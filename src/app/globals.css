@@ -628,6 +628,8 @@ a {
 
 .lang-btn {
   padding:5px 11px;
+  display:inline-block;
+  text-decoration:none;
   border:0;
   border-radius:999px;
   background:transparent;
