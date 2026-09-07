@@ -15,19 +15,20 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 export type Tier = {
   name: string;
   price: number;
-  commission: number;
+  /** Разовый сбор платформы за размещение. Не путать со сбором ОПЕРАТОРА за переоформление — тот считает движок. */
+  platformFee: number;
 };
 
 /** 8 статусов по шкале Viva, от дорогого к дешёвому. Порядок значим: TIERS[0] задаёт максимум слайдера цены. */
 export const TIERS: Tier[] = [
-  { name: "Премиум", price: 1100000, commission: 25000 },
-  { name: "Элит", price: 650000, commission: 15000 },
-  { name: "Бриллиантовый", price: 450000, commission: 10000 },
-  { name: "Платиновый", price: 200000, commission: 5000 },
-  { name: "Золотой", price: 65000, commission: 0 },
-  { name: "Серебряный", price: 25000, commission: 0 },
-  { name: "Бронзовый", price: 9000, commission: 0 },
-  { name: "Обычный", price: 0, commission: 0 },
+  { name: "Премиум", price: 1100000, platformFee: 25000 },
+  { name: "Элит", price: 650000, platformFee: 15000 },
+  { name: "Бриллиантовый", price: 450000, platformFee: 10000 },
+  { name: "Платиновый", price: 200000, platformFee: 5000 },
+  { name: "Золотой", price: 65000, platformFee: 0 },
+  { name: "Серебряный", price: 25000, platformFee: 0 },
+  { name: "Бронзовый", price: 9000, platformFee: 0 },
+  { name: "Обычный", price: 0, platformFee: 0 },
 ];
 
 export const OPERATORS = ["Viva", "Ucom", "Team Telecom"];

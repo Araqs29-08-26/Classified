@@ -106,7 +106,7 @@
   },
   "newListing": {
     "title": "List a number",
-    "subtitle": "Listing is free up to and including the “Gold” tier. Ownership is verified by an SMS code sent to that number.",
+    "subtitle": "Listing is free until the end of 2026. Ownership is verified by an SMS code sent to that number.",
     "autofillNotice": "The fields below were filled in automatically from your valuation — review and adjust the operator and price before publishing if needed.",
     "phoneStep": {
       "label": "Your phone number (for sign-in and verification)",
@@ -223,7 +223,7 @@
         },
         {
           "title": "Cost of listing",
-          "body": "During the beta period, listing is free for every tier, including premium ones. After the beta ends, a one-time listing fee may apply to some premium tiers — current terms will always be shown on this page and on the listing form."
+          "body": "Until the end of 2026, listing is free for every tier, premium included. After that, a one-time platform fee may be introduced for some premium tiers — the current terms are always shown on this page and on the listing page."
         },
         {
           "title": "Prohibited content",
