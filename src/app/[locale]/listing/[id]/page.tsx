@@ -23,15 +23,10 @@ async function getListing(id: string): Promise<Listing | null> {
   return (data as Listing) ?? null;
 }
 
-async function getSellerPhone(sellerId: string): Promise<string | null> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("phone")
-    .eq("id", sellerId)
-    .maybeSingle();
-
-  return (data?.phone as string | undefined) ?? null;
-}
+// Телефон продавца здесь намеренно не запрашивается. Раньше он приходил на
+// страницу вместе со всем остальным и был виден в её исходном коде до всякого
+// нажатия — то есть доступен поисковикам и сборщикам. Теперь его запрашивает
+// ContactReveal в момент нажатия «Связаться».
 
 export async function generateMetadata({
   params,
@@ -61,7 +56,6 @@ export default async function ListingPage({
 
   const t = await getTranslations({ locale: params.locale });
   const tierLabel = t(`tiers.${listing.status_tier}`);
-  const sellerPhone = await getSellerPhone(listing.seller_id);
 
   return (
     <div className="detail">
@@ -84,7 +78,7 @@ export default async function ListingPage({
 
       {listing.description ? <p>{listing.description}</p> : null}
 
-      <ContactReveal phone={sellerPhone} />
+      <ContactReveal listingId={listing.id} />
     </div>
   );
 }

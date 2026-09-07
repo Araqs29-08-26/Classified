@@ -62,7 +62,9 @@
       "phoneLabel": "Seller's phone:",
       "whatsapp": "Message on WhatsApp",
       "telegram": "Message on Telegram",
-      "noPhone": "The seller hasn't provided a contact phone yet."
+      "noPhone": "The seller hasn't provided a contact phone yet.",
+      "loading": "Loading...",
+      "error": "Couldn't get the phone number. Please try again."
     }
   },
   "newListing": {
