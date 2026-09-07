@@ -16,6 +16,12 @@ const LOCALE_LABELS: Record<string, string> = {
 
 const SWITCH_ORDER = ["hy", "ru", "en"];
 
+// Заголовок вкладки задаётся статически: not-found.tsx не умеет собирать метаданные
+// под язык запроса. Поэтому он нейтрален к языку — цифры читаются одинаково всюду.
+export const metadata = {
+  title: "Araqs — 404",
+};
+
 /** Тот же порядок предпочтений, что и у middleware: выбор человека, потом браузер, потом язык по умолчанию. */
 function pickLocale(saved: string | undefined, acceptLanguage: string): string {
   const known = (l: string) => routing.locales.includes(l as (typeof routing.locales)[number]);
