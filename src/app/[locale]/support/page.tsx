@@ -5,8 +5,8 @@ export const dynamic = "force-dynamic";
 
 // ВНИМАНИЕ: адрес поддержки захардкожен здесь и в текстах словаря
 // (legal.terms.sections[9].body и legal.privacy.sections[7].body).
-// По решению проекта его нужно заменить на support@araqs.com — отдельной задачей.
-const SUPPORT_EMAIL = "support@araqs.am";
+// Меняете здесь — поменяйте и там, во всех трёх языках.
+const SUPPORT_EMAIL = "support@araqs.com";
 
 export async function generateMetadata({
   params: { locale },
