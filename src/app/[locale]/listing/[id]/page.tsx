@@ -16,6 +16,7 @@ import {
 } from "@/lib/numberEngine";
 import ContactReveal from "./ContactReveal";
 import PatternNumber from "../../PatternNumber";
+import ReportButton from "./ReportButton";
 
 export const dynamic = "force-dynamic";
 
@@ -201,6 +202,8 @@ export default async function ListingPage({
 
           <ContactReveal listingId={listing.id} />
         </div>
+
+        <ReportButton listingId={listing.id} />
       </aside>
     </div>
   );

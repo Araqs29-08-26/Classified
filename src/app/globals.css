@@ -1455,3 +1455,73 @@ textarea:focus {
   font-size:15px;
   color:var(--accent-ink)
 }
+
+
+/* --- жалоба на объявление --- */
+.report-block {
+  margin-top:12px
+}
+
+.report-link {
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:6px 0;
+  border:0;
+  background:none;
+  color:var(--faint);
+  cursor:pointer;
+  font-family:inherit;
+  font-size:13px
+}
+
+.report-link:hover {
+  color:var(--warn)
+}
+
+.report-form {
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px
+}
+
+.report-title {
+  margin:0 0 10px;
+  font-size:13.5px;
+  font-weight:700
+}
+
+.report-reason {
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  padding:5px 0;
+  font-size:13px;
+  color:var(--muted);
+  cursor:pointer
+}
+
+.report-reason input {
+  margin-top:2px;
+  flex-shrink:0
+}
+
+.report-actions {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px
+}
+
+.report-done {
+  margin-top:12px;
+  font-size:13px;
+  color:var(--success)
+}
+
+.report-error {
+  margin:6px 0 0;
+  font-size:13px;
+  color:var(--warn)
+}

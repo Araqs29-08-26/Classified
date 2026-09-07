@@ -87,6 +87,21 @@
       "operator": "operator",
       "type": "number type",
       "region": "region"
+    },
+    "report": {
+      "button": "Report this listing",
+      "title": "What's wrong with this listing?",
+      "submit": "Send report",
+      "cancel": "Cancel",
+      "sending": "Sending...",
+      "done": "Thank you. Your report has been received — we review them by hand.",
+      "error": "Couldn't send the report. Please try again later.",
+      "reasons": {
+        "not_owner": "The number doesn't belong to the seller",
+        "fraud": "Fraud or deception",
+        "wrong_data": "Incorrect details: price, tier, or operator",
+        "spam": "Spam or offensive content"
+      }
     }
   },
   "newListing": {
