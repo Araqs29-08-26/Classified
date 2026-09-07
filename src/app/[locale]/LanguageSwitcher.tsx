@@ -1,42 +1,49 @@
 "use client";
 
 import { useLocale } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { routing } from "@/i18n/routing";
 
-const LOCALE_LABELS: Record<string, string> = {
-  ru: "RU",
-  hy: "ՀԱՅ",
-  en: "EN",
-};
+// Порядок и подписи заданы здесь, а не берутся из routing.locales: на переключателе
+// армянский стоит первым, и подписи не совпадают с кодами языков.
+const LOCALES: { code: string; label: string }[] = [
+  { code: "hy", label: "Հայ" },
+  { code: "ru", label: "Ру" },
+  { code: "en", label: "Eng" },
+];
 
 export default function LanguageSwitcher() {
   const locale = useLocale();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
 
+  // usePathname() из next-intl отдаёт путь без строки параметров. Без этой склейки
+  // смена языка сбрасывала бы всё, что стоит после «?».
+  const query = searchParams.toString();
+  const href = query ? `${pathname}?${query}` : pathname;
+
   return (
-    <select
+    <div
+      className="lang-switch"
+      role="group"
       aria-label="Язык / Լեզու / Language"
-      value={locale}
-      onChange={(e) => router.replace(pathname, { locale: e.target.value as any })}
-      style={{
-        fontFamily: "inherit",
-        fontSize: 13,
-        fontWeight: 600,
-        padding: "8px 10px",
-        borderRadius: 8,
-        border: "1px solid var(--line)",
-        background: "var(--surface)",
-        color: "var(--ink)",
-        cursor: "pointer",
-      }}
     >
-      {routing.locales.map((l) => (
-        <option key={l} value={l}>
-          {LOCALE_LABELS[l] ?? l}
-        </option>
-      ))}
-    </select>
+      {LOCALES.map(({ code, label }) => {
+        const active = code === locale;
+        return (
+          <button
+            key={code}
+            type="button"
+            lang={code}
+            className={"lang-btn" + (active ? " active" : "")}
+            aria-pressed={active}
+            onClick={() => router.replace(href, { locale: code as any })}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
   );
 }

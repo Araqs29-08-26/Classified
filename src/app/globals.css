@@ -617,6 +617,36 @@ a {
 .nav-link:hover {
   color:var(--ink)
 }
+.lang-switch {
+  display:flex;
+  gap:4px;
+  padding:3px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--surface)
+}
+
+.lang-btn {
+  padding:5px 11px;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-family:inherit;
+  font-size:13px;
+  font-weight:600;
+  transition:background-color .12s ease,color .12s ease
+}
+
+.lang-btn:hover {
+  color:var(--ink)
+}
+
+.lang-btn.active {
+  background:var(--accent-soft);
+  color:var(--accent-ink)
+}
 
 .card {
   background:var(--surface);
