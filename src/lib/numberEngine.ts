@@ -24,6 +24,9 @@ export type EngineOk = {
   /** Код найденного узора, например "run.5". Текст — в разделе engine словарей. */
   patternCode: string;
   patternParams: Record<string, string | number>;
+  /** Границы узора внутри window — включительные индексы, считая с нуля. */
+  patternFrom: number | null;
+  patternTo: number | null;
   operator: "viva" | "team" | "ucom" | null;
   operatorFromCode: boolean;
   /** Диапазон цены продавца. */

@@ -65,6 +65,24 @@
       "noPhone": "The seller hasn't provided a contact phone yet.",
       "loading": "Loading...",
       "error": "Couldn't get the phone number. Please try again."
+    },
+    "why": {
+      "title": "Why this number is beautiful",
+      "subtitle": "Our valuer's breakdown — it looks at eight digits, including the operator prefix",
+      "indexLabel": "beauty index"
+    },
+    "cost": {
+      "title": "What it costs",
+      "seller": "Seller's price",
+      "fee": "{operator} transfer fee",
+      "feeUnknownOperator": "Transfer fee",
+      "total": "You'll pay",
+      "range": "Our estimate for this tier: {from} – {to}"
+    },
+    "meta": {
+      "operator": "operator",
+      "type": "number type",
+      "region": "region"
     }
   },
   "newListing": {

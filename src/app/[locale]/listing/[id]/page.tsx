@@ -3,12 +3,18 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import {
-  TIER_EMOJI,
+  OPERATOR_META,
   formatPrice,
   supabase,
   type Listing,
 } from "@/lib/supabase";
+import {
+  evaluateNumber,
+  messageKey,
+  OPERATOR_CODE,
+} from "@/lib/numberEngine";
 import ContactReveal from "./ContactReveal";
+import PatternNumber from "./PatternNumber";
 
 export const dynamic = "force-dynamic";
 
@@ -55,30 +61,146 @@ export default async function ListingPage({
   if (!listing) notFound();
 
   const t = await getTranslations({ locale: params.locale });
-  const tierLabel = t(`tiers.${listing.status_tier}`);
+
+  // Срок владения в объявлении пока не хранится (это Задача 9г), поэтому у Viva
+  // движок вернёт осторожный сбор — полную стоимость категории — и сам об этом скажет.
+  const verdict = evaluateNumber(listing.phone_number, {
+    operator: OPERATOR_CODE[listing.operator] ?? null,
+  });
+
+  const tier = verdict.ok ? verdict.status : listing.status_tier;
+  const fee = verdict.ok ? verdict.transferFee : 0;
+  const logo = OPERATOR_META[listing.operator]?.logo;
 
   return (
-    <div className="detail">
-      <span className={`tier-badge tier-${listing.status_tier}`}>
-        <span aria-hidden="true">{TIER_EMOJI[listing.status_tier]}</span>{" "}
-        {tierLabel}
-      </span>
+    <div className="listing-layout">
+      <div className="listing-main">
+        <div className="detail">
+          <div className="detail-head">
+            <span className={`tier-badge tier-${tier}`}>{t(`tiers.${tier}`)}</span>
+            {listing.sms_verified && (
+              <span className="verified-mark">{t("listing.verified")}</span>
+            )}
+          </div>
 
-      <div className="number mono">{listing.phone_number}</div>
+          {verdict.ok ? (
+            <PatternNumber
+              window={verdict.window}
+              from={verdict.patternFrom}
+              to={verdict.patternTo}
+            />
+          ) : (
+            <div className="number mono">{listing.phone_number}</div>
+          )}
 
-      <div className="price">{formatPrice(listing.price)}</div>
+          <div className="detail-meta">
+            <div>
+              <b>
+                {logo && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={logo} alt="" className="operator-logo" />
+                )}
+                {listing.operator}
+              </b>
+              <span>{t("listing.meta.operator")}</span>
+            </div>
+            <div>
+              <b>{t(`numberTypes.${listing.number_type}`)}</b>
+              <span>{t("listing.meta.type")}</span>
+            </div>
+            {listing.region && (
+              <div>
+                <b>{listing.region}</b>
+                <span>{t("listing.meta.region")}</span>
+              </div>
+            )}
+          </div>
 
-      <p style={{ color: "var(--muted)" }}>
-        {listing.operator}
-        {" · "}
-        {t(`numberTypes.${listing.number_type}`)}
-        {listing.region ? ` · ${listing.region}` : ""}
-        {listing.sms_verified ? ` · ${t("listing.verified")}` : ""}
-      </p>
+          {listing.description ? (
+            <p style={{ marginTop: 4 }}>{listing.description}</p>
+          ) : null}
+        </div>
 
-      {listing.description ? <p>{listing.description}</p> : null}
+        {verdict.ok && (
+          <div className="detail why-card">
+            <h2>{t("listing.why.title")}</h2>
+            <p className="why-subtitle">{t("listing.why.subtitle")}</p>
 
-      <ContactReveal listingId={listing.id} />
+            <div className="why-body">
+              <div className="why-index">
+                <div className="why-index-value">
+                  <b>{verdict.index}</b>
+                  <span>/ 100</span>
+                </div>
+                <div className="why-index-label">{t("listing.why.indexLabel")}</div>
+                <div className={`index-bar tier-bar-${tier}`} role="presentation">
+                  <span style={{ width: `${verdict.index}%` }} />
+                </div>
+              </div>
+
+              <ul className="why-list">
+                <li>
+                  <b>{t(`engine.${messageKey(verdict.patternCode)}`, verdict.patternParams)}</b>
+                </li>
+                {verdict.noteCodes.map((note) => (
+                  <li key={note.code}>
+                    {t(`engine.${messageKey(note.code)}`, note.params)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        <div className="warning-banner">
+          <span className="warning-icon" aria-hidden="true">
+            ⚠️
+          </span>
+          <p>{t("transfer.warning")}</p>
+        </div>
+      </div>
+
+      <aside className="listing-aside">
+        <div className="detail cost-card">
+          <h3>{t("listing.cost.title")}</h3>
+
+          <div className="price-breakdown">
+            <div>
+              <span>{t("listing.cost.seller")}</span>
+              <b>{formatPrice(listing.price)}</b>
+            </div>
+            <div>
+              <span>
+                {listing.operator
+                  ? t("listing.cost.fee", { operator: listing.operator })
+                  : t("listing.cost.feeUnknownOperator")}
+              </span>
+              <b>{formatPrice(fee)}</b>
+            </div>
+            <div className="price-total">
+              <span>{t("listing.cost.total")}</span>
+              <b>{formatPrice(listing.price + fee)}</b>
+            </div>
+          </div>
+
+          {verdict.ok && (
+            <p className="cost-note">
+              {t(`engine.${messageKey(verdict.feeCode)}`, verdict.feeParams)}
+            </p>
+          )}
+
+          {verdict.ok && (
+            <p className="cost-note">
+              {t("listing.cost.range", {
+                from: formatPrice(verdict.sellerMin),
+                to: formatPrice(verdict.sellerMax),
+              })}
+            </p>
+          )}
+
+          <ContactReveal listingId={listing.id} />
+        </div>
+      </aside>
     </div>
   );
 }
