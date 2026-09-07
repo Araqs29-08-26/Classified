@@ -106,7 +106,7 @@
   },
   "newListing": {
     "title": "List a number",
-    "subtitle": "Listing is free until the end of 2026. Ownership is verified by an SMS code sent to that number.",
+    "subtitle": "Listing is free. Ownership is verified by an SMS code sent to that number.",
     "autofillNotice": "The fields below were filled in automatically from your valuation — review and adjust the operator and price before publishing if needed.",
     "phoneStep": {
       "label": "Your phone number (for sign-in and verification)",
@@ -222,8 +222,8 @@
           "body": "Araqs is not involved in payment, number transfer, or any other step of the deal between seller and buyer — all of that happens outside the platform. We recommend caution, and not sending money before meeting in person or otherwise verifying the other party."
         },
         {
-          "title": "Cost of listing",
-          "body": "Until the end of 2026, listing is free for every tier, premium included. After that, a one-time platform fee may be introduced for some premium tiers — the current terms are always shown on this page and on the listing page."
+          "title": "What listing costs",
+          "body": "Basic listing is free — for every tier, premium included, with no time limit. We take no commission on the deal and take no part in payments between the seller and the buyer. Only promotion of a listing on the marketplace and advertising may be paid for; the current terms are always shown on this page."
         },
         {
           "title": "Prohibited content",
