@@ -1,5 +1,5 @@
 /*!
- * ДВИЖОК ОЦЕНКИ КРАСОТЫ ТЕЛЕФОННЫХ НОМЕРОВ ARAQS — версия 1.2 (07.09.2026)
+ * ДВИЖОК ОЦЕНКИ КРАСОТЫ ТЕЛЕФОННЫХ НОМЕРОВ ARAQS — версия 2.0 (07.09.2026)
  *
  * Что делает: по армянскому мобильному номеру определяет узор, статус по
  * восьмиступенчатой шкале, индекс красоты 0-100, диапазон цены продавца,
@@ -9,21 +9,29 @@
  * Идентичен по логике araqs_number_engine.py — сверено на тысячах номеров,
  * расхождений ноль.
  *
+ * ИЗМЕНЕНИЯ В ВЕРСИИ 2.0 (07.09.2026)
+ * Движок больше не возвращает готовые фразы. Вместо них — КОДЫ и параметры,
+ * а тексты живут на стороне сайта. Так добавление языка не требует правки
+ * движка: переводится словарь, логика остаётся одна.
+ *     v.statusCode   -> "premium"
+ *     v.patternCode  -> "run.5"        v.patternParams -> { digit: "1" }
+ *     v.noteCodes    -> [ { code: "note.crossesCode", params: {} }, ... ]
+ *     v.feeCode      -> "fee.viva.free"  v.feeParams -> { months: 40, limit: 24 }
+ *     v.errorCode    -> "error.multipleNumbers" (когда ok = false)
+ * Готовый русский словарь — в отдельном файле araqs-engine-messages-ru.json.
+ * Он же образец для перевода: ключи те же, меняются только строки.
+ *
  * ИЗМЕНЕНИЯ В ВЕРСИИ 1.2 (07.09.2026)
- * Исправлен дефект разбора букв. Таблица подмены букв на цифры была
- * несимметрична по регистру, а посторонние буквы молча выбрасывались —
- * из-за чего «09L 11 11 01» превращалось в 09111101 и оценивалось как
- * другой номер. Теперь номер ищется в непрерывном участке цифр, а буква
- * внутри номера означает отказ, а не догадку.
+ * Исправлен дефект разбора букв (несимметричная таблица подмены и молчаливое
+ * выбрасывание посторонних букв — «09L 11 11 01» оценивалось как другой номер).
  *
  * Использование:
  *     const v = AraqsNumberEngine.evaluate("+374 91 11 11 01", {
  *         operator: "team",     // "viva" | "team" | "ucom" | null (по коду)
  *         monthsHeld: 40,       // сколько месяцев продавец владеет номером
- *         entity: "individual"  // "individual" | "legal"
+ *         entity: "individual", // "individual" | "legal"
+ *         messages: dict        // необязательно: словарь, чтобы получить и текст
  *     });
- *     v.status  -> "Премиум"
- *     v.totalMax -> 25350700
  */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -31,12 +39,19 @@
 })(typeof self !== "undefined" ? self : this, function () {
 "use strict";
 
-const VERSION = "1.2";
+const VERSION = "2.0";
 
 /* ===================== СПРАВОЧНИКИ ===================== */
 
 const STATUS_ORDER = ["Обычный","Бронзовый","Серебряный","Золотой",
                       "Платиновый","Бриллиантовый","Элит","Премиум"];
+
+// Машинный код статуса. Русское название остаётся для совместимости, но на
+// сайте для показа нужно брать код и переводить его словарём.
+const STATUS_CODE = {
+  "Обычный":"plain", "Бронзовый":"bronze", "Серебряный":"silver", "Золотой":"gold",
+  "Платиновый":"platinum", "Бриллиантовый":"diamond", "Элит":"elite", "Премиум":"premium"
+};
 
 // Прайсы операторов за подключение нового номера соответствующей категории.
 // Проверено на viva.am, telecomarmenia.am, ucom.am 05-06.09.2026.
@@ -58,6 +73,9 @@ const CODE_OPERATOR_HINT = {
   "41":"ucom","44":"ucom","55":"ucom","95":"ucom"
 };
 const LANDLINE_CODES = new Set(["10","11","12"]);
+
+// Названия операторов — торговые марки, не переводятся.
+const OPERATOR_NAME = { viva:"Viva", team:"Team", ucom:"Ucom" };
 
 // Правила переоформления (անվանափոխություն), источники операторов, 06.09.2026.
 const VIVA_FIXED = 500, TEAM_FIXED = 700;
@@ -125,7 +143,7 @@ function digitsToWindow(digits){
  * посторонняя буква разрывает участок. Если подходящий участок один — берём
  * его. Если ни одного или несколько разных — честно говорим, что не поняли. */
 function parse(raw){
-  if(raw === null || raw === undefined) return { window:null, reason:"пустой ввод" };
+  if(raw === null || raw === undefined) return { window:null, errorCode:"error.empty", errorParams:{} };
   const s = String(raw).split("").map(function(c){
     return HOMOGLYPHS[c] !== undefined ? HOMOGLYPHS[c] : c;
   }).join("");
@@ -147,10 +165,9 @@ function parse(raw){
     if(w && found.indexOf(w) < 0) found.push(w);
   }
 
-  if(found.length === 1) return { window:found[0], reason:"ок" };
-  if(found.length === 0) return { window:null,
-    reason:"номер не распознан — нужно 8 значащих цифр подряд, разделённых только пробелами, точками или дефисами" };
-  return { window:null, reason:"в строке несколько разных номеров (" + found.join(", ") + ") — оставьте один" };
+  if(found.length === 1) return { window:found[0], errorCode:null, errorParams:{} };
+  if(found.length === 0) return { window:null, errorCode:"error.notRecognized", errorParams:{} };
+  return { window:null, errorCode:"error.multipleNumbers", errorParams:{ numbers:found.join(", ") } };
 }
 
 function normalize(raw){ return parse(raw).window; }
@@ -261,56 +278,58 @@ function analyze(w){
 
 function classify(w, d){
   const rd = d.run_digit;
-  const R = (status, pattern, a, b) => ({status:status, pattern:pattern, a:a, b:b});
+  // R(статус, код узора, параметры, начало и конец подсветки)
+  const R = (status, code, params, a, b) =>
+    ({ status:status, patternCode:code, patternParams:params || {}, a:a, b:b });
   const WHOLE_A = 2, WHOLE_B = 7;
 
   // --- Премиум ---
-  if(d.run >= 6) return R("Премиум", d.run + " одинаковых цифр подряд (" + new Array(d.run+1).join(rd) + ")", d.run_a, d.run_b);
-  if(d.run === 5) return R("Премиум", "пять цифр " + rd + " подряд", d.run_a, d.run_b);
-  if(d.seq >= 6) return R("Премиум", "полная последовательность из " + d.seq + " цифр (" + d.seq_text + ")", d.seq_a, d.seq_b);
-  if(d.block_k === 2 && d.block_r >= 3) return R("Премиум", "пара «" + d.block_text + "» повторена " + d.block_r + " раза подряд", d.block_a, d.block_b);
-  if(d.zeros_tail >= 4) return R("Премиум", d.zeros_tail + " нуля в конце номера", d.zt_a, d.zt_b);
+  if(d.run >= 6) return R("Премиум", "run.6plus", {n:d.run, digit:rd}, d.run_a, d.run_b);
+  if(d.run === 5) return R("Премиум", "run.5", {digit:rd}, d.run_a, d.run_b);
+  if(d.seq >= 6) return R("Премиум", "seq.6", {n:d.seq, text:d.seq_text}, d.seq_a, d.seq_b);
+  if(d.block_k === 2 && d.block_r >= 3) return R("Премиум", "block.pair.x3", {block:d.block_text, reps:d.block_r}, d.block_a, d.block_b);
+  if(d.zeros_tail >= 4) return R("Премиум", "zeros.tail.4plus", {n:d.zeros_tail}, d.zt_a, d.zt_b);
 
   // --- Элит ---
-  if(d.pal >= 6) return R("Элит", "зеркальный участок из " + d.pal + " цифр («" + d.pal_text + "»)", d.pal_a, d.pal_b);
-  if(d.block_k >= 4 && d.block_r >= 2) return R("Элит", "блок «" + d.block_text + "» повторён дважды", d.block_a, d.block_b);
-  if(d.run === 4 && d.run_at_end && "019".indexOf(rd) >= 0) return R("Элит", "четыре цифры " + rd + " подряд в самом конце номера", d.run_a, d.run_b);
+  if(d.pal >= 6) return R("Элит", "pal.6", {n:d.pal, text:d.pal_text}, d.pal_a, d.pal_b);
+  if(d.block_k >= 4 && d.block_r >= 2) return R("Элит", "block.k4.x2", {block:d.block_text}, d.block_a, d.block_b);
+  if(d.run === 4 && d.run_at_end && "019".indexOf(rd) >= 0) return R("Элит", "run.4.end.lucky", {digit:rd}, d.run_a, d.run_b);
 
   // --- Бриллиантовый ---
-  if(d.run === 4 && (d.run_at_end || d.run_crosses))
-    return R("Бриллиантовый", "четыре цифры " + rd + " подряд " + (d.run_at_end ? "в конце номера" : "с продолжением в код оператора"), d.run_a, d.run_b);
-  if(d.zeros_tail === 3 && d.distinct <= 3) return R("Бриллиантовый", "три нуля в конце при малом числе разных цифр", d.zt_a, d.zt_b);
+  if(d.run === 4 && d.run_at_end) return R("Бриллиантовый", "run.4.end", {digit:rd}, d.run_a, d.run_b);
+  if(d.run === 4 && d.run_crosses) return R("Бриллиантовый", "run.4.cross", {digit:rd}, d.run_a, d.run_b);
+  if(d.zeros_tail === 3 && d.distinct <= 3) return R("Бриллиантовый", "zeros.tail.3.clean", {}, d.zt_a, d.zt_b);
   if(d.block_k === 3 && d.block_r >= 2 && d.distinct <= 2)
-    return R("Бриллиантовый", "тройка «" + d.block_text + "» повторена дважды, номер всего из " + d.distinct + " цифр", d.block_a, d.block_b);
+    return R("Бриллиантовый", "block.triple.x2.clean", {block:d.block_text, distinct:d.distinct}, d.block_a, d.block_b);
 
   // --- Платиновый ---
-  if(d.run === 4) return R("Платиновый", "четыре цифры " + rd + " подряд", d.run_a, d.run_b);
-  if(d.pairs >= 3) return R("Платиновый", "три пары одинаковых цифр подряд", d.pairs_a, d.pairs_b);
-  if(d.block_k === 3 && d.block_r >= 2) return R("Платиновый", "тройка «" + d.block_text + "» повторена дважды", d.block_a, d.block_b);
-  if(d.seq === 5) return R("Платиновый", "последовательность из пяти цифр (" + d.seq_text + ")", d.seq_a, d.seq_b);
-  if(d.zeros_tail === 3) return R("Платиновый", "три нуля в конце номера", d.zt_a, d.zt_b);
+  if(d.run === 4) return R("Платиновый", "run.4", {digit:rd}, d.run_a, d.run_b);
+  if(d.pairs >= 3) return R("Платиновый", "pairs.3", {}, d.pairs_a, d.pairs_b);
+  if(d.block_k === 3 && d.block_r >= 2) return R("Платиновый", "block.triple.x2", {block:d.block_text}, d.block_a, d.block_b);
+  if(d.seq === 5) return R("Платиновый", "seq.5", {text:d.seq_text}, d.seq_a, d.seq_b);
+  if(d.zeros_tail === 3) return R("Платиновый", "zeros.tail.3", {}, d.zt_a, d.zt_b);
 
   // --- Золотой ---
-  if(d.block_k === 2 && d.block_r === 2) return R("Золотой", "пара «" + d.block_text + "» повторена дважды", d.block_a, d.block_b);
-  if(d.run === 3 && (d.run_at_end || d.run_crosses)) return R("Золотой", "три цифры " + rd + " подряд в сильной позиции", d.run_a, d.run_b);
-  if(d.distinct <= 2) return R("Золотой", "весь номер состоит всего из " + d.distinct + " разных цифр", WHOLE_A, WHOLE_B);
-  if(d.seq === 4) return R("Золотой", "последовательность из четырёх цифр (" + d.seq_text + ")", d.seq_a, d.seq_b);
-  if(d.pal === 5) return R("Золотой", "зеркальный участок из 5 цифр («" + d.pal_text + "»)", d.pal_a, d.pal_b);
+  if(d.block_k === 2 && d.block_r === 2) return R("Золотой", "block.pair.x2", {block:d.block_text}, d.block_a, d.block_b);
+  if(d.run === 3 && (d.run_at_end || d.run_crosses)) return R("Золотой", "run.3.strong", {digit:rd}, d.run_a, d.run_b);
+  if(d.distinct <= 2) return R("Золотой", "distinct.le2", {distinct:d.distinct}, WHOLE_A, WHOLE_B);
+  if(d.seq === 4) return R("Золотой", "seq.4", {text:d.seq_text}, d.seq_a, d.seq_b);
+  if(d.pal === 5) return R("Золотой", "pal.5", {text:d.pal_text}, d.pal_a, d.pal_b);
 
   // --- Серебряный ---
-  if(d.run === 3) return R("Серебряный", "три цифры " + rd + " подряд", d.run_a, d.run_b);
-  if(d.pairs === 2) return R("Серебряный", "две пары одинаковых цифр подряд", d.pairs_a, d.pairs_b);
-  if(d.distinct === 3) return R("Серебряный", "номер состоит всего из 3 разных цифр", WHOLE_A, WHOLE_B);
-  if(d.pal === 4) return R("Серебряный", "зеркальный участок из 4 цифр («" + d.pal_text + "»)", d.pal_a, d.pal_b);
+  if(d.run === 3) return R("Серебряный", "run.3", {digit:rd}, d.run_a, d.run_b);
+  if(d.pairs === 2) return R("Серебряный", "pairs.2", {}, d.pairs_a, d.pairs_b);
+  if(d.distinct === 3) return R("Серебряный", "distinct.3", {}, WHOLE_A, WHOLE_B);
+  if(d.pal === 4) return R("Серебряный", "pal.4", {text:d.pal_text}, d.pal_a, d.pal_b);
 
   // --- Бронзовый ---
-  if(d.zeros_tail === 2) return R("Бронзовый", "два нуля в конце номера", d.zt_a, d.zt_b);
-  if(d.run === 2 && d.run_at_end) return R("Бронзовый", "пара " + rd + rd + " в конце номера", d.run_a, d.run_b);
-  if(d.distinct === 4) return R("Бронзовый", "номер состоит из 4 разных цифр", WHOLE_A, WHOLE_B);
-  if(d.seq === 3) return R("Бронзовый", "три цифры подряд по порядку (" + d.seq_text + ")", d.seq_a, d.seq_b);
-  if(d.run === 2) return R("Бронзовый", "пара " + rd + rd + " в номере", d.run_a, d.run_b);
+  if(d.zeros_tail === 2) return R("Бронзовый", "zeros.tail.2", {}, d.zt_a, d.zt_b);
+  if(d.run === 2 && d.run_at_end) return R("Бронзовый", "run.2.end", {digit:rd}, d.run_a, d.run_b);
+  if(d.distinct === 4) return R("Бронзовый", "distinct.4", {}, WHOLE_A, WHOLE_B);
+  if(d.seq === 3) return R("Бронзовый", "seq.3", {text:d.seq_text}, d.seq_a, d.seq_b);
+  if(d.run === 2) return R("Бронзовый", "run.2", {digit:rd}, d.run_a, d.run_b);
 
-  return R("Обычный", "выраженного узора не найдено", -1, -1);
+  return R("Обычный", "none", {}, -1, -1);
 }
 
 function beautyIndex(status, d){
@@ -334,31 +353,48 @@ function transferFee(operator, status, monthsHeld, entity){
   const op = String(operator || "viva").toLowerCase();
   const table = OPERATOR_PRICES[op] || OPERATOR_PRICES.viva;
   const price = table[status] || 0;
+  const F = (amount, code, params) => ({ amount:amount, code:code, params:params || {} });
 
-  if(status === "Обычный") return { amount:0, note:"номер без узора — категорийная плата не взимается" };
+  if(status === "Обычный") return F(0, "fee.plain", {});
 
   if(op === "viva"){
     const limit = VIVA_FREE_AFTER_MONTHS[entity] || VIVA_FREE_AFTER_MONTHS.individual;
     if(monthsHeld === null || monthsHeld === undefined)
-      return { amount: VIVA_FIXED + price,
-        note:"Viva: 500 ֏ плюс стоимость категории. Если продавец владеет номером дольше " + limit +
-             " мес., категорийная плата не взимается и сбор составит всего 500 ֏ — уточните срок владения." };
+      return F(VIVA_FIXED + price, "fee.viva.unknownMonths", {fixed:VIVA_FIXED, limit:limit});
     if(monthsHeld >= limit)
-      return { amount: VIVA_FIXED,
-        note:"Viva: номер в пользовании " + monthsHeld + " мес. — это дольше " + limit +
-             " мес., поэтому платятся только фиксированные 500 ֏." };
-    return { amount: VIVA_FIXED + price,
-      note:"Viva: номер в пользовании " + monthsHeld + " мес., до льготы осталось " + (limit - monthsHeld) +
-           " мес. — платятся 500 ֏ плюс стоимость категории." };
+      return F(VIVA_FIXED, "fee.viva.free", {fixed:VIVA_FIXED, months:monthsHeld, limit:limit});
+    return F(VIVA_FIXED + price, "fee.viva.pending",
+             {fixed:VIVA_FIXED, months:monthsHeld, limit:limit, remaining:limit - monthsHeld});
   }
-  if(op === "team")
-    return { amount: TEAM_FIXED + price, note:"Team: 700 ֏ плюс полная стоимость категории, послаблений нет." };
+  if(op === "team") return F(TEAM_FIXED + price, "fee.team", {fixed:TEAM_FIXED});
   if(op === "ucom"){
-    if(UCOM_FLAT_STATUSES.has(status))
-      return { amount: UCOM_FLAT_FEE, note:"Ucom: для Серебра и Бронзы — фиксированные 1 000 ֏." };
-    return { amount: Math.round(price * UCOM_SHARE), note:"Ucom: половина стоимости категории." };
+    if(UCOM_FLAT_STATUSES.has(status)) return F(UCOM_FLAT_FEE, "fee.ucom.flat", {flat:UCOM_FLAT_FEE});
+    return F(Math.round(price * UCOM_SHARE), "fee.ucom.half", {share:UCOM_SHARE});
   }
-  return { amount: price, note:"оператор неизвестен, взята оценка по прайсу Viva" };
+  return F(price, "fee.unknownOperator", {});
+}
+
+/* ===================== СЛОВАРЬ И ПОДСТАНОВКА =====================
+   Движок текстов не содержит. Словарь передаётся снаружи: объект вида
+   { "run.5": "пять цифр {digit} подряд", ... }. Подстановка — по {имени}. */
+
+function fill(template, params){
+  return String(template).replace(/\{(\w+)\}/g, function(m, key){
+    return (params && params[key] !== undefined) ? String(params[key]) : m;
+  });
+}
+
+/* Превращает коды вердикта в текст по словарю. Если ключа нет — возвращает
+   сам код, чтобы пропажа перевода была видна, а не молча пустая строка. */
+function localize(v, messages){
+  if(!v || !messages) return v;
+  const get = (code, params) => (messages[code] !== undefined ? fill(messages[code], params) : code);
+  if(!v.ok){ v.error = get(v.errorCode, v.errorParams); v.notes = [v.error]; return v; }
+  v.statusName = get("status." + v.statusCode, {});
+  v.pattern = get(v.patternCode, v.patternParams);
+  v.feeNote = get(v.feeCode, v.feeParams);
+  v.notes = v.noteCodes.map(function(n){ return get(n.code, n.params); });
+  return v;
 }
 
 /* ===================== ГЛАВНАЯ ФУНКЦИЯ ===================== */
@@ -367,8 +403,9 @@ function evaluate(raw, options){
   options = options || {};
   const parsed = parse(raw);
   const w = parsed.window;
-  if(!w) return { ok:false, raw:String(raw === undefined ? "" : raw),
-                  notes:[parsed.reason.charAt(0).toUpperCase() + parsed.reason.slice(1) + "."] };
+  if(!w) return localize({ ok:false, version:VERSION, raw:String(raw === undefined ? "" : raw),
+                           errorCode:parsed.errorCode, errorParams:parsed.errorParams,
+                           noteCodes:[], notes:[] }, options.messages);
 
   const code = w.slice(0,2), body = w.slice(2);
   const d = analyze(w);
@@ -390,56 +427,53 @@ function evaluate(raw, options){
   const band = sublevel ? PREMIUM_SUBLEVELS[sublevel] : SELLER_BANDS[c.status];
   const fee = transferFee(operator, c.status, monthsHeld, entity);
 
-  const notes = [];
-  if(d.run_crosses || d.block_crosses)
-    notes.push("Узор продолжается в код оператора — такие номера встречаются реже и ценятся выше.");
-  if(d.distinct <= 2) notes.push("В номере всего " + d.distinct + " разные цифры — очень чистый узор.");
-  if(d.run_at_end && d.run >= 3) notes.push("Узор заканчивается последней цифрой номера — так он лучше запоминается.");
-  if(operatorFromCode)
-    notes.push("Оператор определён по коду (" + operator.charAt(0).toUpperCase() + operator.slice(1) +
-               ") — уточните у продавца, номер мог быть перенесён.");
+  // Пояснения тоже кодами: сайт переводит их своим словарём.
+  const noteCodes = [];
+  const note = (code, params) => noteCodes.push({ code:code, params:params || {} });
+  if(d.run_crosses || d.block_crosses) note("note.crossesCode");
+  if(d.distinct <= 2) note("note.clean", {distinct:d.distinct});
+  if(d.run_at_end && d.run >= 3) note("note.endsLast");
+  if(operatorFromCode) note("note.operatorFromCode", {operator:OPERATOR_NAME[operator] || operator});
   if(operator === "viva" && monthsHeld === null && c.status !== "Обычный")
-    notes.push("Спросите у продавца, как давно он владеет номером: у Viva после 24 месяцев переоформление стоит 500 ֏ вместо полной стоимости категории.");
+    note("note.askMonthsHeld", {limit:VIVA_FREE_AFTER_MONTHS[entity] || 24});
   const rawStr = String(raw);
   for(let i = 0; i < rawStr.length; i++){
-    if(HOMOGLYPHS[rawStr.charAt(i)] !== undefined){
-      notes.push("В записи были буквы, похожие на цифры — прочитаны как цифры. Проверьте, что номер распознан верно.");
-      break;
-    }
+    if(HOMOGLYPHS[rawStr.charAt(i)] !== undefined){ note("note.homoglyphs"); break; }
   }
-  if(LANDLINE_CODES.has(code))
-    notes.push("Это городской номер. Шкала рассчитана на мобильные, оценка ориентировочная.");
-  if(c.status === "Обычный")
-    notes.push("Узор не найден — такой номер на сайте не публикуется.");
+  if(LANDLINE_CODES.has(code)) note("note.landline");
+  if(c.status === "Обычный") note("note.notPublishable");
 
-  return {
+  return localize({
     ok:true, version:VERSION, raw:String(raw), window:w, code:code, body:body,
-    status:c.status, sublevel:sublevel, index:index, indexRange:INDEX_RANGE[c.status],
-    pattern:c.pattern, patternFrom:c.a, patternTo:c.b,
+    status:c.status, statusCode:STATUS_CODE[c.status],
+    sublevel:sublevel, index:index, indexRange:INDEX_RANGE[c.status],
+    patternCode:c.patternCode, patternParams:c.patternParams,
+    patternFrom:c.a, patternTo:c.b,
     operator:operator, operatorFromCode:operatorFromCode,
     monthsHeld:monthsHeld, entity:entity,
     sellerMin:band[0], sellerTypical:band[1], sellerMax:band[2],
-    transferFee:fee.amount, feeNote:fee.note,
+    transferFee:fee.amount, feeCode:fee.code, feeParams:fee.params,
     totalMin:band[0] + fee.amount, totalTypical:band[1] + fee.amount, totalMax:band[2] + fee.amount,
     publishable:c.status !== "Обычный",
-    notes:notes
-  };
+    noteCodes:noteCodes, notes:[]
+  }, options.messages);
 }
 
 function money(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ֏"; }
 
+/* Готовый текст. Работает только если вердикт уже локализован словарём
+   (передайте messages в evaluate) — иначе вернутся коды, и это заметно. */
 function explain(v){
-  if(!v || !v.ok) return "Номер не распознан.";
-  let head = "0" + v.code + " " + v.body + "  →  " + v.status;
+  if(!v || !v.ok) return v && v.error ? v.error : (v && v.errorCode) || "";
+  let head = "0" + v.code + " " + v.body + "  →  " + (v.statusName || v.status);
   if(v.sublevel) head += " (" + v.sublevel + ")";
-  head += ",  индекс красоты " + v.index + "/100";
-  const lines = [head, "", "Узор: " + v.pattern + "."].concat(v.notes);
+  head += ",  " + v.index + "/100";
+  const lines = [head, "", v.pattern || v.patternCode].concat(v.notes || []);
   if(v.publishable){
     lines.push("",
-      "Цена продавца: " + money(v.sellerMin) + " – " + money(v.sellerMax) + " (типично " + money(v.sellerTypical) + ")",
-      "Сбор за переоформление (" + v.operator + ", " + v.status + "): " + money(v.transferFee),
-      "   " + v.feeNote,
-      "Полная стоимость для покупателя: " + money(v.totalMin) + " – " + money(v.totalMax));
+      money(v.sellerMin) + " – " + money(v.sellerMax) + " (" + money(v.sellerTypical) + ")",
+      money(v.transferFee) + "  " + (v.feeNote || v.feeCode),
+      money(v.totalMin) + " – " + money(v.totalMax));
   }
   return lines.join("\n");
 }
@@ -447,6 +481,8 @@ function explain(v){
 return {
   VERSION: VERSION,
   STATUS_ORDER: STATUS_ORDER,
+  STATUS_CODE: STATUS_CODE,
+  OPERATOR_NAME: OPERATOR_NAME,
   OPERATOR_PRICES: OPERATOR_PRICES,
   CODE_OPERATOR_HINT: CODE_OPERATOR_HINT,
   SELLER_BANDS: SELLER_BANDS,
@@ -459,6 +495,8 @@ return {
   beautyIndex: beautyIndex,
   transferFee: transferFee,
   evaluate: evaluate,
+  localize: localize,
+  fill: fill,
   explain: explain,
   money: money
 };
