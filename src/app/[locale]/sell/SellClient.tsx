@@ -5,43 +5,39 @@ import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
 import { detect } from "@/lib/phone";
-import { classify, type ClassifyResult } from "@/lib/tierClassifier";
-import { TIERS, TIER_EMOJI, formatPrice } from "@/lib/supabase";
+import { evaluateNumber, messageKey, type EngineResult } from "@/lib/numberEngine";
+import { TIER_EMOJI, formatPrice } from "@/lib/supabase";
 
 export default function SellClient() {
   const t = useTranslations("sell");
   const tTiers = useTranslations("tiers");
+  const tEngine = useTranslations("engine");
 
   const [phone, setPhone] = useState("+374");
-  const [result, setResult] = useState<ClassifyResult | null>(null);
+  const [result, setResult] = useState<EngineResult | null>(null);
   const [detected, setDetected] = useState<ReturnType<typeof detect> | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    const evaluated = classify(phone);
-    if (!evaluated) {
-      setResult(null);
-      setDetected(null);
-      setError(t("error"));
-      return;
-    }
-
-    setError(null);
-    setResult(evaluated);
+    setResult(evaluateNumber(phone));
     setDetected(detect(phone));
   }
 
-  const tier = result ? TIERS.find((x) => x.name === result.tier) : null;
+  // Причину отказа объясняет сам движок: он лучше знает, что именно не так —
+  // непонятная запись, буква внутри номера или несколько номеров в строке.
+  const error =
+    result && !result.ok
+      ? tEngine(messageKey(result.errorCode), result.errorParams)
+      : null;
 
-  const ctaHref = result
-    ? `/new?number=${encodeURIComponent(phone)}&tier=${encodeURIComponent(
-        result.tier
-      )}&price=${tier?.price ?? 0}&type=${encodeURIComponent(
-        detected?.numberType ?? "Мобильный"
-      )}${detected?.operator ? `&operator=${encodeURIComponent(detected.operator)}` : ""}`
-    : "/new";
+  const ctaHref =
+    result && result.ok
+      ? `/new?number=${encodeURIComponent(phone)}&tier=${encodeURIComponent(
+          result.status
+        )}&price=${result.sellerTypical}&type=${encodeURIComponent(
+          detected?.numberType ?? "Мобильный"
+        )}${detected?.operator ? `&operator=${encodeURIComponent(detected.operator)}` : ""}`
+      : "/new";
 
   return (
     <div style={{ padding: "32px 0" }}>
@@ -67,22 +63,22 @@ export default function SellClient() {
         </button>
       </form>
 
-      {result && tier && (
+      {result && result.ok && (
         <div className="detail" style={{ marginTop: 20, maxWidth: 480 }}>
-          <span className={`tier-badge tier-${result.tier}`}>
-            <span aria-hidden="true">{TIER_EMOJI[result.tier]}</span>{" "}
-            {tTiers(result.tier)}
+          <span className={`tier-badge tier-${result.status}`}>
+            <span aria-hidden="true">{TIER_EMOJI[result.status]}</span>{" "}
+            {tTiers(result.status)}
           </span>
 
           <p style={{ marginTop: 12, marginBottom: 4, color: "var(--muted)" }}>
             {t("result.tierLabel")}
           </p>
 
-          <div className="price">{formatPrice(tier.price)}</div>
+          <div className="price">{formatPrice(result.sellerTypical)}</div>
 
           <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 10 }}>
             {t("result.reasonPrefix")}
-            {result.reason}
+            {tEngine(messageKey(result.patternCode), result.patternParams)}
           </p>
 
           {detected && (
