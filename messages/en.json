@@ -70,7 +70,7 @@
   "newListing": {
     "title": "List a number",
     "subtitle": "Listing is free up to and including the “Gold” tier. Ownership is verified by an SMS code sent to that number.",
-    "autofillNotice": "The fields below were filled in automatically from your valuation — review and adjust the operator, tier, and price before publishing if needed.",
+    "autofillNotice": "The fields below were filled in automatically from your valuation — review and adjust the operator and price before publishing if needed.",
     "phoneStep": {
       "label": "Your phone number (for sign-in and verification)",
       "placeholder": "+374XXXXXXXX",
@@ -91,14 +91,21 @@
       "numberVerifiedHint": "✓ Matches the number verified by SMS — the listing will get a \"verified\" badge.",
       "numberNotVerifiedHint": "Different from the number verified by SMS in step one — the listing will still publish, just without the \"SMS verified\" badge.",
       "typeLabel": "Number type",
-      "tierLabel": "Number tier",
       "regionLabel": "Region (optional)",
       "regionPlaceholder": "Yerevan",
       "priceLabel": "Price, ֏",
       "pricePlaceholder": "65000",
       "descriptionLabel": "Description (optional)",
       "button": "Publish listing",
-      "loading": "Publishing..."
+      "loading": "Publishing...",
+      "monthsHeldLabel": "How many months have you owned this number",
+      "monthsHeldHint": "With Viva, after 24 months of ownership the transfer costs 500 ֏ instead of the full category fee.",
+      "tierComputedHint": "The tier is set by the valuation engine from the digit pattern — it isn't chosen by hand.",
+      "sellerPriceLabel": "Seller's price",
+      "feeLabel": "Operator fee",
+      "totalLabel": "Total for the buyer",
+      "indexOutOf": "out of 100",
+      "tierLabel": "Number tier"
     },
     "doneStep": {
       "title": "Done!",
@@ -108,7 +115,8 @@
       "sendCode": "Couldn't send the SMS code. The SMS provider is likely not yet connected — that's a separate technical task.",
       "wrongCode": "Wrong code:",
       "sessionExpired": "Your session expired, please verify by SMS again.",
-      "saveFailed": "Couldn't save the listing:"
+      "saveFailed": "Couldn't save the listing:",
+      "notPublishable": "A number in the “Standard” tier isn't published — the marketplace accepts Bronze and above."
     }
   },
   "sell": {

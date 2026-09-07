@@ -55,6 +55,13 @@ export type EngineOptions = {
 
 export const ENGINE_VERSION: string = engine.VERSION;
 
+/** Названия операторов на сайте → коды, которые понимает движок. */
+export const OPERATOR_CODE: Record<string, "viva" | "team" | "ucom"> = {
+  Viva: "viva",
+  Ucom: "ucom",
+  "Team Telecom": "team",
+};
+
 export function evaluateNumber(input: string, options?: EngineOptions): EngineResult {
   return engine.evaluate(input, options) as EngineResult;
 }

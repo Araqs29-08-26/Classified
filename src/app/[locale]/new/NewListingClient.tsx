@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { useRouter } from "@/i18n/navigation";
 import { detect, normalizePhone } from "@/lib/phone";
 import {
+  evaluateNumber,
+  messageKey,
+  OPERATOR_CODE,
+  type EngineResult,
+} from "@/lib/numberEngine";
+import {
   NUMBER_TYPES,
   OPERATORS,
-  TIERS,
+  OPERATOR_META,
+  formatPrice,
   supabase,
 } from "@/lib/supabase";
 
@@ -21,7 +28,8 @@ type FormState = {
   number_type: string;
   region: string;
   price: string;
-  status_tier: string;
+  /** Срок владения в месяцах. Нужен только для Viva: от него зависит сбор за переоформление. */
+  months_held: string;
   description: string;
 };
 
@@ -29,6 +37,7 @@ export default function NewListingClient() {
   const t = useTranslations("newListing");
   const tTiers = useTranslations("tiers");
   const tTypes = useTranslations("numberTypes");
+  const tEngine = useTranslations("engine");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -40,10 +49,6 @@ export default function NewListingClient() {
   const qType = searchParams.get("type");
 
   const guessed = qNumber ? detect(qNumber) : null;
-  const tierFromQuery = qTier && TIERS.some((x) => x.name === qTier) ? qTier : null;
-  const tierPrice = tierFromQuery
-    ? TIERS.find((x) => x.name === tierFromQuery)?.price ?? 0
-    : 0;
 
   const [step, setStep] = useState<Step | "done">("phone");
   const [phone, setPhone] = useState("+374");
@@ -65,19 +70,43 @@ export default function NewListingClient() {
       guessed?.numberType ??
       "Мобильный",
     region: "",
-    price:
-      qPrice && !Number.isNaN(Number(qPrice))
-        ? qPrice
-        : qNumber && tierPrice > 0
-          ? String(tierPrice)
-          : "",
-    status_tier: tierFromQuery ?? "Обычный",
+    price: qPrice && !Number.isNaN(Number(qPrice)) ? qPrice : "",
+    months_held: "",
     description: "",
   });
 
   const autofilled = Boolean(qNumber && qTier);
   const numberMatchesVerified =
     normalizePhone(form.phone_number) === normalizePhone(phone);
+
+  const isViva = form.operator === "Viva";
+  /** Срок владения спрашиваем только у Viva — только там от него зависит сбор. */
+  const monthsHeld = isViva && form.months_held !== "" ? Number(form.months_held) : null;
+
+  // Статус, индекс, узор и сбор считает движок — вручную статус не выбирается.
+  const verdict: EngineResult | null = useMemo(
+    () =>
+      form.phone_number.trim()
+        ? evaluateNumber(form.phone_number, {
+            operator: OPERATOR_CODE[form.operator] ?? null,
+            monthsHeld,
+          })
+        : null,
+    [form.phone_number, form.operator, monthsHeld]
+  );
+
+  const sellerPrice = Number(form.price) || 0;
+  const transferFee = verdict?.ok ? verdict.transferFee : 0;
+
+  // Публикацию блокируем, пока номер не разобран или узор не дотягивает до Бронзового.
+  const blocked = !verdict || !verdict.ok || !verdict.publishable;
+  const blockReason = !verdict
+    ? null
+    : !verdict.ok
+      ? tEngine(messageKey(verdict.errorCode), verdict.errorParams)
+      : !verdict.publishable
+        ? t("errors.notPublishable")
+        : null;
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -130,6 +159,10 @@ export default function NewListingClient() {
 
   async function submitListing(e: React.FormEvent) {
     e.preventDefault();
+
+    // Вторая проверка на всякий случай: кнопка и так заблокирована.
+    if (!verdict?.ok || !verdict.publishable) return;
+
     setLoading(true);
     setError(null);
 
@@ -151,7 +184,9 @@ export default function NewListingClient() {
       number_type: form.number_type,
       region: form.region || null,
       price: Number(form.price) || 0,
-      status_tier: form.status_tier,
+      // Статус берём у движка, а не из выбора продавца: иначе обычный номер
+      // можно было бы опубликовать под чужим статусом.
+      status_tier: verdict.status,
       description: form.description || null,
       // отметка «подтверждено» ставится, только если номер объявления совпал
       // с номером, подтверждённым по SMS на первом шаге
@@ -241,23 +276,51 @@ export default function NewListingClient() {
 
           <div className="field">
             <label>{t("formStep.operatorLabel")}</label>
-            <select
-              value={form.operator}
-              onChange={(e) => {
-                setOperatorTouched(true);
-                setField("operator", e.target.value);
-              }}
-            >
+            <div className="operator-pick">
               {OPERATORS.map((op) => (
-                <option key={op} value={op}>
-                  {op}
-                </option>
+                <label
+                  key={op}
+                  className={"operator-card" + (form.operator === op ? " active" : "")}
+                >
+                  <input
+                    type="radio"
+                    name="operator"
+                    value={op}
+                    checked={form.operator === op}
+                    onChange={() => {
+                      setOperatorTouched(true);
+                      setField("operator", op);
+                    }}
+                  />
+                  {OPERATOR_META[op]?.logo && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={OPERATOR_META[op].logo} alt="" className="operator-logo" />
+                  )}
+                  <span>{op}</span>
+                </label>
               ))}
-            </select>
-            <p style={{ fontSize: 12.5, color: "var(--faint)", marginTop: 4 }}>
+            </div>
+            <p style={{ fontSize: 12.5, color: "var(--faint)", marginTop: 6 }}>
               {t("formStep.operatorHint")}
             </p>
           </div>
+
+          {isViva && (
+            <div className="field">
+              <label>{t("formStep.monthsHeldLabel")}</label>
+              <input
+                type="number"
+                min={0}
+                max={600}
+                value={form.months_held}
+                onChange={(e) => setField("months_held", e.target.value)}
+                required
+              />
+              <p style={{ fontSize: 12.5, color: "var(--faint)", marginTop: 4 }}>
+                {t("formStep.monthsHeldHint")}
+              </p>
+            </div>
+          )}
 
           <div className="field">
             <label>{t("formStep.typeLabel")}</label>
@@ -278,16 +341,34 @@ export default function NewListingClient() {
 
           <div className="field">
             <label>{t("formStep.tierLabel")}</label>
-            <select
-              value={form.status_tier}
-              onChange={(e) => setField("status_tier", e.target.value)}
-            >
-              {TIERS.map((tier) => (
-                <option key={tier.name} value={tier.name}>
-                  {tTiers(tier.name)}
-                </option>
-              ))}
-            </select>
+
+            {verdict?.ok ? (
+              <div className="verdict">
+                <div className="verdict-head">
+                  <span className={`tier-badge tier-${verdict.status}`}>
+                    {tTiers(verdict.status)}
+                  </span>
+                  <span className="verdict-index">
+                    <b>{verdict.index}</b> {t("formStep.indexOutOf")}
+                  </span>
+                </div>
+                <div
+                  className={`index-bar tier-bar-${verdict.status}`}
+                  role="presentation"
+                >
+                  <span style={{ width: `${verdict.index}%` }} />
+                </div>
+                <p className="verdict-pattern">
+                  {tEngine(messageKey(verdict.patternCode), verdict.patternParams)}
+                </p>
+              </div>
+            ) : (
+              blockReason && <div className="notice">{blockReason}</div>
+            )}
+
+            <p style={{ fontSize: 12.5, color: "var(--faint)", marginTop: 6 }}>
+              {t("formStep.tierComputedHint")}
+            </p>
           </div>
 
           <div className="field">
@@ -312,6 +393,23 @@ export default function NewListingClient() {
             />
           </div>
 
+          {verdict?.ok && sellerPrice > 0 && (
+            <div className="price-breakdown">
+              <div>
+                <span>{t("formStep.sellerPriceLabel")}</span>
+                <b>{formatPrice(sellerPrice)}</b>
+              </div>
+              <div>
+                <span>{t("formStep.feeLabel")}</span>
+                <b>+ {formatPrice(transferFee)}</b>
+              </div>
+              <div className="price-total">
+                <span>{t("formStep.totalLabel")}</span>
+                <b>{formatPrice(sellerPrice + transferFee)}</b>
+              </div>
+            </div>
+          )}
+
           <div className="field">
             <label>{t("formStep.descriptionLabel")}</label>
             <textarea
@@ -321,7 +419,13 @@ export default function NewListingClient() {
             />
           </div>
 
-          <button className="btn btn-accent" type="submit" disabled={loading}>
+          {blockReason && verdict?.ok && <div className="notice">{blockReason}</div>}
+
+          <button
+            className="btn btn-accent"
+            type="submit"
+            disabled={loading || blocked}
+          >
             {loading ? t("formStep.loading") : t("formStep.button")}
           </button>
         </form>
