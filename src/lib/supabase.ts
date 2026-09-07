@@ -54,6 +54,11 @@ export const TIER_EMOJI: Record<string, string> = {
   Обычный: "⚪",
 };
 
+/** Только число, без знака валюты — для диапазонов вида «50 000 – 190 000 ֏». */
+export function formatAmount(value: number): string {
+  return new Intl.NumberFormat("ru-RU").format(value);
+}
+
 /** Локаль форматирования зашита ru-RU намеренно — так же, как на исходном сайте. */
 export function formatPrice(value: number): string {
   return value === 0

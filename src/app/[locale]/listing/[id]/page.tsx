@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 
 import {
   OPERATOR_META,
+  formatAmount,
   formatPrice,
   supabase,
   type Listing,
@@ -192,7 +193,7 @@ export default async function ListingPage({
           {verdict.ok && (
             <p className="cost-note">
               {t("listing.cost.range", {
-                from: formatPrice(verdict.sellerMin),
+                from: formatAmount(verdict.sellerMin),
                 to: formatPrice(verdict.sellerMax),
               })}
             </p>
