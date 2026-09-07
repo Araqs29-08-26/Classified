@@ -409,7 +409,11 @@ export default function NewListingClient() {
               </div>
               <div>
                 <span>{t("formStep.feeLabel")}</span>
-                <b>+ {formatPrice(transferFee)}</b>
+                <b>
+                  {transferFee > 0
+                    ? `+ ${formatPrice(transferFee)}`
+                    : formatPrice(transferFee)}
+                </b>
               </div>
               <div className="price-total">
                 <span>{t("formStep.totalLabel")}</span>

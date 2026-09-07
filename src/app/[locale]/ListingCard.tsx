@@ -93,7 +93,8 @@ export default function ListingCard({ item }: { item: ValuedListing }) {
         </div>
         <div>
           <span>{tCost("feeUnknownOperator")}</span>
-          <b>+ {formatPrice(item.fee)}</b>
+          {/* Плюс уместен только у ненулевого сбора: «+ Бесплатно» — бессмыслица. */}
+          <b>{item.fee > 0 ? `+ ${formatPrice(item.fee)}` : formatPrice(item.fee)}</b>
         </div>
         <div className="price-total">
           <span>{tCost("total")}</span>
