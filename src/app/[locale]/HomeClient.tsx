@@ -3,16 +3,17 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
+import { evaluateNumber, OPERATOR_CODE } from "@/lib/numberEngine";
 import {
   NUMBER_TYPES,
   OPERATORS,
   OPERATOR_META,
   TIERS,
   TIER_EMOJI,
-  formatPrice,
   type Listing,
 } from "@/lib/supabase";
+import ListingCard, { type ValuedListing } from "./ListingCard";
 
 type Props = {
   listings: Listing[];
@@ -76,7 +77,6 @@ export default function HomeClient({
   const t = useTranslations("home");
   const tTier = useTranslations("tiers");
   const tType = useTranslations("numberTypes");
-  const router = useRouter();
 
   const maxPrice = useMemo(
     () => Math.max(TIERS[0].price, ...listings.map((l) => l.price), 1),
@@ -134,9 +134,34 @@ export default function HomeClient({
     return counts;
   }, [listings]);
 
+  // Оценка для каждого объявления. Сохранённая при публикации важнее пересчитанной:
+  // объявление должно помнить, по какой версии движка его оценили.
+  const valued: ValuedListing[] = useMemo(
+    () =>
+      listings.map((l) => {
+        const v = evaluateNumber(l.phone_number, {
+          operator: OPERATOR_CODE[l.operator] ?? null,
+          monthsHeld: l.months_held ?? null,
+        });
+        const fee = v.ok ? v.transferFee : 0;
+        return {
+          listing: l,
+          index: l.beauty_index ?? (v.ok ? v.index : null),
+          patternCode: l.pattern_code ?? (v.ok ? v.patternCode : null),
+          patternParams: l.pattern_params ?? (v.ok ? v.patternParams : {}),
+          window: v.ok ? v.window : null,
+          patternFrom: v.ok ? v.patternFrom : null,
+          patternTo: v.ok ? v.patternTo : null,
+          fee,
+          total: l.price + fee,
+        };
+      }),
+    [listings]
+  );
+
   const visible = useMemo(() => {
-    const filtered = listings.filter(
-      (l) =>
+    const filtered = valued.filter(
+      ({ listing: l }) =>
         (!selectedOperators.length || selectedOperators.includes(l.operator)) &&
         (!selectedTiers.length || selectedTiers.includes(l.status_tier)) &&
         (!selectedTypes.length || selectedTypes.includes(l.number_type)) &&
@@ -145,14 +170,16 @@ export default function HomeClient({
         (!mask || matchesMask(l.phone_number, mask))
     );
 
-    if (sort === "price_asc") return [...filtered].sort((a, b) => a.price - b.price);
-    if (sort === "price_desc") return [...filtered].sort((a, b) => b.price - a.price);
-    return [...filtered].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-  }, [listings, selectedOperators, selectedTiers, selectedTypes, sort, mask, priceRange]);
+    const by = (rank: (x: ValuedListing) => number) =>
+      [...filtered].sort((a, b) => rank(a) - rank(b));
 
-  const open = (id: string) => router.push(`/listing/${id}`);
+    if (sort === "price_asc") return by((x) => x.listing.price);
+    if (sort === "price_desc") return by((x) => -x.listing.price);
+    if (sort === "index_desc") return by((x) => -(x.index ?? -1));
+    if (sort === "total_asc") return by((x) => x.total);
+    if (sort === "total_desc") return by((x) => -x.total);
+    return by((x) => -new Date(x.listing.created_at).getTime());
+  }, [valued, selectedOperators, selectedTiers, selectedTypes, sort, mask, priceRange]);
 
   return (
     <>
@@ -299,8 +326,11 @@ export default function HomeClient({
           <div className="filter-group-label">{t("filters.sortLabel")}</div>
           <select value={sort} onChange={(e) => setSort(e.target.value)}>
             <option value="">{t("filters.sortNewest")}</option>
+            <option value="index_desc">{t("filters.sortIndex")}</option>
             <option value="price_asc">{t("filters.sortPriceAsc")}</option>
             <option value="price_desc">{t("filters.sortPriceDesc")}</option>
+            <option value="total_asc">{t("filters.sortTotalAsc")}</option>
+            <option value="total_desc">{t("filters.sortTotalDesc")}</option>
           </select>
         </div>
 
@@ -347,66 +377,10 @@ export default function HomeClient({
       )}
 
       {visible.length > 0 && (
-        <div className="listings-table-wrap" style={{ marginTop: 20 }}>
-          <table className="listings-table">
-            <thead>
-              <tr>
-                <th>{t("table.number")}</th>
-                <th>{t("table.status")}</th>
-                <th className="col-hide-sm">{t("table.operator")}</th>
-                <th className="col-hide-sm">{t("table.type")}</th>
-                <th className="col-right">{t("table.price")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((l) => (
-                <tr
-                  key={l.id}
-                  className="listing-row"
-                  tabIndex={0}
-                  onClick={(e) => {
-                    if (!(e.target as HTMLElement).closest("a")) open(l.id);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") open(l.id);
-                  }}
-                >
-                  <td className="cell-number">
-                    <Link href={`/listing/${l.id}`} className="mono">
-                      {l.phone_number}
-                    </Link>
-                    {l.sms_verified && (
-                      <span className="verified-mark" title={t("verified")}>
-                        ✓
-                      </span>
-                    )}
-                    <span className="cell-number-sub col-show-sm">
-                      <OperatorBadge op={l.operator} small />
-                      {l.operator} · {tType(l.number_type)}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span className={`tier-badge tier-${l.status_tier}`}>
-                      <span aria-hidden="true">{TIER_EMOJI[l.status_tier]}</span>{" "}
-                      {tTier(l.status_tier)}
-                    </span>
-                  </td>
-
-                  <td className="cell-muted col-hide-sm">
-                    <OperatorBadge op={l.operator} small />
-                  </td>
-
-                  <td className="cell-muted col-hide-sm">
-                    {tType(l.number_type)}
-                    {l.region ? ` · ${l.region}` : ""}
-                  </td>
-
-                  <td className="cell-price col-right">{formatPrice(l.price)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="listing-cards">
+          {visible.map((item) => (
+            <ListingCard key={item.listing.id} item={item} />
+          ))}
         </div>
       )}
     </>

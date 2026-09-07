@@ -15,7 +15,7 @@ import {
   OPERATOR_CODE,
 } from "@/lib/numberEngine";
 import ContactReveal from "./ContactReveal";
-import PatternNumber from "./PatternNumber";
+import PatternNumber from "../../PatternNumber";
 
 export const dynamic = "force-dynamic";
 

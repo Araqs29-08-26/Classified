@@ -31,7 +31,11 @@
       "priceLabel": "Price, ֏",
       "sortLabel": "Sort",
       "priceFrom": "From",
-      "priceTo": "To"
+      "priceTo": "To",
+      "sortIndex": "Most beautiful first",
+      "sortTotalAsc": "Total cost: low to high",
+      "sortTotalDesc": "Total cost: high to low",
+      "indexShort": "index"
     },
     "table": {
       "number": "Number",

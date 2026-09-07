@@ -187,6 +187,14 @@ export default function NewListingClient() {
       // Статус берём у движка, а не из выбора продавца: иначе обычный номер
       // можно было бы опубликовать под чужим статусом.
       status_tier: verdict.status,
+      // Оценку сохраняем целиком и с версией движка: движок будет меняться,
+      // а объявление должно помнить, чем и когда его оценили.
+      months_held: monthsHeld,
+      beauty_index: verdict.index,
+      pattern_code: verdict.patternCode,
+      pattern_params: verdict.patternParams,
+      engine_version: verdict.version,
+      evaluated_at: new Date().toISOString(),
       description: form.description || null,
       // отметка «подтверждено» ставится, только если номер объявления совпал
       // с номером, подтверждённым по SMS на первом шаге

@@ -31,7 +31,11 @@
       "priceLabel": "Գին, ֏",
       "sortLabel": "Դասավորել",
       "priceFrom": "Սկսած",
-      "priceTo": "Մինչև"
+      "priceTo": "Մինչև",
+      "sortIndex": "Սկզբում ավելի գեղեցիկը",
+      "sortTotalAsc": "Ընդհանուր արժեքը՝ էժանից",
+      "sortTotalDesc": "Ընդհանուր արժեքը՝ թանկից",
+      "indexShort": "ինդեքս"
     },
     "table": {
       "number": "Համար",

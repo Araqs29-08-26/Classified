@@ -31,7 +31,11 @@
       "priceLabel": "Цена, ֏",
       "sortLabel": "Сортировка",
       "priceFrom": "От",
-      "priceTo": "До"
+      "priceTo": "До",
+      "sortIndex": "Сначала красивее",
+      "sortTotalAsc": "Полная стоимость: дешевле",
+      "sortTotalDesc": "Полная стоимость: дороже",
+      "indexShort": "индекс"
     },
     "table": {
       "number": "Номер",

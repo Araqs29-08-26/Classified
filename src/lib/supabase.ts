@@ -80,6 +80,13 @@ export type Listing = {
   created_at: string;
   updated_at: string;
   number_type: string;
+  /* --- оценка движка на момент публикации (Задача 9г) --- */
+  months_held: number | null;
+  beauty_index: number | null;
+  pattern_code: string | null;
+  pattern_params: Record<string, string | number> | null;
+  engine_version: string | null;
+  evaluated_at: string | null;
 };
 
 export type Profile = {
