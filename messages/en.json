@@ -1,0 +1,258 @@
+{
+  "nav": {
+    "brand": "Araqs",
+    "buy": "Buy a number",
+    "postAd": "+ List a number",
+    "sell": "Sell a number",
+    "transfer": "Transfer",
+    "rules": "Listing rules",
+    "support": "Support"
+  },
+  "home": {
+    "eyebrow": "Araqs · beta",
+    "title": "Armenia's beautiful phone numbers, in one place",
+    "subtitle": "Sellers list numbers for free, buyers find a number and contact them directly. Payment and number transfer happen outside the platform, between you and the seller.",
+    "stats": "Showing {count} listings",
+    "warningBanner": "Attention! A phone number can only be re-registered at an official mobile operator office, with both the current and the new subscriber present along with their passports. The operator may charge a fee for the transfer, and its amount can depend on the number's category.",
+    "filters": {
+      "allOperators": "All operators",
+      "allTiers": "All tiers",
+      "sortNewest": "Newest first",
+      "sortPriceAsc": "Price: low to high",
+      "sortPriceDesc": "Price: high to low",
+      "allTypes": "All number types",
+      "apply": "Apply",
+      "maskLabel": "Search by digits",
+      "maskHint": "Fill in the digits you know in their positions, leave the rest blank",
+      "maskClear": "Clear",
+      "operatorLabel": "Operator",
+      "statusLabel": "Status",
+      "typeLabel": "Number type",
+      "priceLabel": "Price, ֏",
+      "sortLabel": "Sort",
+      "priceFrom": "From",
+      "priceTo": "To"
+    },
+    "table": {
+      "number": "Number",
+      "status": "Status",
+      "operator": "Operator",
+      "type": "Type",
+      "price": "Price"
+    },
+    "empty": {
+      "title": "No listings yet",
+      "subtitle": "Be the first — list a number for free.",
+      "cta": "List a number"
+    },
+    "emptyFiltered": {
+      "title": "No listings match your search",
+      "subtitle": "Try adjusting the filters or the digit search."
+    },
+    "error": {
+      "title": "Couldn't load listings"
+    },
+    "verified": "✓ number verified"
+  },
+  "listing": {
+    "verified": "✓ ownership verified by SMS",
+    "contact": {
+      "prompt": "Tap “Contact” to see the seller's phone and messenger.",
+      "button": "Contact",
+      "phoneLabel": "Seller's phone:",
+      "whatsapp": "Message on WhatsApp",
+      "telegram": "Message on Telegram",
+      "noPhone": "The seller hasn't provided a contact phone yet."
+    }
+  },
+  "newListing": {
+    "title": "List a number",
+    "subtitle": "Listing is free up to and including the “Gold” tier. Ownership is verified by an SMS code sent to that number.",
+    "autofillNotice": "The fields below were filled in automatically from your valuation — review and adjust the operator, tier, and price before publishing if needed.",
+    "phoneStep": {
+      "label": "Your phone number (for sign-in and verification)",
+      "placeholder": "+374XXXXXXXX",
+      "button": "Send SMS code",
+      "loading": "Sending..."
+    },
+    "codeStep": {
+      "label": "Code from SMS",
+      "placeholder": "123456",
+      "button": "Confirm",
+      "loading": "Checking..."
+    },
+    "formStep": {
+      "numberLabel": "Phone number for sale",
+      "numberPlaceholder": "+374 XX XXX XXX",
+      "operatorLabel": "Operator",
+      "operatorHint": "* Detected automatically from the number's prefix — assuming the number hasn't been ported to another operator.",
+      "numberVerifiedHint": "✓ Matches the number verified by SMS — the listing will get a \"verified\" badge.",
+      "numberNotVerifiedHint": "Different from the number verified by SMS in step one — the listing will still publish, just without the \"SMS verified\" badge.",
+      "typeLabel": "Number type",
+      "tierLabel": "Number tier",
+      "regionLabel": "Region (optional)",
+      "regionPlaceholder": "Yerevan",
+      "priceLabel": "Price, ֏",
+      "pricePlaceholder": "65000",
+      "descriptionLabel": "Description (optional)",
+      "button": "Publish listing",
+      "loading": "Publishing..."
+    },
+    "doneStep": {
+      "title": "Done!",
+      "subtitle": "Your listing is live. Taking you to the homepage…"
+    },
+    "errors": {
+      "sendCode": "Couldn't send the SMS code. The SMS provider is likely not yet connected — that's a separate technical task.",
+      "wrongCode": "Wrong code:",
+      "sessionExpired": "Your session expired, please verify by SMS again.",
+      "saveFailed": "Couldn't save the listing:"
+    }
+  },
+  "sell": {
+    "title": "Value a number",
+    "subtitle": "Get a recommended market price for your number, based on the same 8 tiers used across the marketplace.",
+    "inputLabel": "Your phone number",
+    "placeholder": "+374 XX XXX XXX",
+    "button": "Get valuation",
+    "result": {
+      "tierLabel": "Your number looks like it falls into:",
+      "priceLabel": "Recommended selling price:",
+      "reasonPrefix": "Why: ",
+      "cta": "List this number",
+      "disclaimer": "This is an automatic estimate based on the digit pattern — you set the final price yourself when listing.",
+      "operatorNote": "Operator (from the number's prefix): {operator} — double-check when listing if the number has been ported to another operator.",
+      "operatorUnknown": "Couldn't detect the operator from this number — you'll set it manually when listing."
+    },
+    "error": "Enter a valid phone number (at least 6 digits)."
+  },
+  "numberTypes": {
+    "Мобильный": "Mobile",
+    "Городской": "Landline",
+    "Короткий": "Short"
+  },
+  "tiers": {
+    "Премиум": "Premium",
+    "Элит": "Elite",
+    "Бриллиантовый": "Diamond",
+    "Платиновый": "Platinum",
+    "Золотой": "Gold",
+    "Серебряный": "Silver",
+    "Бронзовый": "Bronze",
+    "Обычный": "Standard"
+  },
+  "footer": "Araqs · marketplace for beautiful phone numbers · beta",
+  "languageSwitcher": {
+    "label": "Language"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "subtitle": "This page doesn't exist, or the listing has been taken down.",
+    "cta": "Go home"
+  },
+  "legal": {
+    "termsNav": "Terms of use",
+    "privacyNav": "Privacy",
+    "terms": {
+      "title": "Terms of use",
+      "updated": "In effect since Sep 1, 2026",
+      "intro": "Araqs (araqs.am) is a classifieds board for buying and selling beautiful phone numbers from Armenian carriers. By using the site you agree to the terms below.",
+      "sections": [
+        {
+          "title": "What Araqs is",
+          "body": "Araqs is a classifieds board, not a marketplace or a telecom operator. We don't buy or sell numbers ourselves, don't handle payment, and don't guarantee either side of a deal. All agreements about price, payment, and number transfer are made directly between the seller and the buyer, outside the platform."
+        },
+        {
+          "title": "Who can post a listing",
+          "body": "Anyone who has verified ownership of their phone number by SMS code can list a number for sale. You may only sell numbers you actually own, served by an Armenian carrier (Viva, Ucom, or Team Telecom)."
+        },
+        {
+          "title": "Listing accuracy",
+          "body": "The seller is responsible for the accuracy of the listing — price, tier, operator, region, and description. The operator and number type the site detects automatically from the number's prefix are a hint, not a guarantee: because of number portability (MNP) the actual operator can differ, and the seller must review and correct these fields before publishing if needed."
+        },
+        {
+          "title": "Payment and number transfer",
+          "body": "Araqs is not involved in payment, number transfer, or any other step of the deal between seller and buyer — all of that happens outside the platform. We recommend caution, and not sending money before meeting in person or otherwise verifying the other party."
+        },
+        {
+          "title": "Cost of listing",
+          "body": "During the beta period, listing is free for every tier, including premium ones. After the beta ends, a one-time listing fee may apply to some premium tiers — current terms will always be shown on this page and on the listing form."
+        },
+        {
+          "title": "Prohibited content",
+          "body": "You may not list numbers you don't own, post knowingly false information, abusive, fraudulent, or spam content, or anything that violates the laws of Armenia. Such listings are removed without notice, and access may be restricted."
+        },
+        {
+          "title": "Moderation and reports",
+          "body": "We may decline or remove any listing that raises concerns, without explanation. Any visitor can report a listing using the \"Report\" button — reports are reviewed manually."
+        },
+        {
+          "title": "Liability",
+          "body": "The site is provided \"as is\". Araqs does not guarantee uninterrupted service or the accuracy of listings posted by other users, and is not liable for losses arising from deals between users."
+        },
+        {
+          "title": "Changes to these terms",
+          "body": "We may update these terms from time to time. The current version is always available on this page; the last-updated date is shown at the top."
+        },
+        {
+          "title": "Contact",
+          "body": "For questions about these terms, contact us at support@araqs.am."
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "updated": "In effect since Sep 1, 2026",
+      "intro": "This page explains what data Araqs collects when you use the site, why, and who it's shared with.",
+      "sections": [
+        {
+          "title": "What we collect",
+          "body": "The phone number you provide for sign-in and SMS verification; listing details you enter yourself (the number for sale, operator, type, region, price, description); technical data about your visit (IP address, browser language) and a cookie that remembers your chosen language."
+        },
+        {
+          "title": "SMS verification",
+          "body": "To verify phone ownership we use Twilio Verify: the number you enter is sent to Twilio solely to deliver a one-time code, and isn't used by Araqs for anything else besides sign-in and (when it matches the listed number) the \"SMS verified\" badge."
+        },
+        {
+          "title": "Where data is stored",
+          "body": "Araqs' database is hosted by Supabase in the EU (Frankfurt). The site itself runs on Vercel's infrastructure. Both are independent technical providers processing data on Araqs' behalf."
+        },
+        {
+          "title": "Who can see your data",
+          "body": "A seller's phone number becomes visible to a buyer only after the buyer taps \"Contact\" on the listing page. We don't sell or share your personal data with third parties for advertising or other commercial purposes."
+        },
+        {
+          "title": "Cookies",
+          "body": "The site uses one functional cookie (NEXT_LOCALE) to remember your chosen interface language. There are currently no advertising or analytics cookies on the site."
+        },
+        {
+          "title": "Your rights",
+          "body": "You can ask us to delete your listing or account by contacting us below — we'll remove the relevant data, except where the law requires us to keep it."
+        },
+        {
+          "title": "Changes to this policy",
+          "body": "We may update this policy from time to time. The current version is always available on this page."
+        },
+        {
+          "title": "Contact",
+          "body": "For questions about how we handle personal data, contact us at support@araqs.am."
+        }
+      ]
+    }
+  },
+  "transfer": {
+    "title": "Number transfer",
+    "warning": "Attention! A phone number can only be re-registered at an official mobile operator office, with both the current and the new subscriber present along with their passports. The operator may charge a fee for the transfer, and its amount can depend on the number's category.",
+    "note": "Check the current terms and fee amount directly at your operator's office — the rules and rates are set by the operator and may change."
+  },
+  "rules": {
+    "title": "Listing rules",
+    "intro": "Detailed listing rules and pricing will be published here later.",
+    "termsNote": "Until separate listing rules are published, the site's general Terms of Use apply."
+  },
+  "support": {
+    "title": "Support",
+    "intro": "Have a question or a suggestion about the site? Write to the developers — we'll reply by email.",
+    "emailButton": "Send an email"
+  }
+}
