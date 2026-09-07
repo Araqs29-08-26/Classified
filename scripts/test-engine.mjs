@@ -76,13 +76,18 @@ console.log(`   5 месяцев → сбор ${short.transferFee} ֏`);
 console.log(`  ${feeVaries ? "✓" : "✗"} сбор зависит от срока владения\n`);
 
 // --- Проверка разбора букв вместо цифр -----------------------------------
+// С версии 1.2 буква внутри номера — это отказ, а не догадка. Раньше движок
+// подменял «О» на 0 и «I» на 1 и в итоге оценивал совсем другой номер.
 const withLetters = engine.evaluate("О9I 11 11 O1");
 const plain = engine.evaluate("091 11 11 01");
-const lettersOk =
-  withLetters.ok && plain.ok && withLetters.status === plain.status && withLetters.index === plain.index;
+const lettersOk = !withLetters.ok && plain.ok;
 
 console.log("Буквы вместо цифр («О9I 11 11 O1»):");
-console.log(`  ${lettersOk ? "✓" : "✗"} разбирается так же, как 091 11 11 01 (${withLetters.ok ? withLetters.status + ", индекс " + withLetters.index : "не распознан"})\n`);
+console.log(
+  `  ${lettersOk ? "✓" : "✗"} номер отклонён, а не разобран наугад` +
+    `${withLetters.ok ? ` — но получили ${withLetters.status}, индекс ${withLetters.index}` : ""}` +
+    `${plain.ok ? "" : " — и чистый 091 11 11 01 тоже не распознан"}\n`
+);
 
 // --- Проверка публикуемости ----------------------------------------------
 const ordinary = engine.evaluate("091 47 82 63");

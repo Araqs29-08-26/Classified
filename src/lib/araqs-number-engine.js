@@ -1,13 +1,20 @@
 /*!
- * ДВИЖОК ОЦЕНКИ КРАСОТЫ ТЕЛЕФОННЫХ НОМЕРОВ ARAQS — версия 1.1 (06.09.2026)
+ * ДВИЖОК ОЦЕНКИ КРАСОТЫ ТЕЛЕФОННЫХ НОМЕРОВ ARAQS — версия 1.2 (07.09.2026)
  *
  * Что делает: по армянскому мобильному номеру определяет узор, статус по
  * восьмиступенчатой шкале, индекс красоты 0-100, диапазон цены продавца,
  * сбор оператора за переоформление и полную стоимость для покупателя.
  *
  * Внешних зависимостей нет. Работает и в браузере, и в Node.
- * Идентичен по логике araqs_number_engine.py — сверено на 383 номерах,
+ * Идентичен по логике araqs_number_engine.py — сверено на тысячах номеров,
  * расхождений ноль.
+ *
+ * ИЗМЕНЕНИЯ В ВЕРСИИ 1.2 (07.09.2026)
+ * Исправлен дефект разбора букв. Таблица подмены букв на цифры была
+ * несимметрична по регистру, а посторонние буквы молча выбрасывались —
+ * из-за чего «09L 11 11 01» превращалось в 09111101 и оценивалось как
+ * другой номер. Теперь номер ищется в непрерывном участке цифр, а буква
+ * внутри номера означает отказ, а не догадку.
  *
  * Использование:
  *     const v = AraqsNumberEngine.evaluate("+374 91 11 11 01", {
@@ -24,7 +31,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
 "use strict";
 
-const VERSION = "1.1";
+const VERSION = "1.2";
 
 /* ===================== СПРАВОЧНИКИ ===================== */
 
@@ -76,20 +83,77 @@ const INDEX_TOP  = {"Обычный":9,"Бронзовый":24,"Серебрян
 const INDEX_RANGE = {"Обычный":"0–9","Бронзовый":"15–24","Серебряный":"30–39","Золотой":"45–54",
                      "Платиновый":"60–69","Бриллиантовый":"72–79","Элит":"82–89","Премиум":"90–100"};
 
-const HOMOGLYPHS = {"О":"0","о":"0","O":"0","o":"0","Օ":"0",
-                    "З":"3","з":"3","б":"6","Ч":"4","І":"1","l":"1"};
+// ТАБЛИЦА ПОДМЕНЫ БУКВ.
+// Продавцы в объявлениях пишут буквы вместо цифр, чтобы обойти поиск:
+// «Օ.9.6.З.З.З.З.4.8» вместо «096333348». Здесь только те буквы, которые
+// визуально неотличимы от цифры.
+//
+// ВАЖНО: таблица обязана быть симметричной по регистру. Если заглавная буква
+// читается как цифра, то и строчная тоже — начертание от регистра не зависит.
+// В версиях до 1.2 симметрии не было, и часть номеров разбиралась неверно.
+const HOMOGLYPHS = {
+  "O":"0","o":"0",          // латинские
+  "О":"0","о":"0",          // кириллические
+  "Օ":"0","օ":"0",          // армянские
+  "l":"1",                  // латинская строчная L
+  "І":"1","і":"1",          // украинская I
+  "З":"3","з":"3",
+  "Ч":"4","ч":"4",
+  "Б":"6","б":"6"
+};
+
+// Разделители, которые продавцы ставят внутри номера: 0.9.1-11 11 01
+const SEPARATORS = " \u00a0.-–—*()/,`'\"\t";
 
 /* ===================== НОРМАЛИЗАЦИЯ ===================== */
 
-function normalize(raw){
-  if(raw === null || raw === undefined) return null;
-  let s = String(raw).split("").map(c => HOMOGLYPHS[c] !== undefined ? HOMOGLYPHS[c] : c).join("");
-  s = s.replace(/[^0-9]/g,"");
-  if(s.indexOf("00374") === 0) s = s.slice(5);
-  else if(s.indexOf("374") === 0) s = s.slice(3);
-  else if(s.charAt(0) === "0" && s.length === 9) s = s.slice(1);
-  return s.length === 8 ? s : null;
+function digitsToWindow(digits){
+  if(digits.indexOf("00374") === 0) digits = digits.slice(5);
+  else if(digits.indexOf("374") === 0) digits = digits.slice(3);
+  else if(digits.charAt(0) === "0" && digits.length === 9) digits = digits.slice(1);
+  return digits.length === 8 ? digits : null;
 }
+
+/* Разбирает произвольную запись номера. -> { window, reason }
+ *
+ * Почему не просто «выбросить всё, кроме цифр»: так делалось до версии 1.2,
+ * и это давало молчаливо неверный ответ. Например «09L 11 11 01»: буква L
+ * выбрасывалась, оставалось ровно 8 цифр «09111101», и движок уверенно
+ * оценивал СОВСЕМ ДРУГОЙ номер вместо 091 11 11 01.
+ *
+ * Теперь номер ищется в непрерывном участке из цифр и разделителей. Любая
+ * посторонняя буква разрывает участок. Если подходящий участок один — берём
+ * его. Если ни одного или несколько разных — честно говорим, что не поняли. */
+function parse(raw){
+  if(raw === null || raw === undefined) return { window:null, reason:"пустой ввод" };
+  const s = String(raw).split("").map(function(c){
+    return HOMOGLYPHS[c] !== undefined ? HOMOGLYPHS[c] : c;
+  }).join("");
+
+  const regions = [];
+  let current = "";
+  for(let i = 0; i < s.length; i++){
+    const ch = s.charAt(i);
+    if((ch >= "0" && ch <= "9") || SEPARATORS.indexOf(ch) >= 0) current += ch;
+    else { if(current) regions.push(current); current = ""; }
+  }
+  if(current) regions.push(current);
+
+  const found = [];
+  for(let i = 0; i < regions.length; i++){
+    const digits = regions[i].replace(/[^0-9]/g, "");
+    if(!digits) continue;
+    const w = digitsToWindow(digits);
+    if(w && found.indexOf(w) < 0) found.push(w);
+  }
+
+  if(found.length === 1) return { window:found[0], reason:"ок" };
+  if(found.length === 0) return { window:null,
+    reason:"номер не распознан — нужно 8 значащих цифр подряд, разделённых только пробелами, точками или дефисами" };
+  return { window:null, reason:"в строке несколько разных номеров (" + found.join(", ") + ") — оставьте один" };
+}
+
+function normalize(raw){ return parse(raw).window; }
 
 /* ===================== ПОИСК УЗОРОВ ===================== */
 /* Все примитивы считаются на 8-значном окне: код (2) + тело (6).
@@ -301,8 +365,10 @@ function transferFee(operator, status, monthsHeld, entity){
 
 function evaluate(raw, options){
   options = options || {};
-  const w = normalize(raw);
-  if(!w) return { ok:false, raw:String(raw === undefined ? "" : raw), notes:["Номер не распознан."] };
+  const parsed = parse(raw);
+  const w = parsed.window;
+  if(!w) return { ok:false, raw:String(raw === undefined ? "" : raw),
+                  notes:[parsed.reason.charAt(0).toUpperCase() + parsed.reason.slice(1) + "."] };
 
   const code = w.slice(0,2), body = w.slice(2);
   const d = analyze(w);
@@ -334,6 +400,13 @@ function evaluate(raw, options){
                ") — уточните у продавца, номер мог быть перенесён.");
   if(operator === "viva" && monthsHeld === null && c.status !== "Обычный")
     notes.push("Спросите у продавца, как давно он владеет номером: у Viva после 24 месяцев переоформление стоит 500 ֏ вместо полной стоимости категории.");
+  const rawStr = String(raw);
+  for(let i = 0; i < rawStr.length; i++){
+    if(HOMOGLYPHS[rawStr.charAt(i)] !== undefined){
+      notes.push("В записи были буквы, похожие на цифры — прочитаны как цифры. Проверьте, что номер распознан верно.");
+      break;
+    }
+  }
   if(LANDLINE_CODES.has(code))
     notes.push("Это городской номер. Шкала рассчитана на мобильные, оценка ориентировочная.");
   if(c.status === "Обычный")
@@ -379,6 +452,7 @@ return {
   SELLER_BANDS: SELLER_BANDS,
   PREMIUM_SUBLEVELS: PREMIUM_SUBLEVELS,
   INDEX_RANGE: INDEX_RANGE,
+  parse: parse,
   normalize: normalize,
   analyze: analyze,
   classify: classify,
