@@ -163,7 +163,7 @@
       "subtitle": "Your listing is live. Taking you to the homepage…"
     },
     "errors": {
-      "sendCode": "Couldn't send the SMS code. The SMS provider is likely not yet connected — that's a separate technical task.",
+      "sendCode": "Couldn't send the SMS code. Check the number and try again.",
       "wrongCode": "Wrong code:",
       "sessionExpired": "Your session expired, please verify by SMS again.",
       "saveFailed": "Couldn't save the listing:",
