@@ -85,7 +85,12 @@
       "ladder": "Ladder"
     },
     "found": "Found {count, plural, one {# number} other {# numbers}}",
-    "view": "View"
+    "view": "View",
+    "promo": {
+      "top": "Promoted",
+      "highlight": "Highlighted",
+      "urgent": "Urgent"
+    }
   },
   "listing": {
     "verified": "✓ ownership verified by SMS",

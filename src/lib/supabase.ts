@@ -94,6 +94,10 @@ export type Listing = {
   pattern_params: Record<string, string | number> | null;
   engine_version: string | null;
   evaluated_at: string | null;
+  /* --- платное продвижение (Задача 14) --- */
+  promo_kind: "top" | "highlight" | "urgent" | null;
+  promo_until: string | null;
+  promo_paid_at: string | null;
 };
 
 export type Profile = {

@@ -2085,3 +2085,44 @@ textarea:focus {
   font-size:12.5px;
   color:var(--faint)
 }
+
+
+/* --- платное продвижение объявления --- */
+.promo-badge {
+  align-self:flex-start;
+  padding:3px 10px;
+  border-radius:999px;
+  font-size:11.5px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.03em
+}
+
+.promo-badge-top {
+  background:var(--accent);
+  color:#fff
+}
+
+.promo-badge-highlight {
+  background:var(--accent-2-soft);
+  color:var(--accent-2)
+}
+
+.promo-badge-urgent {
+  background:var(--warn-soft);
+  color:var(--warn)
+}
+
+/* Выделение — заметная рамка, но без крика: список должен остаться читаемым. */
+.listing-card.promo-highlight {
+  border-color:var(--accent-2);
+  box-shadow:0 0 0 1px var(--accent-2-soft),var(--shadow)
+}
+
+.listing-card.promo-urgent {
+  border-color:var(--warn)
+}
+
+.listing-card.promo-top {
+  border-color:var(--accent)
+}

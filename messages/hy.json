@@ -85,7 +85,12 @@
       "ladder": "Սանդուղք"
     },
     "found": "Գտնվել է {count, plural, one {# համար} other {# համար}}",
-    "view": "Դիտել"
+    "view": "Դիտել",
+    "promo": {
+      "top": "Վերևում",
+      "highlight": "Ընդգծված",
+      "urgent": "Շտապ"
+    }
   },
   "listing": {
     "verified": "✓ համարի սեփականությունը հաստատված է SMS-ով",

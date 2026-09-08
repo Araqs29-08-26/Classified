@@ -13,7 +13,7 @@ import {
   TIER_EMOJI,
   type Listing,
 } from "@/lib/supabase";
-import ListingCard, { type ValuedListing } from "./ListingCard";
+import ListingCard, { activePromo, type ValuedListing } from "./ListingCard";
 import DigitSearch, { EMPTY_MASK, matchesDigits } from "./DigitSearch";
 
 type Props = {
@@ -255,8 +255,16 @@ export default function HomeClient({
             presetPrefixes.some((prefix) => patternCode.startsWith(prefix))))
     );
 
+    // Продвинутые объявления идут первыми при ЛЮБОЙ сортировке — за это и платят.
+    // Внутри своей группы они упорядочиваются наравне со всеми, поэтому оплата
+    // поднимает объявление, но не ломает выбранный человеком порядок.
+    const promoted = (x: ValuedListing) =>
+      activePromo(x.listing) === "top" ? 0 : 1;
+
     const by = (rank: (x: ValuedListing) => number) =>
-      [...filtered].sort((a, b) => rank(a) - rank(b));
+      [...filtered].sort(
+        (a, b) => promoted(a) - promoted(b) || rank(a) - rank(b)
+      );
 
     if (sort === "price_asc") return by((x) => x.listing.price);
     if (sort === "price_desc") return by((x) => -x.listing.price);

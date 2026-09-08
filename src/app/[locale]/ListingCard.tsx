@@ -20,6 +20,18 @@ export type ValuedListing = {
   total: number;
 };
 
+/**
+ * Действующее продвижение объявления либо ничего.
+ *
+ * Продвижение живёт до срока: истёкшее просто перестаёт показываться,
+ * запись при этом сохраняется — по ней видно, что и когда покупали.
+ */
+export function activePromo(listing: Listing): Listing["promo_kind"] {
+  if (!listing.promo_kind || !listing.promo_until) return null;
+  const until = new Date(listing.promo_until).getTime();
+  return until > Date.now() ? listing.promo_kind : null;
+}
+
 export default function ListingCard({ item }: { item: ValuedListing }) {
   const t = useTranslations("home");
   const tTier = useTranslations("tiers");
@@ -29,9 +41,13 @@ export default function ListingCard({ item }: { item: ValuedListing }) {
 
   const l = item.listing;
   const logo = OPERATOR_META[l.operator]?.logo;
+  const promo = activePromo(l);
 
   return (
-    <Link href={`/listing/${l.id}`} className="listing-card">
+    <Link
+      href={`/listing/${l.id}`}
+      className={"listing-card" + (promo ? ` promo promo-${promo}` : "")}
+    >
       <div className="listing-card-main">
         <div className="listing-card-number">
           {item.window ? (
@@ -47,6 +63,12 @@ export default function ListingCard({ item }: { item: ValuedListing }) {
             <span className="verified-mark">{t("verified")}</span>
           )}
         </div>
+
+        {promo && (
+          <span className={`promo-badge promo-badge-${promo}`}>
+            {t(`promo.${promo}`)}
+          </span>
+        )}
 
         <div className="listing-card-tier">
           <span className={`tier-badge tier-${l.status_tier}`}>
