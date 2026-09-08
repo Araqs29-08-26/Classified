@@ -56,7 +56,21 @@
     "error": {
       "title": "Couldn't load listings"
     },
-    "verified": "✓ number verified"
+    "verified": "✓ number verified",
+    "searchTitle": "Find a number by your digits",
+    "searchSubtitle": "Type the digits you want to see in the number. Leave the rest blank — we'll find everything that fits.",
+    "cellHint": "An empty cell means any digit in that position",
+    "cellAria": "Digit {position} of 8",
+    "presetsLabel": "Ready-made patterns",
+    "counters": "{count, plural, one {# listing} other {# listings}}",
+    "operatorsCount": "{count, plural, one {# operator} other {# operators}}",
+    "presets": {
+      "mirror": "Mirrored",
+      "triple": "Three the same",
+      "pairRepeat": "Repeated pair",
+      "round": "Round",
+      "ladder": "Ladder"
+    }
   },
   "listing": {
     "verified": "✓ ownership verified by SMS",

@@ -14,6 +14,7 @@ import {
   type Listing,
 } from "@/lib/supabase";
 import ListingCard, { type ValuedListing } from "./ListingCard";
+import DigitSearch, { EMPTY_MASK, matchesDigits } from "./DigitSearch";
 
 type Props = {
   listings: Listing[];
@@ -44,25 +45,16 @@ function OperatorBadge({ op, small }: { op: string; small?: boolean }) {
   );
 }
 
-/**
- * Маска выравнивается по ПРАВОМУ краю номера: сравниваются последние N цифр,
- * где N — длина маски. Подстановочные символы — «_» и «*» (фактически любой
- * нецифровой символ занимает позицию, но ничего не проверяет).
- */
-function matchesMask(phoneNumber: string, mask: string): boolean {
-  const digits = phoneNumber.replace(/\D/g, "");
-  const m = mask.trim();
-  if (!m) return true;
-  if (digits.length < m.length) return false;
 
-  const tail = digits.slice(-m.length);
-  for (let i = 0; i < m.length; i++) {
-    const ch = m[i];
-    if (ch !== "_" && ch !== "*" && /\d/.test(ch) && ch !== tail[i]) return false;
-  }
-  return true;
-}
 
+/** Готовые узоры: каждый — семейство кодов, которые возвращает движок. */
+const PRESETS = [
+  { id: "mirror", prefixes: ["pal."] },
+  { id: "triple", prefixes: ["run.3", "run.4", "run.5", "run.6"] },
+  { id: "pairRepeat", prefixes: ["block.pair.", "pairs."] },
+  { id: "round", prefixes: ["zeros.tail."] },
+  { id: "ladder", prefixes: ["seq."] },
+] as const;
 const splitParam = (value?: string) =>
   value ? value.split(",").filter(Boolean) : [];
 
@@ -94,6 +86,7 @@ export default function HomeClient({
   );
   const [sort, setSort] = useState<string>(initialSort);
   const [mask, setMask] = useState<string>(initialMask);
+  const [preset, setPreset] = useState<string>("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
 
   const toggle = (
@@ -113,7 +106,8 @@ export default function HomeClient({
     selectedOperators.length > 0 ||
     selectedTiers.length > 0 ||
     selectedTypes.length > 0 ||
-    !!mask ||
+    /\d/.test(mask) ||
+    !!preset ||
     priceRange[0] > 0 ||
     priceRange[1] < maxPrice;
 
@@ -122,7 +116,8 @@ export default function HomeClient({
     setSelectedTiers([]);
     setSelectedTypes([]);
     setSort("");
-    setMask("");
+    setMask(EMPTY_MASK);
+    setPreset("");
     setPriceRange([0, maxPrice]);
   }
 
@@ -159,15 +154,20 @@ export default function HomeClient({
     [listings]
   );
 
+  const presetPrefixes = PRESETS.find((p) => p.id === preset)?.prefixes;
+
   const visible = useMemo(() => {
     const filtered = valued.filter(
-      ({ listing: l }) =>
+      ({ listing: l, patternCode }) =>
         (!selectedOperators.length || selectedOperators.includes(l.operator)) &&
         (!selectedTiers.length || selectedTiers.includes(l.status_tier)) &&
         (!selectedTypes.length || selectedTypes.includes(l.number_type)) &&
         !(l.price < priceRange[0]) &&
         !(l.price > priceRange[1]) &&
-        (!mask || matchesMask(l.phone_number, mask))
+        (!/\d/.test(mask) || matchesDigits(l.phone_number, mask)) &&
+        (!presetPrefixes ||
+          (patternCode !== null &&
+            presetPrefixes.some((prefix) => patternCode.startsWith(prefix))))
     );
 
     const by = (rank: (x: ValuedListing) => number) =>
@@ -179,17 +179,47 @@ export default function HomeClient({
     if (sort === "total_asc") return by((x) => x.total);
     if (sort === "total_desc") return by((x) => -x.total);
     return by((x) => -new Date(x.listing.created_at).getTime());
-  }, [valued, selectedOperators, selectedTiers, selectedTypes, sort, mask, priceRange]);
+  }, [
+    valued,
+    selectedOperators,
+    selectedTiers,
+    selectedTypes,
+    sort,
+    mask,
+    priceRange,
+    presetPrefixes,
+  ]);
 
   return (
     <>
-      <section className="hero">
-        <span className="eyebrow">{t("eyebrow")}</span>
-        <h1>{t("title")}</h1>
-        <p>{t("subtitle")}</p>
-        {visible.length > 0 && (
-          <p className="stat-pill">{t("stats", { count: visible.length })}</p>
-        )}
+      <section className="hero hero-search">
+        <div className="hero-search-text">
+          <span className="eyebrow">{t("eyebrow")}</span>
+          <h1>{t("searchTitle")}</h1>
+          <p>{t("searchSubtitle")}</p>
+        </div>
+
+        <div className="hero-counters">
+          <span>{t("counters", { count: listings.length })}</span>
+          <span>{t("operatorsCount", { count: OPERATORS.length })}</span>
+        </div>
+
+        <DigitSearch mask={mask} onChange={setMask} />
+
+        <div className="presets">
+          <span className="presets-label">{t("presetsLabel")}</span>
+          {PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              className={"chip" + (preset === p.id ? " active" : "")}
+              aria-pressed={preset === p.id}
+              onClick={() => setPreset(preset === p.id ? "" : p.id)}
+            >
+              {t(`presets.${p.id}`)}
+            </button>
+          ))}
+        </div>
       </section>
 
       <div className="warning-banner">
@@ -334,17 +364,6 @@ export default function HomeClient({
           </select>
         </div>
 
-        <div className="filter-group">
-          <div className="filter-group-label">{t("filters.maskLabel")}</div>
-          <input
-            type="text"
-            className="mono"
-            value={mask}
-            placeholder={t("filters.maskLabel")}
-            onChange={(e) => setMask(e.target.value)}
-          />
-          <p className="filters-hint">{t("filters.maskHint")}</p>
-        </div>
 
         {hasActiveFilters && (
           <button
