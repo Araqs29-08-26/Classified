@@ -6,13 +6,12 @@ import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
 import { detect } from "@/lib/phone";
-import { evaluateNumber, messageKey, type EngineResult } from "@/lib/numberEngine";
+import { evaluateNumber, type EngineResult } from "@/lib/numberEngine";
 import { TIER_EMOJI, formatPrice } from "@/lib/supabase";
 
 export default function SellClient() {
   const t = useTranslations("sell");
   const tTiers = useTranslations("tiers");
-  const tEngine = useTranslations("engine");
 
   // Номер берётся из адреса, если он там есть: иначе смена языка сбрасывала бы
   // и введённый номер, и показанную оценку.
@@ -43,7 +42,7 @@ export default function SellClient() {
   // непонятная запись, буква внутри номера или несколько номеров в строке.
   const error =
     result && !result.ok
-      ? tEngine(messageKey(result.errorCode), result.errorParams)
+      ? result.error
       : null;
 
   const ctaHref =
@@ -94,7 +93,7 @@ export default function SellClient() {
 
           <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 10 }}>
             {t("result.reasonPrefix")}
-            {tEngine(messageKey(result.patternCode), result.patternParams)}
+            {result.pattern}
           </p>
 
           {detected && (

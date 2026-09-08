@@ -9,11 +9,7 @@ import {
   supabase,
   type Listing,
 } from "@/lib/supabase";
-import {
-  evaluateNumber,
-  messageKey,
-  OPERATOR_CODE,
-} from "@/lib/numberEngine";
+import { evaluateNumber, OPERATOR_CODE } from "@/lib/numberEngine";
 import ContactReveal from "./ContactReveal";
 import PatternNumber from "../../PatternNumber";
 import ReportButton from "./ReportButton";
@@ -69,6 +65,8 @@ export default async function ListingPage({
   // движок вернёт осторожный сбор — полную стоимость категории — и сам об этом скажет.
   const verdict = evaluateNumber(listing.phone_number, {
     operator: OPERATOR_CODE[listing.operator] ?? null,
+    heldOverLimit: listing.held_over_limit,
+    locale: params.locale,
   });
 
   const tier = verdict.ok ? verdict.status : listing.status_tier;
@@ -143,12 +141,10 @@ export default async function ListingPage({
 
               <ul className="why-list">
                 <li>
-                  <b>{t(`engine.${messageKey(verdict.patternCode)}`, verdict.patternParams)}</b>
+                  <b>{verdict.pattern}</b>
                 </li>
-                {verdict.noteCodes.map((note) => (
-                  <li key={note.code}>
-                    {t(`engine.${messageKey(note.code)}`, note.params)}
-                  </li>
+                {verdict.notes.map((note) => (
+                  <li key={note}>{note}</li>
                 ))}
               </ul>
             </div>
@@ -188,7 +184,7 @@ export default async function ListingPage({
 
           {verdict.ok && (
             <p className="cost-note">
-              {t(`engine.${messageKey(verdict.feeCode)}`, verdict.feeParams)}
+              {verdict.feeNote}
             </p>
           )}
 

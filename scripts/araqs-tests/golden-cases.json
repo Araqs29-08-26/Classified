@@ -1,0 +1,186 @@
+{
+  "_": "Эталонные случаи. Каждый проверяется вызовом evaluate(input) без опций: статус, код узора, индекс и границы цены должны совпасть. Числа зафиксированы движком версии 3.1 от 08.09.2026 — если они изменились, значит изменилась логика оценки, и это надо объяснить, а не просто обновить файл.",
+  "engineVersion": "3.1",
+  "cases": [
+    {
+      "input": "055 909090",
+      "expectStatus": "Премиум",
+      "why": "блок «90» трижды подряд, НЕ зеркало",
+      "expectPatternCode": "block.pair.x3",
+      "expectIndex": 93,
+      "expectSellerMin": 400000,
+      "expectSellerMax": 2500000
+    },
+    {
+      "input": "077 123456",
+      "expectStatus": "Премиум",
+      "why": "полная последовательность 6 цифр, НЕ «5 из 6»",
+      "expectPatternCode": "seq.6",
+      "expectIndex": 90,
+      "expectSellerMin": 1100000,
+      "expectSellerMax": 2500000
+    },
+    {
+      "input": "091 11 11 01",
+      "expectStatus": "Премиум",
+      "why": "пять единиц подряд с учётом кода оператора",
+      "expectPatternCode": "run.5",
+      "expectIndex": 100,
+      "expectSellerMin": 350000,
+      "expectSellerMax": 10000000
+    },
+    {
+      "input": "077 77 77 97",
+      "expectStatus": "Премиум",
+      "why": "шесть семёрок подряд с учётом кода",
+      "expectPatternCode": "run.6plus",
+      "expectIndex": 100,
+      "expectSellerMin": 1100000,
+      "expectSellerMax": 10000000
+    },
+    {
+      "input": "033 333030",
+      "expectStatus": "Премиум",
+      "why": "пять троек подряд с учётом кода",
+      "expectPatternCode": "run.5",
+      "expectIndex": 100,
+      "expectSellerMin": 350000,
+      "expectSellerMax": 10000000
+    },
+    {
+      "input": "099 06 66 66",
+      "expectStatus": "Премиум",
+      "why": "пять шестёрок подряд",
+      "expectPatternCode": "run.5",
+      "expectIndex": 96,
+      "expectSellerMin": 350000,
+      "expectSellerMax": 4000000
+    },
+    {
+      "input": "096 656669",
+      "expectStatus": "Золотой",
+      "why": "шестёрки есть, но блок только из трёх",
+      "expectPatternCode": "pal.5",
+      "expectIndex": 48,
+      "expectSellerMin": 60000,
+      "expectSellerMax": 380000
+    },
+    {
+      "input": "096 660067",
+      "expectStatus": "Золотой",
+      "why": "три шестёрки подряд с продолжением в код",
+      "expectPatternCode": "run.3.strong",
+      "expectIndex": 49,
+      "expectSellerMin": 60000,
+      "expectSellerMax": 380000
+    },
+    {
+      "input": "033 19 44 44",
+      "expectStatus": "Бриллиантовый",
+      "why": "четыре четвёрки в конце",
+      "expectPatternCode": "run.4.end",
+      "expectIndex": 74,
+      "expectSellerMin": 350000,
+      "expectSellerMax": 1100000
+    },
+    {
+      "input": "096 030000",
+      "expectStatus": "Премиум",
+      "why": "четыре нуля в конце",
+      "expectPatternCode": "zeros.tail.4plus",
+      "expectIndex": 100,
+      "expectSellerMin": 350000,
+      "expectSellerMax": 10000000
+    },
+    {
+      "input": "055 203-203",
+      "expectStatus": "Платиновый",
+      "why": "повтор тройки «203»",
+      "expectPatternCode": "block.triple.x2",
+      "expectIndex": 61,
+      "expectSellerMin": 150000,
+      "expectSellerMax": 500000
+    },
+    {
+      "input": "041 140041",
+      "expectStatus": "Элит",
+      "why": "зеркало 140041",
+      "expectPatternCode": "pal.6",
+      "expectIndex": 83,
+      "expectSellerMin": 400000,
+      "expectSellerMax": 1800000
+    },
+    {
+      "input": "033 36 36 11",
+      "expectStatus": "Золотой",
+      "why": "повтор пары «36»",
+      "expectPatternCode": "block.pair.x2",
+      "expectIndex": 49,
+      "expectSellerMin": 60000,
+      "expectSellerMax": 380000
+    },
+    {
+      "input": "091 47 82 63",
+      "expectStatus": "Обычный",
+      "why": "узора нет, объявление не публикуется",
+      "expectPatternCode": "none",
+      "expectIndex": 3,
+      "expectSellerMin": 0,
+      "expectSellerMax": 0
+    },
+    {
+      "input": "044 84 14 14",
+      "expectStatus": "Золотой",
+      "why": "узор читается С КОНЦА: пара 14-14, а не 41-41",
+      "expectPatternCode": "block.pair.x2",
+      "expectIndex": 49,
+      "expectSellerMin": 60000,
+      "expectSellerMax": 380000
+    },
+    {
+      "input": "044 55 66 77",
+      "expectStatus": "Премиум",
+      "why": "пары одинаковых цифр, идущие по порядку",
+      "expectPatternCode": "pairs.seq",
+      "expectIndex": 91,
+      "expectSellerMin": 400000,
+      "expectSellerMax": 2500000
+    },
+    {
+      "input": "055 25 45 65",
+      "expectStatus": "Золотой",
+      "why": "пятёрка через одну, четыре раза",
+      "expectPatternCode": "rhythm.4plus",
+      "expectIndex": 48,
+      "expectSellerMin": 60000,
+      "expectSellerMax": 380000
+    },
+    {
+      "input": "044 555550",
+      "expectStatus": "Премиум",
+      "why": "пять пятёрок подряд",
+      "expectPatternCode": "run.5",
+      "expectIndex": 95,
+      "expectSellerMin": 400000,
+      "expectSellerMax": 4000000
+    },
+    {
+      "input": "099 22 33 44",
+      "expectStatus": "Бриллиантовый",
+      "why": "четыре пары подряд, но цифры не по порядку",
+      "expectPatternCode": "pairs.4",
+      "expectIndex": 73,
+      "expectSellerMin": 350000,
+      "expectSellerMax": 1100000
+    },
+    {
+      "input": "055 22 33 41",
+      "expectStatus": "Платиновый",
+      "why": "три пары подряд, цифры не по порядку",
+      "expectPatternCode": "pairs.3",
+      "expectIndex": 60,
+      "expectSellerMin": 150000,
+      "expectSellerMax": 500000
+    }
+  ]
+}

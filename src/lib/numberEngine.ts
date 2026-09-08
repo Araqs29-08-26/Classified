@@ -1,90 +1,107 @@
 /**
- * Обёртка над движком оценки номеров (araqs-number-engine.js).
+ * Обёртка над модулем оценки номеров (src/lib/araqs).
  *
- * Движок написан на обычном JavaScript и одинаков для сайта и для Python-близнеца,
- * поэтому типы описаны здесь, а не в нём. Здесь же — единственное место, где код
- * от движка превращается в ключ словаря переводов.
+ * Модуль приходит готовым от разработчика движка и не переписывается: он
+ * одинаково работает в браузере, в Node и на сервере, у него нет зависимостей.
+ * Здесь только то, что нужно сайту: типы, выбор словаря по языку и удобный
+ * вызов.
+ *
+ * Тексты движок не содержит — он отдаёт коды, а строки берутся из его же
+ * словарей messages.<язык>.json. Поэтому статус, узор, пояснения и объяснение
+ * сбора приходят уже на нужном языке.
  */
-import engine from "./araqs-number-engine.js";
+import engine from "./araqs/araqs-number-engine.js";
+import ru from "./araqs/messages.ru.json";
+import hy from "./araqs/messages.hy.json";
+import en from "./araqs/messages.en.json";
 
-/** Что движок вернул: либо разобранный номер, либо отказ с кодом причины. */
-export type EngineResult = EngineOk | EngineFail;
+const DICTIONARIES: Record<string, Record<string, string>> = { ru, hy, en };
+
+export type Operator = "viva" | "team" | "ucom";
 
 export type EngineOk = {
   ok: true;
   version: string;
   /** Восемь значащих цифр номера. */
   window: string;
-  /** Русское название статуса — оно же ключ в разделе tiers словарей. */
+  /** Русское название статуса — оно же ключ в разделе tiers словарей сайта. */
   status: string;
   statusCode: string;
+  /** Готовое название статуса на языке запроса. */
+  statusName: string;
   sublevel: string | null;
   /** Индекс красоты, 0–100. */
   index: number;
-  /** Код найденного узора, например "run.5". Текст — в разделе engine словарей. */
+  indexRange: string;
   patternCode: string;
+  patternFamily: string;
   patternParams: Record<string, string | number>;
   /** Границы узора внутри window — включительные индексы, считая с нуля. */
   patternFrom: number | null;
   patternTo: number | null;
-  operator: "viva" | "team" | "ucom" | null;
+  /** Найденный узор словами. */
+  pattern: string;
+  operator: Operator | null;
   operatorFromCode: boolean;
-  /** Диапазон цены продавца. */
+  heldOverLimit: boolean | null;
+  entity: "individual" | "legal";
+  distinct: number;
+  /** Диапазон цены продавца: от прайса оператора до рыночного уровня. */
   sellerMin: number;
   sellerTypical: number;
   sellerMax: number;
   transferFee: number;
   feeCode: string;
-  feeParams: Record<string, string | number>;
+  /** Как посчитан сбор — словами. */
+  feeNote: string;
   totalMin: number;
   totalTypical: number;
   totalMax: number;
   publishable: boolean;
-  noteCodes: { code: string; params: Record<string, string | number> }[];
+  /** Пояснения словами, от нуля до шести. */
+  notes: string[];
 };
 
 export type EngineFail = {
   ok: false;
   version: string;
   errorCode: string;
-  errorParams: Record<string, string | number>;
+  /** Причина отказа словами. */
+  error: string;
 };
 
+export type EngineResult = EngineOk | EngineFail;
+
 export type EngineOptions = {
-  operator?: "viva" | "team" | "ucom" | null;
-  monthsHeld?: number | null;
+  operator?: Operator | null;
+  /** Владеет ли продавец номером дольше льготного срока. Спрашивается только у Viva. */
+  heldOverLimit?: boolean | null;
   entity?: "individual" | "legal";
+  /** Язык текстов в ответе. */
+  locale?: string;
 };
+
+export const ENGINE_VERSION: string = engine.VERSION;
 
 /** Диапазон индекса красоты для каждого статуса, например «90–100». */
 export const INDEX_RANGE: Record<string, string> = engine.INDEX_RANGE;
 
-export const ENGINE_VERSION: string = engine.VERSION;
-
 /**
- * Названия операторов на сайте → коды, которые понимает движок.
+ * Названия операторов на сайте → коды движка.
  *
  * «Других» здесь намеренно нет: их тарифов на переоформление мы не знаем.
- * Движок в этом случае считает по прайсу Viva и сам предупреждает об этом
- * строкой fee.unknownOperator — лучше честная оговорка, чем выдуманное число.
+ * Движок в этом случае считает по прайсу Viva и сам предупреждает об этом.
  */
-export const OPERATOR_CODE: Record<string, "viva" | "team" | "ucom"> = {
+export const OPERATOR_CODE: Record<string, Operator> = {
   Viva: "viva",
   Ucom: "ucom",
   "Team Telecom": "team",
 };
 
 export function evaluateNumber(input: string, options?: EngineOptions): EngineResult {
-  return engine.evaluate(input, options) as EngineResult;
-}
-
-/**
- * Код движка → ключ в разделе engine словарей.
- *
- * Точки заменяются на подчёркивания: система переводов считает точку вложенностью,
- * а среди кодов есть и "run.4", и "run.4.end" — один ключ не может быть
- * одновременно строкой и веткой.
- */
-export function messageKey(code: string): string {
-  return code.replace(/\./g, "_");
+  const { locale = "ru", ...rest } = options ?? {};
+  return engine.evaluate(input, {
+    ...rest,
+    messages: DICTIONARIES[locale] ?? DICTIONARIES.ru,
+  }) as EngineResult;
 }

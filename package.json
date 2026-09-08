@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:engine": "node scripts/test-engine.mjs",
-    "test:control": "node scripts/test-control-set.mjs"
+    "test:engine": "node scripts/araqs-tests/run-tests.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

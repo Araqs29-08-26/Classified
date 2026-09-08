@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
-import { messageKey } from "@/lib/numberEngine";
 import { OPERATOR_META, formatPrice, type Listing } from "@/lib/supabase";
 import PatternNumber from "./PatternNumber";
 
@@ -12,7 +11,8 @@ export type ValuedListing = {
   listing: Listing;
   index: number | null;
   patternCode: string | null;
-  patternParams: Record<string, string | number>;
+  /** Узор словами, уже на нужном языке. */
+  pattern: string | null;
   window: string | null;
   patternFrom: number | null;
   patternTo: number | null;
@@ -36,7 +36,6 @@ export default function ListingCard({ item }: { item: ValuedListing }) {
   const t = useTranslations("home");
   const tTier = useTranslations("tiers");
   const tType = useTranslations("numberTypes");
-  const tEngine = useTranslations("engine");
   const tCost = useTranslations("listing.cost");
 
   const l = item.listing;
@@ -74,9 +73,9 @@ export default function ListingCard({ item }: { item: ValuedListing }) {
           <span className={`tier-badge tier-${l.status_tier}`}>
             {tTier(l.status_tier)}
           </span>
-          {item.patternCode && (
+          {item.pattern && (
             <span className="listing-card-pattern">
-              {tEngine(messageKey(item.patternCode), item.patternParams)}
+              {item.pattern}
             </span>
           )}
         </div>

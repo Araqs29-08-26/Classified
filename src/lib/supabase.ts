@@ -88,7 +88,10 @@ export type Listing = {
   updated_at: string;
   number_type: string;
   /* --- оценка движка на момент публикации (Задача 9г) --- */
+  /** УСТАРЕЛО: точный срок владения, собранный формой до 08.09.2026. */
   months_held: number | null;
+  /** Владеет ли продавец дольше льготного срока. Спрашивается только у Viva. */
+  held_over_limit: boolean | null;
   beauty_index: number | null;
   pattern_code: string | null;
   pattern_params: Record<string, string | number> | null;

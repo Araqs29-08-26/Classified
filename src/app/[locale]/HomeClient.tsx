@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
 import { evaluateNumber, INDEX_RANGE, OPERATOR_CODE } from "@/lib/numberEngine";
@@ -74,6 +74,7 @@ export default function HomeClient({
   initialMask = "",
   initialPreset = "",
 }: Props) {
+  const locale = useLocale();
   const t = useTranslations("home");
   const tTier = useTranslations("tiers");
   const tType = useTranslations("numberTypes");
@@ -85,14 +86,15 @@ export default function HomeClient({
       listings.map((l) => {
         const v = evaluateNumber(l.phone_number, {
           operator: OPERATOR_CODE[l.operator] ?? null,
-          monthsHeld: l.months_held ?? null,
+          heldOverLimit: l.held_over_limit,
+          locale,
         });
         const fee = v.ok ? v.transferFee : 0;
         return {
           listing: l,
           index: l.beauty_index ?? (v.ok ? v.index : null),
           patternCode: l.pattern_code ?? (v.ok ? v.patternCode : null),
-          patternParams: l.pattern_params ?? (v.ok ? v.patternParams : {}),
+          pattern: v.ok ? v.pattern : null,
           window: v.ok ? v.window : null,
           patternFrom: v.ok ? v.patternFrom : null,
           patternTo: v.ok ? v.patternTo : null,

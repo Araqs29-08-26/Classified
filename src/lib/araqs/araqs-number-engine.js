@@ -1,5 +1,5 @@
 /*!
- * ДВИЖОК ОЦЕНКИ КРАСОТЫ ТЕЛЕФОННЫХ НОМЕРОВ ARAQS — версия 2.0 (07.09.2026)
+ * ДВИЖОК ОЦЕНКИ КРАСОТЫ ТЕЛЕФОННЫХ НОМЕРОВ ARAQS — версия 3.1 (08.09.2026)
  *
  * Что делает: по армянскому мобильному номеру определяет узор, статус по
  * восьмиступенчатой шкале, индекс красоты 0-100, диапазон цены продавца,
@@ -28,7 +28,8 @@
  * Использование:
  *     const v = AraqsNumberEngine.evaluate("+374 91 11 11 01", {
  *         operator: "team",     // "viva" | "team" | "ucom" | null (по коду)
- *         monthsHeld: 40,       // сколько месяцев продавец владеет номером
+ *         heldOverLimit: true,  // владеет ли номером дольше двух лет (Viva)
+ *         monthsHeld: 40,       // устаревшее: точное число месяцев
  *         entity: "individual", // "individual" | "legal"
  *         messages: dict        // необязательно: словарь, чтобы получить и текст
  *     });
@@ -39,7 +40,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
 "use strict";
 
-const VERSION = "2.0";
+const VERSION = "3.1";
 
 /* ===================== СПРАВОЧНИКИ ===================== */
 
@@ -83,21 +84,44 @@ const VIVA_FREE_AFTER_MONTHS = { individual: 24, legal: 6 };
 const UCOM_FLAT_STATUSES = new Set(["Бронзовый","Серебряный"]);
 const UCOM_FLAT_FEE = 1000, UCOM_SHARE = 0.5;
 
-// Диапазоны цены продавца: 25-й и 75-й процентили внутри статуса
-// по 385 объявлениям list.am (05.09.2026), сглаженные до монотонных.
-const SELLER_BANDS = {
-  "Обычный":[0,0,0], "Бронзовый":[15000,25000,40000], "Серебряный":[25000,50000,90000],
-  "Золотой":[50000,95000,190000], "Платиновый":[100000,200000,500000],
-  "Бриллиантовый":[250000,400000,800000], "Элит":[600000,1000000,1800000],
-  "Премиум":[1100000,1500000,2500000]
+/* ЦЕНА — ДИАПАЗОН, А НЕ ОДНО ЧИСЛО (версия 3.0).
+   Продавец сам выбирает цену внутри диапазона. Границы имеют разный смысл:
+     НИЖНЯЯ  — логика оператора: сколько стоит у оператора новый номер той же
+               категории. Ниже этой суммы продавать смысла нет.
+     ВЕРХНЯЯ — рыночная логика: 75-й процентиль запрашиваемых цен на list.am
+               внутри того же статуса (385 объявлений, выгрузка 05.09.2026).
+     РЕКОМЕНДАЦИЯ — точка внутри. Стоит на рыночной медиане статуса и
+               сдвигается индексом красоты. Именно здесь работают
+               повторяемость цифры и ритм: статус они не меняют.
+   Бронзовый p75 понижен со 100 000 до 80 000: в этом статусе всего 21
+   объявление, и сырое значение было выше, чем у Серебряного. */
+const MARKET_P75 = {
+  "Обычный":0, "Бронзовый":80000, "Серебряный":100000, "Золотой":380000,
+  "Платиновый":500000, "Бриллиантовый":1100000, "Элит":1800000, "Премиум":2900000
 };
-const PREMIUM_SUBLEVELS = {
-  P1:[1100000,1500000,2500000], P2:[2000000,3000000,6000000], P3:[4000000,8000000,25000000]
+const MARKET_MED = {
+  "Обычный":0, "Бронзовый":50000, "Серебряный":45000, "Золотой":105000,
+  "Платиновый":180000, "Бриллиантовый":300000, "Элит":1200000, "Премиум":1500000
 };
+/* Границы подуровней Премиума по индексу и их рыночные (медиана, потолок).
+   В версии 2.0 пороги 93/97 оставляли подуровень P1 пустым — на рынке
+   премиальные номера не опускаются ниже индекса 93. */
+const PREMIUM_SUBLEVEL_INDEX = [["P3",98],["P2",95],["P1",0]];
+const PREMIUM_SUBLEVEL_MARKET = {
+  P1:[1000000,2500000], P2:[1500000,4000000], P3:[3000000,10000000]
+};
+/* Насколько индекс двигает рекомендацию от рыночной медианы статуса. */
+const REC_SWING = 1.6;
 const INDEX_BASE = {"Обычный":3,"Бронзовый":15,"Серебряный":30,"Золотой":45,
                     "Платиновый":60,"Бриллиантовый":72,"Элит":82,"Премиум":90};
 const INDEX_TOP  = {"Обычный":9,"Бронзовый":24,"Серебряный":39,"Золотой":54,
                     "Платиновый":69,"Бриллиантовый":79,"Элит":89,"Премиум":100};
+/* Типичный индекс внутри статуса — медиана по 385 объявлениям list.am.
+   Полосы индекса шире, чем то, что встречается на рынке: почти все номера
+   статуса сидят у нижнего края. Отсчёт положения рекомендации идёт от
+   типичного индекса, иначе она у всех оказывается ниже рыночной медианы. */
+const INDEX_MID  = {"Обычный":3,"Бронзовый":16,"Серебряный":31,"Золотой":47,
+                    "Платиновый":62,"Бриллиантовый":75,"Элит":86,"Премиум":96};
 const INDEX_RANGE = {"Обычный":"0–9","Бронзовый":"15–24","Серебряный":"30–39","Золотой":"45–54",
                      "Платиновый":"60–69","Бриллиантовый":"72–79","Элит":"82–89","Премиум":"90–100"};
 
@@ -193,13 +217,16 @@ function bestRun(w){
   for(let n = 0; n < rs.length; n++){
     const d = rs[n][0], a = rs[n][1], b = rs[n][2];
     if(b < 2) continue;
-    if(b - a + 1 > best[0]) best = [b - a + 1, d, a, b];
+    const len = b - a + 1;
+    // При равной длине выигрывает БОЛЕЕ ПРАВЫЙ блок: номер читается
+    // и группируется с конца (0XX AB CD EF).
+    if(len > best[0] || (len === best[0] && b > best[3])) best = [len, d, a, b];
   }
   return best;
 }
 
 function bestBlock(w){
-  const n = w.length; let best = [0,0,-1,-1], span = 0;
+  const n = w.length; let best = [0,0,-1,-1], bestKey = null;
   for(let k = 2; k <= Math.floor(n/2); k++){
     for(let a = 0; a + 2*k <= n; a++){
       if(w.slice(a, a+k) !== w.slice(a+k, a+2*k)) continue;
@@ -207,7 +234,11 @@ function bestBlock(w){
       while(j + k <= n && w.slice(j, j+k) === w.slice(a, a+k)){ r++; j += k; }
       const b = a + k*r - 1;
       if(b < 2) continue;
-      if(k*r > span){ best = [k, r, a, b]; span = k*r; }
+      // Охват больше -> короче блок -> правее конец.
+      const key = [k*r, -k, b];
+      if(bestKey === null || key[0] > bestKey[0] ||
+         (key[0] === bestKey[0] && (key[1] > bestKey[1] ||
+         (key[1] === bestKey[1] && key[2] > bestKey[2])))){ best = [k, r, a, b]; bestKey = key; }
     }
   }
   return best;
@@ -243,9 +274,13 @@ function longestPalindrome(w, minLen){
   return best;
 }
 
+/* Подряд идущие пары одинаковых цифр: 66-44-33. Считаются только пары,
+   выровненные по естественной разбивке номера (0XX AB CD EF), то есть
+   начинающиеся с чётной позиции окна. Пара, «съехавшая» на одну цифру,
+   при записи номера не видна и красоты не создаёт. */
 function pairChain(w){
   let best = [0,-1,-1];
-  for(let a = 0; a < w.length - 1; a++){
+  for(let a = 0; a < w.length - 1; a += 2){
     let cnt = 0, j = a;
     while(j + 1 < w.length && w.charAt(j) === w.charAt(j+1)){ cnt++; j += 2; }
     if(cnt >= 2 && a + 2*cnt - 1 >= 2 && cnt > best[0]) best = [cnt, a, a + 2*cnt - 1];
@@ -255,10 +290,56 @@ function pairChain(w){
 
 function zerosTail(w){ return w.length - w.replace(/0+$/,"").length; }
 
+/* 44 55 66 77 — все четыре пары одинаковых цифр, и сами цифры идут подряд.
+   В выборке рынка (385 объявлений) таких номеров не встретилось ни одного,
+   поэтому оценка опирается не на цену, а на редкость. */
+function pairsFormSequence(w){
+  if(w.length !== 8) return false;
+  const parts = [w.slice(0,2), w.slice(2,4), w.slice(4,6), w.slice(6,8)];
+  for(let i = 0; i < 4; i++) if(parts[i].charAt(0) !== parts[i].charAt(1)) return false;
+  const ds = parts.map(function(p){ return +p.charAt(0); });
+  let asc = true, desc = true;
+  for(let i = 0; i < 3; i++){
+    if((((ds[i+1] - ds[i]) % 10) + 10) % 10 !== 1) asc = false;
+    if((((ds[i] - ds[i+1]) % 10) + 10) % 10 !== 1) desc = false;
+  }
+  return asc || desc;
+}
+
+/* Ритм: одна цифра стоит через одну — 5_5_5_5. -> [длина, цифра] */
+function rhythm(w){
+  let best = 0, digit = null;
+  const seen = {};
+  for(let i = 0; i < w.length; i++) seen[w.charAt(i)] = true;
+  for(const d in seen){
+    for(let start = 0; start < w.length; start++){
+      let k = 0, i = start;
+      while(i < w.length && w.charAt(i) === d){ k++; i += 2; }
+      if(k > best){ best = k; digit = d; }
+    }
+  }
+  return [best, digit];
+}
+
+function digitCounts(w){
+  const c = {};
+  for(let i = 0; i < w.length; i++) c[w.charAt(i)] = (c[w.charAt(i)] || 0) + 1;
+  const out = {};
+  Object.keys(c).sort().forEach(function(k){ out[k] = c[k]; });
+  return out;
+}
+
 function analyze(w){
   const r = bestRun(w), bl = bestBlock(w), sq = bestSeq(w),
         pl = longestPalindrome(w), pc = pairChain(w);
   const last = w.length - 1, zt = zerosTail(w);
+  const dc = digitCounts(w), rh = rhythm(w);
+  // При равном числе повторов побеждает цифра, встретившаяся в номере раньше.
+  let domD = null, domN = 0;
+  for(let i = 0; i < w.length; i++){
+    const ch = w.charAt(i);
+    if(dc[ch] > domN){ domN = dc[ch]; domD = ch; }
+  }
   return {
     run:r[0], run_digit:r[1], run_a:r[2], run_b:r[3],
     run_crosses:(r[2] < 2 && r[3] >= 2), run_at_end:(r[3] === last),
@@ -268,7 +349,13 @@ function analyze(w){
     pal:pl[0], pal_a:pl[1], pal_b:pl[2], pal_text: pl[0] ? w.slice(pl[1], pl[2]+1) : "",
     pairs:pc[0], pairs_a:pc[1], pairs_b:pc[2],
     zeros_tail:zt, zt_a:last - zt + 1, zt_b:last,
-    distinct:new Set(w.slice(2).split("")).size, last:last
+    distinct:new Set(w.slice(2).split("")).size, last:last,
+    /* Доминирование одной цифры во всём номере. Рынок платит за это заметно:
+       внутри статуса «Золотой» номера с шестью одинаковыми цифрами стоят
+       втрое дороже, чем с двумя (медианы 300 000 и 78 000 ֏). */
+    digit_counts:dc, dominant:domN, dominant_digit:domD,
+    rhythm:rh[0], rhythm_digit:rh[1],
+    pairs_seq:pairsFormSequence(w)
   };
 }
 
@@ -284,6 +371,10 @@ function classify(w, d){
   const WHOLE_A = 2, WHOLE_B = 7;
 
   // --- Премиум ---
+  if(d.pairs_seq){
+    const txt = [w.slice(0,2), w.slice(2,4), w.slice(4,6), w.slice(6,8)].join(" ");
+    return R("Премиум", "pairs.seq", {text:txt}, 0, 7);
+  }
   if(d.run >= 6) return R("Премиум", "run.6plus", {n:d.run, digit:rd}, d.run_a, d.run_b);
   if(d.run === 5) return R("Премиум", "run.5", {digit:rd}, d.run_a, d.run_b);
   if(d.seq >= 6) return R("Премиум", "seq.6", {n:d.seq, text:d.seq_text}, d.seq_a, d.seq_b);
@@ -302,9 +393,11 @@ function classify(w, d){
   if(d.block_k === 3 && d.block_r >= 2 && d.distinct <= 2)
     return R("Бриллиантовый", "block.triple.x2.clean", {block:d.block_text, distinct:d.distinct}, d.block_a, d.block_b);
 
+  if(d.pairs >= 4) return R("Бриллиантовый", "pairs.4", {}, d.pairs_a, d.pairs_b);
+
   // --- Платиновый ---
   if(d.run === 4) return R("Платиновый", "run.4", {digit:rd}, d.run_a, d.run_b);
-  if(d.pairs >= 3) return R("Платиновый", "pairs.3", {}, d.pairs_a, d.pairs_b);
+  if(d.pairs === 3) return R("Платиновый", "pairs.3", {}, d.pairs_a, d.pairs_b);
   if(d.block_k === 3 && d.block_r >= 2) return R("Платиновый", "block.triple.x2", {block:d.block_text}, d.block_a, d.block_b);
   if(d.seq === 5) return R("Платиновый", "seq.5", {text:d.seq_text}, d.seq_a, d.seq_b);
   if(d.zeros_tail === 3) return R("Платиновый", "zeros.tail.3", {}, d.zt_a, d.zt_b);
@@ -315,6 +408,7 @@ function classify(w, d){
   if(d.distinct <= 2) return R("Золотой", "distinct.le2", {distinct:d.distinct}, WHOLE_A, WHOLE_B);
   if(d.seq === 4) return R("Золотой", "seq.4", {text:d.seq_text}, d.seq_a, d.seq_b);
   if(d.pal === 5) return R("Золотой", "pal.5", {text:d.pal_text}, d.pal_a, d.pal_b);
+  if(d.rhythm >= 4) return R("Золотой", "rhythm.4plus", {n:d.rhythm, digit:d.rhythm_digit}, 2, 7);
 
   // --- Серебряный ---
   if(d.run === 3) return R("Серебряный", "run.3", {digit:rd}, d.run_a, d.run_b);
@@ -340,7 +434,65 @@ function beautyIndex(status, d){
   if((d.run_digit === "0" || d.run_digit === "1" || d.run_digit === "9") && d.run >= 4) s += 2;
   if(d.zeros_tail >= 4) s += 2;
   if(d.run_at_end && d.run >= 3) s += 1;
+  // Доминирование одной цифры — подтверждено рынком: внутри одного статуса
+  // цена растёт вместе с числом повторов доминирующей цифры.
+  if(d.dominant >= 5) s += 2 * (d.dominant - 4);
+  if(d.rhythm >= 4 && d.dominant < 6) s += 1;
   return Math.max(0, Math.min(INDEX_TOP[status], s));
+}
+
+/* Семейство узора — крупная группа, к которой относится найденный узор.
+   Нужно сайту для витрины: «Повторы», «Последовательности», «Зеркальные»,
+   «Пары». Получается из уже посчитанного кода узора бесплатно. */
+const PATTERN_FAMILY = {
+  run:"run", seq:"seq", block:"block", pal:"pal", pairs:"pairs",
+  zeros:"zeros", rhythm:"rhythm", distinct:"distinct", none:"none"
+};
+function patternFamily(patternCode){
+  const head = String(patternCode).split(".")[0];
+  return PATTERN_FAMILY[head] || "none";
+}
+
+/* Округление до «человеческой» суммы: цены в объявлениях круглые. */
+function roundPrice(x){
+  if(x <= 0) return 0;
+  const steps = [1000000, 100000, 10000, 5000, 1000];
+  for(let i = 0; i < steps.length; i++)
+    if(x >= steps[i] * 10) return Math.round(x / steps[i]) * steps[i];
+  return Math.round(x / 1000) * 1000;
+}
+
+/* Диапазон цены продавца -> [нижняя, рекомендация, верхняя]. */
+function priceRange(operator, status, index, sublevel){
+  if(status === "Обычный") return [0,0,0];
+  let op = String(operator || "viva").toLowerCase();
+  if(!OPERATOR_PRICES[op]) op = "viva";
+  let lo = OPERATOR_PRICES[op][status];
+  let med, hi;
+  if(sublevel && PREMIUM_SUBLEVEL_MARKET[sublevel]){
+    med = PREMIUM_SUBLEVEL_MARKET[sublevel][0];
+    hi  = PREMIUM_SUBLEVEL_MARKET[sublevel][1];
+  } else {
+    med = MARKET_MED[status];
+    hi  = MARKET_P75[status];
+  }
+  // Оператор может оказаться дороже рынка (так бывает у Viva на верхних
+  // категориях). Диапазон всё равно обязан быть возрастающим.
+  lo = Math.max(lo, 1000);
+  hi = Math.max(hi, lo * 1.5);
+  med = Math.min(Math.max(med, lo), hi);
+
+  const base = INDEX_BASE[status], mid = INDEX_MID[status], top = INDEX_TOP[status];
+  let t;
+  if(index <= mid) t = mid > base ? 0.5 * (index - base) / (mid - base) : 0.5;
+  else             t = top > mid  ? 0.5 + 0.5 * (index - mid) / (top - mid) : 0.5;
+  t = Math.min(1, Math.max(0, t));
+
+  // Множитель геометрический: цены распределены логарифмически, и шаг
+  // «в полтора раза» ощущается одинаково и на 50 тысячах, и на миллионе.
+  let rec = med * Math.pow(REC_SWING, 2 * t - 1);
+  rec = Math.min(Math.max(rec, lo), hi);
+  return [roundPrice(lo), roundPrice(rec), roundPrice(hi)];
 }
 
 /* ===================== СБОР ЗА ПЕРЕОФОРМЛЕНИЕ =====================
@@ -349,7 +501,17 @@ function beautyIndex(status, d){
    Team  — 700 ֏ плюс ПОЛНАЯ текущая стоимость категории, послаблений нет.
    Ucom  — Золото/Платина/Бриллиант: 50% стоимости. Серебро и Бронза: 1 000 ֏. */
 
-function transferFee(operator, status, monthsHeld, entity){
+/* Владеет ли продавец номером дольше льготного срока Viva.
+   Спрашивать точный срок не нужно и неприлично: достаточно «больше/меньше».
+   Точное число месяцев принимается только ради совместимости. */
+function heldLongEnough(entity, heldOverLimit, monthsHeld){
+  if(heldOverLimit === true || heldOverLimit === false) return heldOverLimit;
+  if(monthsHeld !== null && monthsHeld !== undefined && monthsHeld !== "")
+    return (+monthsHeld) >= (VIVA_FREE_AFTER_MONTHS[entity] || VIVA_FREE_AFTER_MONTHS.individual);
+  return null;
+}
+
+function transferFee(operator, status, monthsHeld, entity, heldOverLimit){
   const op = String(operator || "viva").toLowerCase();
   const table = OPERATOR_PRICES[op] || OPERATOR_PRICES.viva;
   const price = table[status] || 0;
@@ -359,12 +521,11 @@ function transferFee(operator, status, monthsHeld, entity){
 
   if(op === "viva"){
     const limit = VIVA_FREE_AFTER_MONTHS[entity] || VIVA_FREE_AFTER_MONTHS.individual;
-    if(monthsHeld === null || monthsHeld === undefined)
-      return F(VIVA_FIXED + price, "fee.viva.unknownMonths", {fixed:VIVA_FIXED, limit:limit});
-    if(monthsHeld >= limit)
-      return F(VIVA_FIXED, "fee.viva.free", {fixed:VIVA_FIXED, months:monthsHeld, limit:limit});
-    return F(VIVA_FIXED + price, "fee.viva.pending",
-             {fixed:VIVA_FIXED, months:monthsHeld, limit:limit, remaining:limit - monthsHeld});
+    const held = heldLongEnough(entity, heldOverLimit, monthsHeld);
+    if(held === null)
+      return F(VIVA_FIXED + price, "fee.viva.unknownHeld", {fixed:VIVA_FIXED, limit:limit});
+    if(held) return F(VIVA_FIXED, "fee.viva.free", {fixed:VIVA_FIXED, limit:limit});
+    return F(VIVA_FIXED + price, "fee.viva.pending", {fixed:VIVA_FIXED, limit:limit});
   }
   if(op === "team") return F(TEAM_FIXED + price, "fee.team", {fixed:TEAM_FIXED});
   if(op === "ucom"){
@@ -413,7 +574,10 @@ function evaluate(raw, options){
   const index = beautyIndex(c.status, d);
 
   let sublevel = null;
-  if(c.status === "Премиум") sublevel = index >= 97 ? "P3" : (index >= 93 ? "P2" : "P1");
+  if(c.status === "Премиум"){
+    for(let i = 0; i < PREMIUM_SUBLEVEL_INDEX.length; i++)
+      if(index >= PREMIUM_SUBLEVEL_INDEX[i][1]){ sublevel = PREMIUM_SUBLEVEL_INDEX[i][0]; break; }
+  }
 
   const explicitOperator = options.operator && options.operator !== "auto" ? String(options.operator).toLowerCase() : null;
   const operator = explicitOperator && OPERATOR_PRICES[explicitOperator]
@@ -423,9 +587,12 @@ function evaluate(raw, options){
   const monthsHeld = (options.monthsHeld === undefined || options.monthsHeld === null ||
                       options.monthsHeld === "") ? null : Number(options.monthsHeld);
   const entity = options.entity === "legal" ? "legal" : "individual";
+  const heldOverLimit = (options.heldOverLimit === true || options.heldOverLimit === false)
+    ? options.heldOverLimit : null;
 
-  const band = sublevel ? PREMIUM_SUBLEVELS[sublevel] : SELLER_BANDS[c.status];
-  const fee = transferFee(operator, c.status, monthsHeld, entity);
+  const held = heldLongEnough(entity, heldOverLimit, monthsHeld);
+  const band = priceRange(operator, c.status, index, sublevel);
+  const fee = transferFee(operator, c.status, monthsHeld, entity, held);
 
   // Пояснения тоже кодами: сайт переводит их своим словарём.
   const noteCodes = [];
@@ -434,8 +601,12 @@ function evaluate(raw, options){
   if(d.distinct <= 2) note("note.clean", {distinct:d.distinct});
   if(d.run_at_end && d.run >= 3) note("note.endsLast");
   if(operatorFromCode) note("note.operatorFromCode", {operator:OPERATOR_NAME[operator] || operator});
-  if(operator === "viva" && monthsHeld === null && c.status !== "Обычный")
-    note("note.askMonthsHeld", {limit:VIVA_FREE_AFTER_MONTHS[entity] || 24});
+  if(c.status !== "Обычный" && MARKET_MED[c.status] &&
+     OPERATOR_PRICES[operator][c.status] > MARKET_MED[c.status])
+    note("note.operatorAboveMarket", {operator:OPERATOR_NAME[operator] || operator});
+  if(d.dominant >= 5) note("note.dominant", {digit:d.dominant_digit, n:d.dominant});
+  if(operator === "viva" && held === null && c.status !== "Обычный")
+    note("note.askHeldOver", {limit:VIVA_FREE_AFTER_MONTHS[entity] || 24});
   const rawStr = String(raw);
   for(let i = 0; i < rawStr.length; i++){
     if(HOMOGLYPHS[rawStr.charAt(i)] !== undefined){ note("note.homoglyphs"); break; }
@@ -447,10 +618,15 @@ function evaluate(raw, options){
     ok:true, version:VERSION, raw:String(raw), window:w, code:code, body:body,
     status:c.status, statusCode:STATUS_CODE[c.status],
     sublevel:sublevel, index:index, indexRange:INDEX_RANGE[c.status],
-    patternCode:c.patternCode, patternParams:c.patternParams,
+    patternCode:c.patternCode, patternFamily:patternFamily(c.patternCode),
+    patternParams:c.patternParams,
     patternFrom:c.a, patternTo:c.b,
     operator:operator, operatorFromCode:operatorFromCode,
-    monthsHeld:monthsHeld, entity:entity,
+    monthsHeld:monthsHeld, heldOverLimit:held, entity:entity,
+    /* Сколько раз встречается каждая цифра — чтобы сайт мог искать
+       «номер, где пять пятёрок», не привязываясь к месту цифры. */
+    digitCounts:d.digit_counts, dominantDigit:d.dominant_digit, dominantCount:d.dominant,
+    distinct:d.distinct,
     sellerMin:band[0], sellerTypical:band[1], sellerMax:band[2],
     transferFee:fee.amount, feeCode:fee.code, feeParams:fee.params,
     totalMin:band[0] + fee.amount, totalTypical:band[1] + fee.amount, totalMax:band[2] + fee.amount,
@@ -485,8 +661,9 @@ return {
   OPERATOR_NAME: OPERATOR_NAME,
   OPERATOR_PRICES: OPERATOR_PRICES,
   CODE_OPERATOR_HINT: CODE_OPERATOR_HINT,
-  SELLER_BANDS: SELLER_BANDS,
-  PREMIUM_SUBLEVELS: PREMIUM_SUBLEVELS,
+  MARKET_P75: MARKET_P75,
+  MARKET_MED: MARKET_MED,
+  PREMIUM_SUBLEVEL_MARKET: PREMIUM_SUBLEVEL_MARKET,
   INDEX_RANGE: INDEX_RANGE,
   parse: parse,
   normalize: normalize,
@@ -494,6 +671,9 @@ return {
   classify: classify,
   beautyIndex: beautyIndex,
   transferFee: transferFee,
+  priceRange: priceRange,
+  patternFamily: patternFamily,
+  heldLongEnough: heldLongEnough,
   evaluate: evaluate,
   localize: localize,
   fill: fill,

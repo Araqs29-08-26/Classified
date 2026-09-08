@@ -2,13 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { useRouter } from "@/i18n/navigation";
 import { detect, normalizePhone } from "@/lib/phone";
 import {
   evaluateNumber,
-  messageKey,
   OPERATOR_CODE,
   type EngineResult,
 } from "@/lib/numberEngine";
@@ -28,16 +27,16 @@ type FormState = {
   number_type: string;
   region: string;
   price: string;
-  /** Срок владения в месяцах. Нужен только для Viva: от него зависит сбор за переоформление. */
-  months_held: string;
+  /** Владеет ли дольше льготного срока: «yes» / «no» / «» (не ответил). Только для Viva. */
+  held: "yes" | "no" | "";
   description: string;
 };
 
 export default function NewListingClient() {
+  const locale = useLocale();
   const t = useTranslations("newListing");
   const tTiers = useTranslations("tiers");
   const tTypes = useTranslations("numberTypes");
-  const tEngine = useTranslations("engine");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -71,7 +70,7 @@ export default function NewListingClient() {
       "Мобильный",
     region: "",
     price: qPrice && !Number.isNaN(Number(qPrice)) ? qPrice : "",
-    months_held: "",
+    held: "",
     description: "",
   });
 
@@ -80,8 +79,9 @@ export default function NewListingClient() {
     normalizePhone(form.phone_number) === normalizePhone(phone);
 
   const isViva = form.operator === "Viva";
-  /** Срок владения спрашиваем только у Viva — только там от него зависит сбор. */
-  const monthsHeld = isViva && form.months_held !== "" ? Number(form.months_held) : null;
+  // Спрашиваем только у Viva и только «дольше двух лет или нет»: точный срок —
+  // это вмешательство в личные дела, а для расчёта сбора хватает да/нет.
+  const heldOverLimit = isViva && form.held !== "" ? form.held === "yes" : null;
 
   // Статус, индекс, узор и сбор считает движок — вручную статус не выбирается.
   const verdict: EngineResult | null = useMemo(
@@ -89,10 +89,11 @@ export default function NewListingClient() {
       form.phone_number.trim()
         ? evaluateNumber(form.phone_number, {
             operator: OPERATOR_CODE[form.operator] ?? null,
-            monthsHeld,
+            heldOverLimit,
+            locale,
           })
         : null,
-    [form.phone_number, form.operator, monthsHeld]
+    [form.phone_number, form.operator, heldOverLimit, locale]
   );
 
   const sellerPrice = Number(form.price) || 0;
@@ -103,7 +104,7 @@ export default function NewListingClient() {
   const blockReason = !verdict
     ? null
     : !verdict.ok
-      ? tEngine(messageKey(verdict.errorCode), verdict.errorParams)
+      ? verdict.error
       : !verdict.publishable
         ? t("errors.notPublishable")
         : null;
@@ -189,10 +190,9 @@ export default function NewListingClient() {
       status_tier: verdict.status,
       // Оценку сохраняем целиком и с версией движка: движок будет меняться,
       // а объявление должно помнить, чем и когда его оценили.
-      months_held: monthsHeld,
+      held_over_limit: heldOverLimit,
       beauty_index: verdict.index,
       pattern_code: verdict.patternCode,
-      pattern_params: verdict.patternParams,
       engine_version: verdict.version,
       evaluated_at: new Date().toISOString(),
       description: form.description || null,
@@ -315,17 +315,26 @@ export default function NewListingClient() {
 
           {isViva && (
             <div className="field">
-              <label>{t("formStep.monthsHeldLabel")}</label>
-              <input
-                type="number"
-                min={0}
-                max={600}
-                value={form.months_held}
-                onChange={(e) => setField("months_held", e.target.value)}
-                required
-              />
-              <p style={{ fontSize: 12.5, color: "var(--faint)", marginTop: 4 }}>
-                {t("formStep.monthsHeldHint")}
+              <label>{t("formStep.heldLabel")}</label>
+              <div className="type-toggle-row">
+                {(["yes", "no", ""] as const).map((value) => (
+                  <button
+                    key={value || "unknown"}
+                    type="button"
+                    className={"type-toggle" + (form.held === value ? " active" : "")}
+                    aria-pressed={form.held === value}
+                    onClick={() => setField("held", value)}
+                  >
+                    {value === "yes"
+                      ? t("formStep.heldYes")
+                      : value === "no"
+                        ? t("formStep.heldNo")
+                        : t("formStep.heldUnknown")}
+                  </button>
+                ))}
+              </div>
+              <p style={{ fontSize: 12.5, color: "var(--faint)", marginTop: 6 }}>
+                {t("formStep.heldHint")}
               </p>
             </div>
           )}
@@ -367,7 +376,7 @@ export default function NewListingClient() {
                   <span style={{ width: `${verdict.index}%` }} />
                 </div>
                 <p className="verdict-pattern">
-                  {tEngine(messageKey(verdict.patternCode), verdict.patternParams)}
+                  {verdict.pattern}
                 </p>
               </div>
             ) : (
