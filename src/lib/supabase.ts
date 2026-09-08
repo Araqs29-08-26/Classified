@@ -31,7 +31,12 @@ export const TIERS: Tier[] = [
   { name: "Обычный", price: 0, platformFee: 0 },
 ];
 
-export const OPERATORS = ["Viva", "Ucom", "Team Telecom"];
+/**
+ * «Другие» — для мелких провайдеров помимо трёх крупных: OVIO на городском
+ * коде 15 и прочих, особенно на коротких номерах. Логотипа у них нет,
+ * поэтому в оформлении используется монограмма.
+ */
+export const OPERATORS = ["Viva", "Ucom", "Team Telecom", "Другие"];
 
 export const OPERATOR_META: Record<
   string,
@@ -40,6 +45,7 @@ export const OPERATOR_META: Record<
   Viva: { abbr: "V", color: "#c9532e", logo: "/operators/viva.png" },
   Ucom: { abbr: "U", color: "#2e6b78", logo: "/operators/ucom.png" },
   "Team Telecom": { abbr: "TT", color: "#7a3dad", logo: "/operators/team.png" },
+  "Другие": { abbr: "?", color: "#5c6773" },
 };
 
 export const NUMBER_TYPES = ["Мобильный", "Городской", "Короткий"];

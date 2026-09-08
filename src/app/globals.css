@@ -1866,3 +1866,113 @@ textarea:focus {
 .board-results .listing-cards {
   margin-top:0
 }
+
+
+/* --- шапка списка: сколько найдено, активные фильтры, сортировка --- */
+.results-head {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:14px
+}
+
+.results-count {
+  font-size:14px;
+  font-weight:600
+}
+
+.active-chips {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+  flex:1;
+  min-width:0
+}
+
+.active-chip {
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:5px 11px;
+  border:0;
+  border-radius:999px;
+  background:var(--accent-2-soft);
+  color:var(--accent-2);
+  cursor:pointer;
+  font-family:inherit;
+  font-size:12.5px;
+  font-weight:600
+}
+
+.active-chip span {
+  font-size:14px;
+  line-height:1;
+  opacity:.7
+}
+
+.active-chip:hover span {
+  opacity:1
+}
+
+.reset-all {
+  border:0;
+  background:none;
+  padding:5px 2px;
+  color:var(--muted);
+  cursor:pointer;
+  font-family:inherit;
+  font-size:12.5px;
+  text-decoration:underline
+}
+
+.reset-all:hover {
+  color:var(--accent)
+}
+
+.results-sort {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-left:auto
+}
+
+.results-sort span {
+  font-size:12.5px;
+  color:var(--faint)
+}
+
+.results-sort select {
+  font-family:inherit;
+  font-size:13.5px;
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--surface);
+  color:var(--ink)
+}
+
+/* «Смотреть» — подпись, а не ссылка: вся карточка и так ведёт на объявление. */
+.listing-card-view {
+  display:none
+}
+
+@media (max-width:759px) {
+  .listing-card-view {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    margin-top:10px;
+    padding:9px 16px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink)
+  }
+  .listing-card:hover .listing-card-view {
+    border-color:var(--accent);
+    color:var(--accent-ink)
+  }
+}

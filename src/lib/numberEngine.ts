@@ -61,7 +61,13 @@ export const INDEX_RANGE: Record<string, string> = engine.INDEX_RANGE;
 
 export const ENGINE_VERSION: string = engine.VERSION;
 
-/** Названия операторов на сайте → коды, которые понимает движок. */
+/**
+ * Названия операторов на сайте → коды, которые понимает движок.
+ *
+ * «Других» здесь намеренно нет: их тарифов на переоформление мы не знаем.
+ * Движок в этом случае считает по прайсу Viva и сам предупреждает об этом
+ * строкой fee.unknownOperator — лучше честная оговорка, чем выдуманное число.
+ */
 export const OPERATOR_CODE: Record<string, "viva" | "team" | "ucom"> = {
   Viva: "viva",
   Ucom: "ucom",

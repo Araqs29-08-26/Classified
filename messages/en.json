@@ -44,7 +44,9 @@
       "onlyVerified": "Ownership verified by SMS",
       "onlyMobile": "Mobile only",
       "onlyDescribed": "With a description from the seller",
-      "indexShortLabel": "index"
+      "indexShortLabel": "index",
+      "resetAll": "Clear all",
+      "otherOperator": "Other"
     },
     "table": {
       "number": "Number",
@@ -79,7 +81,9 @@
       "pairRepeat": "Repeated pair",
       "round": "Round",
       "ladder": "Ladder"
-    }
+    },
+    "found": "Found {count, plural, one {# number} other {# numbers}}",
+    "view": "View"
   },
   "listing": {
     "verified": "✓ ownership verified by SMS",

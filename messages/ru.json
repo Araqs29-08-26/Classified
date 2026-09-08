@@ -44,7 +44,9 @@
       "onlyVerified": "Владение подтверждено по SMS",
       "onlyMobile": "Только мобильные",
       "onlyDescribed": "С описанием от продавца",
-      "indexShortLabel": "индекс"
+      "indexShortLabel": "индекс",
+      "resetAll": "Сбросить всё",
+      "otherOperator": "Другие"
     },
     "table": {
       "number": "Номер",
@@ -79,7 +81,9 @@
       "pairRepeat": "Повтор пары",
       "round": "Круглые",
       "ladder": "Лесенка"
-    }
+    },
+    "found": "Найдено {count, plural, one {# номер} few {# номера} many {# номеров} other {# номеров}}",
+    "view": "Смотреть"
   },
   "listing": {
     "verified": "✓ владение номером подтверждено по SMS",

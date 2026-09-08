@@ -44,7 +44,9 @@
       "onlyVerified": "Սեփականությունը հաստատված է SMS-ով",
       "onlyMobile": "Միայն բջջային",
       "onlyDescribed": "Վաճառողի նկարագրությամբ",
-      "indexShortLabel": "ինդեքս"
+      "indexShortLabel": "ինդեքս",
+      "resetAll": "Զրոյացնել ամենը",
+      "otherOperator": "Այլ"
     },
     "table": {
       "number": "Համար",
@@ -79,7 +81,9 @@
       "pairRepeat": "Զույգի կրկնություն",
       "round": "Կլոր",
       "ladder": "Սանդուղք"
-    }
+    },
+    "found": "Գտնվել է {count, plural, one {# համար} other {# համար}}",
+    "view": "Դիտել"
   },
   "listing": {
     "verified": "✓ համարի սեփականությունը հաստատված է SMS-ով",

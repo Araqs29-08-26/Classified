@@ -197,6 +197,44 @@ export default function HomeClient({
     );
   }, [selectedOperators, selectedTiers, selectedTypes, sort, mask, preset]);
 
+  // Активные фильтры показываются чипами над списком: видно, что именно сузило
+  // выдачу, и каждый снимается по отдельности, не сбрасывая остальные.
+  const activeChips: { key: string; label: string; clear: () => void }[] = [
+    ...selectedOperators.map((op) => ({
+      key: `op:${op}`,
+      label: op === "Другие" ? t("filters.otherOperator") : op,
+      clear: () => toggle(setSelectedOperators, op),
+    })),
+    ...selectedTiers.map((tier) => ({
+      key: `tier:${tier}`,
+      label: tTier(tier),
+      clear: () => toggle(setSelectedTiers, tier),
+    })),
+    ...selectedTypes.map((type) => ({
+      key: `type:${type}`,
+      label: tType(type),
+      clear: () => toggle(setSelectedTypes, type),
+    })),
+    ...(preset
+      ? [{ key: "preset", label: t(`presets.${preset}`), clear: () => setPreset("") }]
+      : []),
+    ...(/\d/.test(mask)
+      ? [{ key: "mask", label: mask.replace(/_/g, "·"), clear: () => setMask(EMPTY_MASK) }]
+      : []),
+    ...(onlyVerified
+      ? [{ key: "verified", label: t("filters.onlyVerified"), clear: () => setOnlyVerified(false) }]
+      : []),
+    ...(onlyDescribed
+      ? [
+          {
+            key: "described",
+            label: t("filters.onlyDescribed"),
+            clear: () => setOnlyDescribed(false),
+          },
+        ]
+      : []),
+  ];
+
   const presetPrefixes = PRESETS.find((p) => p.id === preset)?.prefixes;
 
   const visible = useMemo(() => {
@@ -294,7 +332,7 @@ export default function HomeClient({
                   onClick={() => toggle(setSelectedOperators, op)}
                 >
                   <OperatorBadge op={op} />
-                  <span className="operator-toggle-name">{op}</span>
+                  <span className="operator-toggle-name">{op === "Другие" ? t("filters.otherOperator") : op}</span>
                   <span className="operator-toggle-count">
                     {operatorCounts[op] ?? 0}
                   </span>
@@ -406,17 +444,6 @@ export default function HomeClient({
           </div>
         </div>
 
-        <div className="filter-group">
-          <div className="filter-group-label">{t("filters.sortLabel")}</div>
-          <select value={sort} onChange={(e) => setSort(e.target.value)}>
-            <option value="">{t("filters.sortNewest")}</option>
-            <option value="index_desc">{t("filters.sortIndex")}</option>
-            <option value="price_asc">{t("filters.sortPriceAsc")}</option>
-            <option value="price_desc">{t("filters.sortPriceDesc")}</option>
-            <option value="total_asc">{t("filters.sortTotalAsc")}</option>
-            <option value="total_desc">{t("filters.sortTotalDesc")}</option>
-          </select>
-        </div>
 
         <div className="filter-group">
           <div className="filter-group-label">{t("filters.moreLabel")}</div>
@@ -440,18 +467,43 @@ export default function HomeClient({
           </div>
         </div>
 
-        {hasActiveFilters && (
-          <button
-            type="button"
-            className="btn btn-ghost filter-clear"
-            onClick={resetFilters}
-          >
-            {t("filters.maskClear")}
-          </button>
-        )}
         </aside>
 
         <div className="board-results">
+          <div className="results-head">
+            <span className="results-count">{t("found", { count: visible.length })}</span>
+
+            <div className="active-chips">
+              {activeChips.map((chip) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  className="active-chip"
+                  onClick={chip.clear}
+                >
+                  {chip.label}
+                  <span aria-hidden="true">×</span>
+                </button>
+              ))}
+              {hasActiveFilters && (
+                <button type="button" className="reset-all" onClick={resetFilters}>
+                  {t("filters.resetAll")}
+                </button>
+              )}
+            </div>
+
+            <label className="results-sort">
+              <span>{t("filters.sortLabel")}</span>
+              <select value={sort} onChange={(e) => setSort(e.target.value)}>
+                <option value="">{t("filters.sortNewest")}</option>
+                <option value="index_desc">{t("filters.sortIndex")}</option>
+                <option value="price_asc">{t("filters.sortPriceAsc")}</option>
+                <option value="price_desc">{t("filters.sortPriceDesc")}</option>
+                <option value="total_asc">{t("filters.sortTotalAsc")}</option>
+                <option value="total_desc">{t("filters.sortTotalDesc")}</option>
+              </select>
+            </label>
+          </div>
       {visible.length === 0 && !hasActiveFilters && (
         <div className="empty-state">
           <h2>{t("empty.title")}</h2>
