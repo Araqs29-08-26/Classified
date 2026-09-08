@@ -13,15 +13,37 @@ import { useTranslations } from "next-intl";
 export const MASK_LENGTH = 8;
 export const EMPTY_MASK = "_".repeat(MASK_LENGTH);
 
-/** Совпадает ли номер с маской. Сравниваются все восемь значащих цифр. */
-export function matchesDigits(phoneNumber: string, mask: string): boolean {
-  const digits = phoneNumber.replace(/\D/g, "").replace(/^374/, "").replace(/^0/, "");
-  if (digits.length < MASK_LENGTH) return false;
+/**
+ * Ячейки → запрос для модуля поиска.
+ *
+ * Первые две ячейки — код оператора, остальные шесть — тело номера. Модуль
+ * считает позицию маски ПО ТЕЛУ, кода оператора в ней нет, поэтому код
+ * отбирается отдельно, а телу подбирается такая позиция, чтобы расшифровка
+ * читалась по-человечески: «оканчиваются на 14», а не «начинаются на ????14».
+ */
+export function maskToQuery(mask: string): {
+  code: string;
+  bodyMask: string;
+  where: "any" | "start" | "end";
+} {
+  const padded = (mask || EMPTY_MASK).padEnd(MASK_LENGTH, "_").slice(0, MASK_LENGTH);
+  const code = padded.slice(0, 2);
+  const body = padded.slice(2).replace(/_/g, "?");
 
-  const window = digits.slice(-MASK_LENGTH);
-  for (let i = 0; i < MASK_LENGTH; i++) {
-    const ch = mask[i];
-    if (ch && ch !== "_" && ch !== window[i]) return false;
+  const first = body.search(/\d/);
+  const last = body.search(/\d(?!.*\d)/);
+  if (first < 0) return { code, bodyMask: "", where: "any" };
+
+  const filled = body.slice(first, last + 1);
+  if (last === body.length - 1) return { code, bodyMask: filled, where: "end" };
+  if (first === 0) return { code, bodyMask: filled, where: "start" };
+  return { code, bodyMask: body, where: "start" };
+}
+
+/** Подходит ли код оператора номера под заданные первые две ячейки. */
+export function matchesCode(window: string, code: string): boolean {
+  for (let i = 0; i < code.length; i++) {
+    if (code[i] !== "_" && code[i] !== window[i]) return false;
   }
   return true;
 }

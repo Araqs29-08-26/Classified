@@ -28,7 +28,7 @@ import {
   type Listing,
 } from "@/lib/supabase";
 import ListingCard, { activePromo, type ValuedListing } from "./ListingCard";
-import DigitSearch, { EMPTY_MASK } from "./DigitSearch";
+import DigitSearch, { EMPTY_MASK, maskToQuery, matchesCode } from "./DigitSearch";
 
 type Props = {
   listings: Listing[];
@@ -263,32 +263,33 @@ export default function HomeClient({
 
   const presetPrefixes = PRESETS.find((p) => p.id === preset)?.prefixes;
 
-  // Запрос собирается модулем поиска: он же объясняет его человеку строкой
-  // расшифровки. Ячейки дают маску из восьми позиций, поэтому where — «start»:
-  // маска покрывает весь номер, и позиция уже задана самими ячейками.
+  // Ячейки → запрос модуля. Первые две — код оператора, его модуль в маске
+  // не учитывает: позиция маски считается по телу номера.
+  const cellQuery = useMemo(() => maskToQuery(mask), [mask]);
+
   const query = useMemo(
     () =>
-      parseQuery(/\d/.test(mask) ? mask.replace(/_/g, "?") : "", {
-        where: "start",
+      parseQuery(cellQuery.bodyMask, {
+        where: cellQuery.where,
         counts: countDigit ? [{ digit: countDigit, min: countMin }] : [],
         family: family || null,
       }),
-    [mask, countDigit, countMin, family]
+    [cellQuery, countDigit, countMin, family]
   );
 
   /** Расшифровка запроса словами — обязательная страховка от «понял не так». */
   const queryHint = useMemo(() => {
-    if (!/\d/.test(mask) && !countDigit && !family) return null;
+    if (!cellQuery.bodyMask && !countDigit && !family) return null;
     return fillMessage(engineMessage(query.hint, locale), {
-      mask: mask.replace(/_/g, "?"),
+      mask: cellQuery.bodyMask,
       digit: countDigit,
       min: countMin,
       n: countMin,
     });
-  }, [query.hint, mask, countDigit, countMin, family, locale]);
+  }, [query.hint, cellQuery, countDigit, countMin, family, locale]);
 
   /** Нужен ли модуль поиска: без маски, счётчика и вида узора он не при чём. */
-  const needsSearch = /\d/.test(mask) || !!countDigit || !!family;
+  const needsSearch = !!cellQuery.bodyMask || !!countDigit || !!family;
 
   /** Окна номеров, прошедших поиск. Сам поиск делает модуль, а не сайт. */
   const searchHits = useMemo(() => {
@@ -311,8 +312,10 @@ export default function HomeClient({
         !(total > priceRange[1]) &&
         (!onlyVerified || l.sms_verified) &&
         (!onlyDescribed || !!l.description) &&
-        // Маску, счётчики цифр и вид узора проверяет модуль поиска.
+        // Маску тела, счётчики цифр и вид узора проверяет модуль поиска;
+        // код оператора он не видит, поэтому первые две ячейки — отдельно.
         (!searchHits || (rec !== null && searchHits.has(rec.w))) &&
+        (rec === null || matchesCode(rec.w, cellQuery.code)) &&
         (!presetPrefixes ||
           (patternCode !== null &&
             presetPrefixes.some((prefix) => patternCode.startsWith(prefix))))
@@ -345,6 +348,7 @@ export default function HomeClient({
     priceRange,
     presetPrefixes,
     searchHits,
+    cellQuery,
     onlyVerified,
     onlyDescribed,
   ]);
