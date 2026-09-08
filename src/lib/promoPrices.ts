@@ -19,9 +19,6 @@ export const PROMO_KINDS: PromoKind[] = ["top", "highlight", "urgent"];
 /** Плата за каждое второе и последующее объявление одного пользователя. */
 export const EXTRA_LISTING_PRICE = 500;
 
-/** Сертификат оценки номера — подробный разбор с печатной формой. */
-export const CERTIFICATE_PRICE = 500;
-
 /** Срок действия продвижения в днях. */
 export const PROMO_DAYS = 30;
 

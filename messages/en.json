@@ -10,7 +10,6 @@
     "brand": "Araqs"
   },
   "home": {
-    "eyebrow": "Araqs · beta",
     "title": "Armenia's beautiful phone numbers, in one place",
     "subtitle": "Sellers list numbers for free, buyers find a number and contact them directly. Payment and number transfer happen outside the platform, between you and the seller.",
     "stats": "Showing {count} listings",
@@ -48,7 +47,6 @@
       "resetAll": "Clear all",
       "otherOperator": "Other",
       "digitCountLabel": "Repeated digit",
-      "digitAny": "Any digit",
       "familyLabel": "Pattern kind",
       "familyAny": "Any",
       "foundSuffix": "Found: {count}",
@@ -61,7 +59,8 @@
       "whereHint": "Start and end are counted over the six digits after the operator code.",
       "extraLabel": "More filters",
       "digitCountHint": "For example, five fives — anywhere in the number",
-      "timesOption": "at least {n, plural, one {# time} other {# times}}"
+      "timesLabel": "at least",
+      "timesUnit": "times"
     },
     "table": {
       "number": "Number",
@@ -84,14 +83,11 @@
     },
     "verified": "✓ number verified",
     "searchTitle": "Find your beautiful number",
-    "searchSubtitle": "Type the digits you want to see in the number. «?» stands for any single digit, «*» for any number of them.",
     "presetsLabel": "Ready-made patterns",
-    "counters": "{count, plural, one {# listing} other {# listings}}",
-    "operatorsCount": "{count, plural, one {# operator} other {# operators}}",
     "presets": {
       "mirror": "Mirrored",
-      "triple": "Three the same",
-      "pairRepeat": "Repeated pair",
+      "triple": "Triples",
+      "pairRepeat": "Pairs",
       "round": "Round",
       "ladder": "Ladder"
     },
@@ -102,7 +98,22 @@
       "highlight": "Highlighted",
       "urgent": "Urgent"
     },
-    "similarTitle": "No exact matches. Here are numbers that differ by a single digit:"
+    "similarTitle": "No exact matches. Here are numbers that differ by a single digit:",
+    "find": "Search",
+    "legendAny": "— any single digit",
+    "legendMany": "— any number of digits",
+    "valuerEyebrow": "Free, no sign-up",
+    "valuerTitle": "What is your number worth?",
+    "valuerText": "Status, pattern, market price and the operator's transfer fee",
+    "valuerPlaceholder": "+374 ...",
+    "valuerButton": "Value a number",
+    "resultsCount": "{count, plural, one {# number} other {# numbers}}",
+    "filtersButton": "Filters",
+    "filtersApply": "Show {count, plural, one {# number} other {# numbers}}",
+    "filtersTitle": "More filters",
+    "filtersClose": "Close",
+    "threeLinesTitle": "Why we show three lines of price.",
+    "threeLinesText": "Besides the seller's price the operator charges a transfer fee, and Viva, Ucom and Team each calculate it differently. On other marketplaces people find this out at the operator's office."
   },
   "listing": {
     "verified": "✓ ownership verified by SMS",
@@ -262,13 +273,6 @@
       "operatorNote": "Operator (by the number's code): {operator} — confirm when posting if the number has been ported.",
       "operatorUnknown": "The operator could not be determined from the number — you will pick it manually when posting.",
       "cta": "Post this number",
-      "certificateTitle": "Valuation certificate",
-      "certificateText": "A certified breakdown of the number as a separate document: status, index, pattern, price range and the fee calculation as of the issue date. Useful when the price needs backing up in front of a buyer.",
-      "certificateOrder": "Order a certificate",
-      "certificateOrdering": "Sending...",
-      "certificateDone": "The certificate request has been sent — we will get in touch.",
-      "certificateFailed": "The request could not be sent. Please try again.",
-      "certificateSignIn": "Sign in to order a certificate",
       "disclaimer": "This is an automatic valuation based on the pattern of digits — you set the final price yourself when posting."
     }
   },

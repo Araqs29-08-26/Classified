@@ -30,6 +30,7 @@ import {
 } from "@/lib/supabase";
 import ListingCard, { activePromo, type ValuedListing } from "./ListingCard";
 import MaskSearch from "./MaskSearch";
+import ValuerCard from "./ValuerCard";
 
 type Props = {
   listings: Listing[];
@@ -158,6 +159,8 @@ export default function HomeClient({
   const [countDigit, setCountDigit] = useState("");
   const [countMin, setCountMin] = useState(2);
   const [family, setFamily] = useState("");
+  /** На узком экране фильтры живут в выезжающей снизу панели. */
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const toggle = (
     setter: React.Dispatch<React.SetStateAction<string[]>>,
@@ -416,29 +419,58 @@ export default function HomeClient({
   return (
     <>
       <section className="hero hero-search">
-        <div className="hero-search-text">
-          <span className="eyebrow">{t("eyebrow")}</span>
+        <div className="hero-search-main">
           <h1>{t("searchTitle")}</h1>
-          <p>{t("searchSubtitle")}</p>
+
+          <MaskSearch
+            mask={mask}
+            where={where}
+            onMaskChange={setMask}
+            onWhereChange={setWhere}
+            onSubmit={() => {
+              document
+                .getElementById("results")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            status={queryStatus}
+          />
         </div>
 
-        <div className="hero-counters">
-          <span>{t("counters", { count: listings.length })}</span>
-          <span>{t("operatorsCount", { count: OPERATORS.length })}</span>
-        </div>
-
-        <MaskSearch
-          mask={mask}
-          where={where}
-          onMaskChange={setMask}
-          onWhereChange={setWhere}
-          status={queryStatus}
-        />
-
+        <ValuerCard />
       </section>
 
       <div className="board">
-        <aside className="filters">
+        {/* Кнопка видна только на узком экране — на широком колонка и так слева. */}
+        <button
+          type="button"
+          className="filters-open btn btn-accent"
+          onClick={() => setSheetOpen(true)}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <path d="M3 6h18M7 12h10M11 18h2" />
+          </svg>
+          {t("filtersButton")}
+          {activeChips.length > 0 && (
+            <span className="filters-open-count">{activeChips.length}</span>
+          )}
+        </button>
+
+        <aside className={"filters" + (sheetOpen ? " open" : "")}>
+        <div className="filters-sheet-head">
+          <span className="filters-sheet-title">{t("filtersTitle")}</span>
+          <button type="button" className="reset-all" onClick={resetFilters}>
+            {t("filters.resetAll")}
+          </button>
+        </div>
         <div className="filter-group">
           <div className="filter-group-label">{t("filters.operatorLabel")}</div>
           <div className="operator-toggle-row">
@@ -590,30 +622,41 @@ export default function HomeClient({
 
         <div className="filter-group">
           <div className="filter-group-label">{t("filters.digitCountLabel")}</div>
-          {/* Два списка подряд, без текста между ними: «не менее N раз»
-              читается прямо в самом списке, а не собирается из кусочков. */}
-          <div className="count-filter">
-            <select value={countDigit} onChange={(e) => setCountDigit(e.target.value)}>
-              <option value="">{t("filters.digitAny")}</option>
-              {"0123456789".split("").map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-            <select
-              value={countMin}
-              onChange={(e) => setCountMin(Number(e.target.value))}
-              disabled={!countDigit}
-            >
-              {[2, 3, 4, 5, 6, 7, 8].map((n) => (
-                <option key={n} value={n}>
-                  {t("filters.timesOption", { n })}
-                </option>
-              ))}
-            </select>
-          </div>
           <p className="filters-hint">{t("filters.digitCountHint")}</p>
+
+          {/* Десять квадратов вместо списка из десяти строк: видно сразу,
+              нажимается с первого раза и экономит экран прокрутки. */}
+          <div className="digit-grid">
+            {"0123456789".split("").map((d) => (
+              <button
+                key={d}
+                type="button"
+                className={"digit-key mono" + (countDigit === d ? " active" : "")}
+                aria-pressed={countDigit === d}
+                onClick={() => setCountDigit(countDigit === d ? "" : d)}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+
+          <div className="times-row">
+            <span>{t("filters.timesLabel")}</span>
+            <div className="times-keys">
+              {[2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={"digit-key mono" + (countMin === n ? " active" : "")}
+                  aria-pressed={countMin === n}
+                  onClick={() => setCountMin(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <span>{t("filters.timesUnit")}</span>
+          </div>
         </div>
 
         <div className="filter-group">
@@ -652,11 +695,29 @@ export default function HomeClient({
 
         </details>
 
+        <button
+          type="button"
+          className="btn btn-accent filters-apply"
+          onClick={() => setSheetOpen(false)}
+        >
+          {t("filtersApply", { count: visible.length })}
+        </button>
         </aside>
 
-        <div className="board-results">
+        {sheetOpen && (
+          <button
+            type="button"
+            className="filters-scrim"
+            aria-label={t("filtersClose")}
+            onClick={() => setSheetOpen(false)}
+          />
+        )}
+
+        <div className="board-results" id="results">
           <div className="results-head">
-            <span className="results-count">{t("found", { count: visible.length })}</span>
+            <span className="results-count">
+              {t("resultsCount", { count: visible.length })}
+            </span>
 
             <div className="active-chips">
               {activeChips.map((chip) => (
@@ -722,11 +783,23 @@ export default function HomeClient({
       )}
 
       {visible.length > 0 && (
-        <div className="listing-cards">
-          {visible.map((item) => (
-            <ListingCard key={item.listing.id} item={item} />
-          ))}
-        </div>
+        <>
+          <div className="listing-cards">
+            {visible.map((item) => (
+              <ListingCard key={item.listing.id} item={item} />
+            ))}
+          </div>
+
+          {/* Три строки цены — не прихоть оформления: сбор оператора у Viva,
+              Ucom и Team считается по-разному, и покупателю это важно знать
+              до похода в офис. */}
+          <p className="three-lines">
+            <span className="three-lines-icon" aria-hidden="true">i</span>
+            <span>
+              <b>{t("threeLinesTitle")}</b> {t("threeLinesText")}
+            </span>
+          </p>
+        </>
       )}
         </div>
       </div>

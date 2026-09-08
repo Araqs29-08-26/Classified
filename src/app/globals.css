@@ -1,65 +1,79 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap");
+/* Unbounded — заголовки, Golos Text — интерфейс, JetBrains Mono — цифры.
+   Noto Sans Armenian подключён ради армянской версии: остальные три
+   армянский набор не покрывают. */
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+Armenian:wght@400;500;600;700&display=swap");
 :root {
-  --bg:#f2f5f6;
+  --bg:#f6f7f9;
   --surface:#fff;
-  --surface-2:#e9eef0;
-  --ink:#1b2430;
-  --muted:#5c6773;
-  --faint:#8a94a0;
-  --line:#dbe2e6;
-  --accent:#c96a2e;
-  --accent-ink:#7a3d19;
-  --accent-soft:#f4e0cf;
-  --accent-2:#2e6b78;
-  --accent-2-soft:#dcebee;
-  --success:#3f7a50;
-  --success-soft:#deebdf;
-  --warn:#b3492f;
-  --warn-soft:#f5ddd5;
-  --shadow:0 1px 2px rgba(27,36,48,.04),0 8px 24px -12px rgba(27,36,48,.12);
-  --shadow-lg:0 4px 10px rgba(27,36,48,.08),0 22px 44px -16px rgba(27,36,48,.22)
+  --surface-2:#f0f2f5;
+  --ink:#101418;
+  --muted:#5b646e;
+  --faint:#8b95a1;
+  /* Две границы: тонкая у карточек, заметная у органов управления. */
+  --line:#e8ebef;
+  --line-strong:#d5dbe1;
+  --accent:#c9982a;
+  --accent-ink:#8a6d1f;
+  --accent-soft:#f6ecd2;
+  --accent-2:#1f8a9a;
+  --accent-2-soft:#e4f1f3;
+  --success:#157a5b;
+  --success-soft:#e0f0ea;
+  --warn:#a4632e;
+  --warn-soft:#f6ecd2;
+  /* Главное действие чернильное, а не цветное: цвет остаётся товару. */
+  --action:#101418;
+  --action-ink:#fff;
+  --shadow:0 1px 2px rgba(16,20,24,.04),0 8px 24px -12px rgba(16,20,24,.1);
+  --shadow-lg:0 4px 10px rgba(16,20,24,.08),0 22px 44px -16px rgba(16,20,24,.2)
 }
 
 @media (prefers-color-scheme:dark) {
   :root:not([data-theme=light]) {
-    --bg:#12161c;
-    --surface:#1a2029;
-    --surface-2:#212934;
-    --ink:#eceff2;
-    --muted:#9aa6b2;
-    --faint:#6c7784;
-    --line:#2a323c;
-    --accent:#e39152;
-    --accent-ink:#f6c89a;
-    --accent-soft:#3a2a1c;
-    --accent-2:#62aab8;
-    --accent-2-soft:#1e353a;
-    --success:#7bb98a;
-    --success-soft:#1e2e22;
-    --warn:#e08267;
-    --warn-soft:#3a231d;
+    --bg:#0c0f13;
+    --surface:#161b21;
+    --surface-2:#1e242b;
+    --ink:#eef1f4;
+    --muted:#9aa4ae;
+    --faint:#6f7a86;
+    --line:#232a32;
+    --line-strong:#2f3841;
+    --accent:#d9b04a;
+    --accent-ink:#e9cd8b;
+    --accent-soft:#2e2717;
+    --accent-2:#5fb3c2;
+    --accent-2-soft:#152b30;
+    --success:#4fa383;
+    --success-soft:#12251f;
+    --warn:#c98a58;
+    --warn-soft:#2e2717;
+    --action:#eef1f4;
+    --action-ink:#101418;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5);
     --shadow-lg:0 4px 10px rgba(0,0,0,.4),0 22px 44px -16px rgba(0,0,0,.6)
   }
 }
 
 :root[data-theme=dark] {
-  --bg:#12161c;
-  --surface:#1a2029;
-  --surface-2:#212934;
-  --ink:#eceff2;
-  --muted:#9aa6b2;
-  --faint:#6c7784;
-  --line:#2a323c;
-  --accent:#e39152;
-  --accent-ink:#f6c89a;
-  --accent-soft:#3a2a1c;
-  --accent-2:#62aab8;
-  --accent-2-soft:#1e353a;
-  --success:#7bb98a;
-  --success-soft:#1e2e22;
-  --warn:#e08267;
-  --warn-soft:#3a231d;
+  --bg:#0c0f13;
+  --surface:#161b21;
+  --surface-2:#1e242b;
+  --ink:#eef1f4;
+  --muted:#9aa4ae;
+  --faint:#6f7a86;
+  --line:#232a32;
+  --line-strong:#2f3841;
+  --accent:#d9b04a;
+  --accent-ink:#e9cd8b;
+  --accent-soft:#2e2717;
+  --accent-2:#5fb3c2;
+  --accent-2-soft:#152b30;
+  --success:#4fa383;
+  --success-soft:#12251f;
+  --warn:#c98a58;
+  --warn-soft:#2e2717;
+  --action:#eef1f4;
+  --action-ink:#101418;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5);
   --shadow-lg:0 4px 10px rgba(0,0,0,.4),0 22px 44px -16px rgba(0,0,0,.6)
 }
@@ -77,7 +91,7 @@ html {
 body {
   background:var(--bg);
   color:var(--ink);
-  font-family:Manrope,system-ui,sans-serif;
+  font-family:"Golos Text","Noto Sans Armenian",system-ui,sans-serif;
   line-height:1.5;
   transition:background-color .2s ease,color .2s ease
 }
@@ -85,7 +99,7 @@ body {
 h1,
 h2,
 h3 {
-  font-family:Fraunces,Georgia,serif;
+  font-family:Unbounded,"Noto Sans Armenian",system-ui,sans-serif;
   font-weight:600;
   margin:0
 }
@@ -95,7 +109,7 @@ a {
 }
 
 .mono {
-  font-family:IBM Plex Mono,ui-monospace,monospace
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums
 }
 
 .wrap {
@@ -158,19 +172,14 @@ a {
   align-items:center
 }
 
-.brand .mark {
-  width:34px;
-  height:34px;
-  border-radius:9px;
-  background:var(--accent);
-  color:#fff;
-  justify-content:center;
-  font-size:15px
+.brand svg {
+  display:block;
+  flex-shrink:0
 }
 
 .brand .mark,
 .brand .name {
-  font-family:Fraunces,serif;
+  font-family:Unbounded,"Noto Sans Armenian",system-ui,sans-serif;
   font-weight:600
 }
 
@@ -182,8 +191,9 @@ a {
 .btn {
   display:inline-flex;
   align-items:center;
+  justify-content:center;
   gap:8px;
-  border-radius:10px;
+  border-radius:11px;
   padding:10px 16px;
   font-weight:600;
   font-size:14px;
@@ -205,15 +215,31 @@ a {
 }
 
 .btn-accent {
+  background:var(--action);
+  color:var(--action-ink);
+  border-color:var(--action)
+}
+
+.btn-accent:hover {
+  filter:brightness(1.25)
+}
+
+/* Янтарная кнопка остаётся для одного случая — призыва на тёмной подложке. */
+.btn-amber {
   background:var(--accent);
-  color:#fff;
-  box-shadow:0 2px 6px -2px color-mix(in srgb,var(--accent) 55%,transparent)
+  color:#101418;
+  border-color:var(--accent);
+  font-weight:700
 }
 
 .btn-ghost {
-  background:transparent;
-  border-color:var(--line);
+  background:var(--surface);
+  border-color:var(--line-strong);
   color:var(--ink)
+}
+
+.btn-ghost:hover {
+  border-color:var(--ink)
 }
 
 .btn-ghost:hover {
@@ -607,11 +633,32 @@ a {
 }
 
 .nav-link {
+  position:relative;
   color:var(--muted);
   text-decoration:none;
-  font-size:14px;
-  font-weight:600;
-  padding:8px 4px
+  font-size:14.5px;
+  font-weight:500;
+  padding:21px 0
+}
+
+.nav-link:hover {
+  color:var(--ink)
+}
+
+/* Текущий раздел подчёркнут чернильной линией — как в макете. */
+.nav-link.current {
+  color:var(--ink);
+  font-weight:600
+}
+
+.nav-link.current::after {
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-1px;
+  height:2px;
+  background:var(--ink)
 }
 
 .nav-link:hover {
@@ -619,19 +666,18 @@ a {
 }
 .lang-switch {
   display:flex;
-  gap:4px;
+  gap:2px;
   padding:3px;
-  border:1px solid var(--line);
-  border-radius:999px;
-  background:var(--surface)
+  border-radius:9px;
+  background:var(--surface-2)
 }
 
 .lang-btn {
-  padding:5px 11px;
+  padding:5px 10px;
   display:inline-block;
   text-decoration:none;
   border:0;
-  border-radius:999px;
+  border-radius:7px;
   background:transparent;
   color:var(--muted);
   cursor:pointer;
@@ -682,38 +728,43 @@ a.card:hover {
 }
 
 .tier-Премиум {
-  background:linear-gradient(135deg,var(--accent),var(--accent-ink));
+  background:linear-gradient(135deg,#d9b04a,#8a6d1f);
   color:#fff
 }
 
 .tier-Элит {
-  background:rgba(122,61,173,.16);
-  color:#7a3dad
+  background:#6b4fa8;
+  color:#fff
 }
 
 .tier-Бриллиантовый {
-  background:rgba(31,122,138,.16);
-  color:#1f7a8c
+  background:#1f8a9a;
+  color:#fff
 }
 
 .tier-Платиновый {
-  background:rgba(63,100,120,.16);
-  color:#3f6478
+  background:#4a6b78;
+  color:#fff
 }
 
 .tier-Золотой {
-  background:rgba(156,122,16,.18);
-  color:#9c7a10
+  background:#b08324;
+  color:#fff
 }
 
 .tier-Серебряный {
-  background:rgba(95,113,128,.16);
-  color:#5f7180
+  background:#7d8894;
+  color:#fff
 }
 
 .tier-Бронзовый {
-  background:rgba(169,103,44,.18);
-  color:#a9672c
+  background:#a4632e;
+  color:#fff
+}
+
+.tier-Обычный {
+  background:#cfd5db;
+  color:#5b646e
 }
 
 .listings-table-wrap {
@@ -933,10 +984,33 @@ textarea:focus {
 }
 
 .site-footer {
-  text-align:center;
-  color:var(--faint);
+  margin-top:40px;
+  background:#101418;
+  color:#9aa4ae;
   font-size:13px;
-  padding:32px 20px
+  padding:28px 20px 32px
+}
+
+.site-footer > * {
+  max-width:1240px;
+  margin-left:auto;
+  margin-right:auto
+}
+
+.site-footer p {
+  margin:0 0 14px;
+  color:#5b646e;
+  font-size:12px;
+  line-height:1.5
+}
+
+.footer-links a {
+  color:#9aa4ae;
+  text-decoration:none
+}
+
+.footer-links a:hover {
+  color:var(--accent)
 }
 
 .site-footer p {
@@ -947,10 +1021,34 @@ textarea:focus {
   margin-bottom:0
 }
 
-.footer-links {
+.footer-brand {
   display:flex;
-  justify-content:center;
-  gap:8px
+  align-items:center;
+  gap:10px;
+  margin-bottom:18px;
+  color:#fff;
+  font-family:Unbounded,"Noto Sans Armenian",system-ui,sans-serif;
+  font-weight:600;
+  font-size:17px;
+  letter-spacing:-.03em
+}
+
+/* Ссылки подвала в две колонки, как в макете на телефоне. */
+.footer-links {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px 24px;
+  margin-bottom:18px;
+  max-width:520px
+}
+
+@media (min-width:760px) {
+  .footer-links {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 26px;
+    max-width:none
+  }
 }
 
 .footer-links a {
@@ -1072,7 +1170,7 @@ textarea:focus {
 }
 
 .verdict-index {
-  font-family:IBM Plex Mono,ui-monospace,monospace;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
   font-size:12.5px;
   color:var(--faint)
 }
@@ -1103,14 +1201,14 @@ textarea:focus {
 }
 
 /* Цвет полосы совпадает с цветом статуса — число и цвет говорят одно и то же. */
-.tier-bar-Премиум span { background:var(--accent) }
-.tier-bar-Элит span { background:#7a3dad }
-.tier-bar-Бриллиантовый span { background:#1f7a8c }
-.tier-bar-Платиновый span { background:#3f6478 }
-.tier-bar-Золотой span { background:#9c7a10 }
-.tier-bar-Серебряный span { background:#5f7180 }
-.tier-bar-Бронзовый span { background:#a9672c }
-.tier-bar-Обычный span { background:var(--faint) }
+.tier-bar-Премиум span { background:linear-gradient(135deg,#d9b04a,#8a6d1f) }
+.tier-bar-Элит span { background:#6b4fa8 }
+.tier-bar-Бриллиантовый span { background:#1f8a9a }
+.tier-bar-Платиновый span { background:#4a6b78 }
+.tier-bar-Золотой span { background:#b08324 }
+.tier-bar-Серебряный span { background:#7d8894 }
+.tier-bar-Бронзовый span { background:#a4632e }
+.tier-bar-Обычный span { background:#cfd5db }
 
 /* --- три строки цены --- */
 .price-breakdown {
@@ -1131,7 +1229,7 @@ textarea:focus {
 }
 
 .price-breakdown b {
-  font-family:IBM Plex Mono,ui-monospace,monospace;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
   color:var(--ink)
 }
 
@@ -1284,7 +1382,7 @@ textarea:focus {
 }
 
 .why-index-value b {
-  font-family:IBM Plex Mono,ui-monospace,monospace;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
   font-size:38px;
   line-height:1;
   color:var(--accent-2)
@@ -1419,7 +1517,7 @@ textarea:focus {
 }
 
 .listing-card-index b {
-  font-family:IBM Plex Mono,ui-monospace,monospace;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
   font-size:23px;
   line-height:1
 }
@@ -1445,7 +1543,7 @@ textarea:focus {
 }
 
 .listing-card-cost b {
-  font-family:IBM Plex Mono,ui-monospace,monospace;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
   color:var(--ink)
 }
 
@@ -1535,9 +1633,100 @@ textarea:focus {
 
 /* --- поиск по цифрам номера --- */
 .hero-search {
-  display:flex;
-  flex-direction:column;
-  gap:18px
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:26px;
+  align-items:center;
+  padding:30px 0 32px
+}
+
+@media (min-width:1000px) {
+  .hero-search {
+    grid-template-columns:minmax(0,1fr) 360px;
+    gap:44px
+  }
+}
+
+.hero-search h1 {
+  font-size:clamp(27px,4vw,38px);
+  line-height:1.1;
+  letter-spacing:-.03em;
+  margin:0 0 20px;
+  max-width:15ch
+}
+
+/* --- чёрная карточка оценки --- */
+.valuer {
+  position:relative;
+  overflow:hidden;
+  background:#101418;
+  border-radius:18px;
+  padding:24px
+}
+
+.valuer-glow {
+  position:absolute;
+  top:-60px;
+  right:-50px;
+  width:200px;
+  height:200px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(201,152,42,.24) 0%,rgba(201,152,42,0) 70%)
+}
+
+.valuer-body {
+  position:relative
+}
+
+.valuer-eyebrow {
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#c9982a;
+  margin-bottom:8px
+}
+
+.valuer h2 {
+  font-size:21px;
+  line-height:1.2;
+  color:#fff;
+  margin:0 0 6px
+}
+
+.valuer p {
+  font-size:13.5px;
+  color:#9aa4ae;
+  line-height:1.45;
+  margin:0 0 16px
+}
+
+.valuer-input {
+  width:100%;
+  height:46px;
+  border-radius:11px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:16px;
+  padding:0 14px;
+  margin-bottom:9px
+}
+
+.valuer-input::placeholder {
+  color:#6f7a86
+}
+
+.valuer-input:focus {
+  outline:none;
+  border-color:#c9982a
+}
+
+.valuer-button {
+  width:100%;
+  height:46px;
+  font-size:15px
 }
 
 .hero-search-text h1 {
@@ -1563,35 +1752,47 @@ textarea:focus {
 .mask-search {
   display:flex;
   flex-direction:column;
-  gap:7px;
-  max-width:560px
-}
-
-.mask-search-label {
-  font-size:13px;
-  color:var(--muted)
+  gap:12px
 }
 
 .mask-search-row {
   display:flex;
+  gap:10px;
+  align-items:stretch
+}
+
+.mask-search-field {
+  flex:1;
+  min-width:0;
+  display:flex;
   align-items:center;
-  gap:8px;
-  padding:6px 8px 6px 14px;
-  background:var(--surface-2);
-  border-radius:14px
+  gap:12px;
+  height:62px;
+  padding:0 14px 0 18px;
+  background:var(--bg);
+  border:1.5px solid var(--ink);
+  border-radius:14px;
+  color:var(--muted)
+}
+
+.mask-search-field:focus-within {
+  box-shadow:0 0 0 3px var(--accent-soft)
+}
+
+.mask-search-field svg {
+  flex-shrink:0
 }
 
 .mask-search-input {
   flex:1;
   min-width:0;
-  height:46px;
+  height:100%;
   padding:0;
   border:0;
   background:none;
-  font-family:IBM Plex Mono,ui-monospace,monospace;
-  font-size:20px;
-  font-weight:600;
-  letter-spacing:.06em;
+  font-size:24px;
+  font-weight:500;
+  letter-spacing:.04em;
   color:var(--ink)
 }
 
@@ -1602,12 +1803,13 @@ textarea:focus {
 .mask-search-input::placeholder {
   color:var(--faint);
   font-weight:400;
+  font-size:19px;
   letter-spacing:normal
 }
 
 .mask-search-clear {
   flex:none;
-  border:1px solid var(--line);
+  border:1px solid var(--line-strong);
   background:var(--surface);
   border-radius:20px;
   padding:6px 12px;
@@ -1616,11 +1818,34 @@ textarea:focus {
   cursor:pointer
 }
 
-.mask-search-hint {
-  margin:0;
+.mask-search-submit {
+  flex:none;
+  height:62px;
+  padding:0 34px;
+  font-size:16px;
+  border-radius:14px
+}
+
+/* Пояснение к «?» и «*» стоит рядом с кнопками положения: и то и другое
+   относится к тому, как читается введённая маска. */
+.mask-search-legend {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
   font-size:12.5px;
-  color:var(--faint);
-  line-height:1.45
+  color:var(--faint)
+}
+
+.mask-search-legend b {
+  color:var(--ink);
+  font-weight:700
+}
+
+.mask-search-sep {
+  width:1px;
+  height:16px;
+  background:var(--line)
 }
 
 /* Четыре положения маски. Считаются по шести цифрам после кода оператора. */
@@ -1632,29 +1857,31 @@ textarea:focus {
 }
 
 .where-button {
-  border:1px solid var(--line);
+  border:1px solid var(--line-strong);
   background:var(--surface);
-  border-radius:20px;
-  padding:7px 14px;
-  font-size:13px;
+  border-radius:999px;
+  padding:6px 13px;
+  font-size:12.5px;
+  font-weight:500;
   color:var(--muted);
-  cursor:pointer
+  cursor:pointer;
+  white-space:nowrap
 }
 
 .where-button:hover {
-  border-color:var(--accent)
+  border-color:var(--ink)
 }
 
 .where-button.active {
-  border-color:var(--accent);
-  background:var(--accent-soft);
-  color:var(--accent-ink);
+  border-color:var(--ink);
+  background:var(--ink);
+  color:var(--surface);
   font-weight:600
 }
 
 /* Расшифровка запроса словами — прямо под полем, где человек её и ищет. */
 .mask-search-status {
-  margin:2px 0 0;
+  margin:0;
   padding:9px 12px;
   border-radius:10px;
   background:var(--accent-2-soft);
@@ -1771,13 +1998,13 @@ textarea:focus {
   background:var(--faint)
 }
 
-.tier-edge.tier-bar-Премиум { background:var(--accent) }
-.tier-edge.tier-bar-Элит { background:#7a3dad }
-.tier-edge.tier-bar-Бриллиантовый { background:#1f7a8c }
-.tier-edge.tier-bar-Платиновый { background:#3f6478 }
-.tier-edge.tier-bar-Золотой { background:#9c7a10 }
-.tier-edge.tier-bar-Серебряный { background:#5f7180 }
-.tier-edge.tier-bar-Бронзовый { background:#a9672c }
+.tier-edge.tier-bar-Премиум { background:linear-gradient(135deg,#d9b04a,#8a6d1f) }
+.tier-edge.tier-bar-Элит { background:#6b4fa8 }
+.tier-edge.tier-bar-Бриллиантовый { background:#1f8a9a }
+.tier-edge.tier-bar-Платиновый { background:#4a6b78 }
+.tier-edge.tier-bar-Золотой { background:#b08324 }
+.tier-edge.tier-bar-Серебряный { background:#7d8894 }
+.tier-edge.tier-bar-Бронзовый { background:#a4632e }
 
 .tier-row-text {
   display:flex;
@@ -1792,13 +2019,13 @@ textarea:focus {
 }
 
 .tier-row-text span {
-  font-family:IBM Plex Mono,ui-monospace,monospace;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
   font-size:11.5px;
   color:var(--faint)
 }
 
 .tier-row-count {
-  font-family:IBM Plex Mono,ui-monospace,monospace;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
   font-size:12.5px;
   color:var(--muted)
 }
@@ -1845,22 +2072,19 @@ textarea:focus {
 
 @media (min-width:900px) {
   .board {
-    grid-template-columns:264px minmax(0,1fr);
-    gap:20px
-  }
-  .board .filters {
-    position:sticky;
-    top:16px
+    grid-template-columns:252px minmax(0,1fr);
+    gap:24px
   }
 }
 
 /* Внутри боковой колонки фильтры компактнее: места меньше, а групп больше. */
 .board .filters {
   margin:0;
-  padding:13px;
-  gap:12px;
+  padding:18px 16px;
+  gap:18px;
   min-width:0;
-  overflow:visible
+  overflow:visible;
+  border-radius:16px
 }
 
 .board .filters * {
@@ -2139,7 +2363,7 @@ textarea:focus {
 }
 
 .account-row-price {
-  font-family:IBM Plex Mono,ui-monospace,monospace;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
   font-size:14px;
   color:var(--muted)
 }
@@ -2428,6 +2652,619 @@ textarea:focus {
   font-size:13px;
   color:var(--muted);
   line-height:1.55
+}
+
+
+/* --- фильтры на телефоне: панель снизу --- */
+.filters-open,
+.filters-sheet-head,
+.filters-apply,
+.filters-scrim {
+  display:none
+}
+
+@media (max-width:899px) {
+  .filters-open {
+    display:inline-flex;
+    align-self:flex-start;
+    margin-bottom:4px
+  }
+
+  .filters-open-count {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:18px;
+    height:18px;
+    padding:0 5px;
+    border-radius:999px;
+    background:var(--accent);
+    color:#101418;
+    font-size:11px;
+    font-weight:700
+  }
+
+  /* Панель закрыта — её нет в потоке, а не просто спрятана за краем. */
+  .board .filters {
+    display:none
+  }
+
+  .board .filters.open {
+    display:flex;
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:60;
+    max-height:88vh;
+    overflow-y:auto;
+    border-radius:20px 20px 0 0;
+    padding:18px 16px 16px;
+    box-shadow:0 -12px 40px rgba(16,20,24,.24)
+  }
+
+  .board .filters.open .filters-sheet-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--line)
+  }
+
+  .filters-sheet-title {
+    font-family:Unbounded,"Noto Sans Armenian",system-ui,sans-serif;
+    font-weight:600;
+    font-size:16px;
+    letter-spacing:-.02em
+  }
+
+  .board .filters.open .filters-apply {
+    display:flex;
+    position:sticky;
+    bottom:0;
+    height:48px;
+    font-size:15px
+  }
+
+  .filters-scrim {
+    display:block;
+    position:fixed;
+    inset:0;
+    z-index:50;
+    border:0;
+    padding:0;
+    background:rgba(16,20,24,.45)
+  }
+
+  /* Дополнительные фильтры внутри панели раскрыты: прятать их незачем,
+     панель и так открывается по нажатию. */
+  .filter-extra > summary {
+    display:none
+  }
+
+  .filter-extra {
+    border-top:0;
+    padding-top:0
+  }
+
+  /* Карточка на телефоне: номер и индекс в строку, цена одной строкой. */
+  .listing-card {
+    padding:14px 16px;
+    gap:10px
+  }
+
+  .listing-card-number .number {
+    font-size:22px
+  }
+
+  .listing-card-index {
+    display:flex;
+    align-items:baseline;
+    gap:8px
+  }
+
+  .listing-card-index .index-bar {
+    flex:1;
+    margin-top:0
+  }
+}
+
+
+/* --- органы управления в колонке фильтров --- */
+.filter-group-label {
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--faint);
+  margin-bottom:8px
+}
+
+.filters-hint {
+  font-size:11.5px;
+  color:var(--faint);
+  margin:0 0 8px
+}
+
+/* Операторы — две колонки с логотипом и счётчиком. */
+.operator-toggle-row {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px
+}
+
+.operator-toggle {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid var(--line-strong);
+  background:var(--surface);
+  border-radius:9px;
+  padding:6px 8px;
+  cursor:pointer;
+  font-family:inherit;
+  color:var(--ink);
+  min-width:0
+}
+
+.operator-toggle:hover {
+  border-color:var(--ink)
+}
+
+.operator-toggle.active {
+  background:var(--ink);
+  border-color:var(--ink);
+  color:var(--surface)
+}
+
+.operator-toggle-name {
+  font-size:12.5px;
+  font-weight:600;
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:left
+}
+
+.operator-toggle-count {
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;
+  font-size:11px;
+  color:var(--faint)
+}
+
+.operator-toggle.active .operator-toggle-count {
+  color:var(--accent)
+}
+
+/* Тип номера и готовые узоры — пилюли. */
+.type-toggle-row,
+.presets {
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px
+}
+
+.type-toggle,
+.chip {
+  border:1px solid var(--line-strong);
+  background:var(--surface);
+  border-radius:999px;
+  padding:5px 12px;
+  font-size:12.5px;
+  font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  font-family:inherit
+}
+
+.type-toggle:hover,
+.chip:hover:not(:disabled) {
+  border-color:var(--ink)
+}
+
+.type-toggle.active,
+.chip.active {
+  background:var(--ink);
+  border-color:var(--ink);
+  color:var(--surface);
+  font-weight:600
+}
+
+.chip-count {
+  margin-left:6px;
+  font-size:11px;
+  color:var(--faint)
+}
+
+.chip.active .chip-count {
+  color:var(--accent)
+}
+
+.chip:disabled {
+  opacity:.45;
+  cursor:default
+}
+
+/* Статусы — две колонки: цветная грань, название, счётчик. */
+.tier-list {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:5px
+}
+
+.tier-row {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 8px 5px 7px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  cursor:pointer;
+  margin:0;
+  min-width:0
+}
+
+.tier-row:hover {
+  border-color:var(--line-strong)
+}
+
+.tier-row.active {
+  background:var(--ink);
+  border-color:var(--ink)
+}
+
+.tier-edge {
+  width:9px;
+  height:9px;
+  border-radius:3px;
+  flex-shrink:0
+}
+
+.tier-row-text {
+  display:block;
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap
+}
+
+.tier-row-text b {
+  font-size:11.5px;
+  font-weight:600
+}
+
+/* Диапазон индекса в узкой колонке не помещается — он есть в разборе номера. */
+.tier-row-text span {
+  display:none
+}
+
+.tier-row.active .tier-row-text b {
+  color:var(--surface)
+}
+
+.tier-row-count {
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;
+  font-size:10.5px;
+  color:var(--faint)
+}
+
+.tier-row.active .tier-row-count {
+  color:var(--accent)
+}
+
+/* Заметка о трёх строках цены — под списком, где вопрос и возникает. */
+.three-lines {
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin-top:10px;
+  padding:14px 16px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--surface);
+  font-size:13px;
+  line-height:1.5;
+  color:var(--muted)
+}
+
+.three-lines b {
+  color:var(--ink)
+}
+
+.three-lines-icon {
+  flex-shrink:0;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:var(--accent-soft);
+  color:var(--accent-ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:700;
+  margin-top:1px
+}
+
+
+/* --- клавиши цифр в фильтре повторов --- */
+.digit-grid {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:5px
+}
+
+.digit-key {
+  height:30px;
+  border-radius:8px;
+  border:1px solid var(--line-strong);
+  background:var(--surface);
+  color:var(--ink);
+  font-size:13px;
+  cursor:pointer;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center
+}
+
+.digit-key:hover {
+  border-color:var(--ink)
+}
+
+.digit-key.active {
+  background:var(--ink);
+  border-color:var(--ink);
+  color:var(--surface)
+}
+
+.times-row {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-top:10px;
+  font-size:11.5px;
+  color:var(--muted)
+}
+
+.times-row > span {
+  white-space:nowrap
+}
+
+.times-keys {
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:4px;
+  flex:1;
+  min-width:0
+}
+
+.times-keys .digit-key {
+  height:26px;
+  font-size:12px
+}
+
+
+/* --- шапка выдачи --- */
+.results-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:14px
+}
+
+.results-count {
+  font-family:Unbounded,"Noto Sans Armenian",system-ui,sans-serif;
+  font-weight:600;
+  font-size:17px;
+  letter-spacing:-.03em;
+  color:var(--ink)
+}
+
+.active-chip {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  background:var(--ink);
+  color:var(--surface);
+  border:0;
+  border-radius:999px;
+  padding:4px 9px 4px 11px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  font-family:inherit
+}
+
+.active-chip span {
+  color:var(--faint);
+  font-size:14px;
+  line-height:1
+}
+
+.reset-all {
+  border:0;
+  background:none;
+  padding:0;
+  font-family:inherit;
+  font-size:12.5px;
+  font-weight:500;
+  color:var(--faint);
+  cursor:pointer
+}
+
+.reset-all:hover {
+  color:var(--ink)
+}
+
+.results-sort select {
+  border:1px solid var(--line-strong);
+  background:var(--surface);
+  border-radius:10px;
+  padding:8px 12px;
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink)
+}
+
+
+/* --- карточка объявления --- */
+.listing-cards {
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+
+.listing-card {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:14px;
+  align-items:center;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px 18px;
+  text-decoration:none;
+  color:inherit
+}
+
+.listing-card:hover {
+  border-color:var(--line-strong)
+}
+
+@media (min-width:900px) {
+  .listing-card {
+    grid-template-columns:minmax(0,1fr) 74px 232px 118px;
+    gap:18px;
+    padding:16px 20px
+  }
+}
+
+.listing-card-number .number {
+  font-size:26px;
+  font-weight:500;
+  letter-spacing:.01em;
+  margin-bottom:8px
+}
+
+/* Узор подсвечивается прямо в цифрах: покупателю не нужно читать объяснение. */
+.pattern-digit.lit {
+  background:var(--accent-soft);
+  border-radius:3px
+}
+
+.listing-card-tier {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap
+}
+
+.listing-card-pattern {
+  font-size:13px;
+  color:var(--muted)
+}
+
+.listing-card-meta {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-top:8px;
+  font-size:12px;
+  color:var(--faint)
+}
+
+.listing-card-index {
+  display:block
+}
+
+.listing-card-index b {
+  font-size:22px;
+  font-weight:700;
+  line-height:1;
+  color:var(--accent-ink)
+}
+
+.listing-card-index .index-bar {
+  height:4px;
+  border-radius:999px;
+  background:var(--surface-2);
+  margin-top:5px;
+  overflow:hidden
+}
+
+.listing-card-index-label {
+  display:block;
+  font-size:10.5px;
+  color:var(--faint);
+  margin-top:4px
+}
+
+.listing-card-cost {
+  display:flex;
+  flex-direction:column;
+  gap:3px
+}
+
+.listing-card-cost > div {
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  font-size:12px;
+  color:var(--faint)
+}
+
+.listing-card-cost b {
+  font-size:13px;
+  font-weight:500;
+  color:var(--ink)
+}
+
+.listing-card-cost .price-total {
+  border-top:1px solid var(--line);
+  margin-top:3px;
+  padding-top:6px;
+  align-items:baseline
+}
+
+.listing-card-cost .price-total span {
+  font-size:12px;
+  font-weight:700;
+  color:var(--ink)
+}
+
+.listing-card-cost .price-total b {
+  font-size:17px;
+  font-weight:700
+}
+
+.listing-card-view {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:40px;
+  border:1px solid var(--line-strong);
+  border-radius:10px;
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--ink)
+}
+
+.verified-mark {
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--success)
 }
 
 

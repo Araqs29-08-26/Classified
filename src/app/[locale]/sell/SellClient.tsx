@@ -9,7 +9,6 @@ import { detect } from "@/lib/phone";
 import { evaluateNumber, type EngineResult } from "@/lib/numberEngine";
 import { formatPrice, formatAmount } from "@/lib/supabase";
 import PatternNumber from "../PatternNumber";
-import CertificateButton from "./CertificateButton";
 
 /**
  * Оценка номера — вход для того, кто ещё не решил, продавать ли.
@@ -183,12 +182,6 @@ export default function SellClient() {
             <Link href={ctaHref} className="btn btn-accent">
               {tr("cta")}
             </Link>
-          </div>
-
-          <div className="certificate">
-            <b>{tr("certificateTitle")}</b>
-            <p>{tr("certificateText")}</p>
-            <CertificateButton phone={phone} status={result.status} />
           </div>
 
           <p className="notice" style={{ marginTop: 16, marginBottom: 0 }}>

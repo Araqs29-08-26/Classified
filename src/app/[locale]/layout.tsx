@@ -6,6 +6,7 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
+import BrandMark from "./BrandMark";
 import LanguageSwitcher from "./LanguageSwitcher";
 import AccountLink from "./AccountLink";
 import SupportButton from "./SupportButton";
@@ -51,7 +52,7 @@ export default async function LocaleLayout({
           <header className="site-header">
             <div className="bar">
               <Link href="/" className="brand">
-                <span className="mark">Aq</span>
+                <BrandMark size={32} />
                 <span className="name">Araqs</span>
               </Link>
               <nav className="nav-actions">
@@ -92,18 +93,20 @@ async function SiteFooter({ locale }: { locale: string }) {
 
   return (
     <footer className="site-footer">
-      <p>{t("footer")}</p>
-      <p className="footer-links">
+      <div className="footer-brand">
+        <BrandMark size={30} inverted />
+        <span>Araqs</span>
+      </div>
+
+      <div className="footer-links">
         <Link href="/rules">{t("rulesNav.posting")}</Link>
-        <span aria-hidden="true">·</span>
         <Link href="/rules/transfer">{t("rulesNav.transfer")}</Link>
-        <span aria-hidden="true">·</span>
         <Link href="/rules/promo">{t("rulesNav.promo")}</Link>
-        <span aria-hidden="true">·</span>
         <Link href="/rules/terms">{t("rulesNav.terms")}</Link>
-        <span aria-hidden="true">·</span>
         <Link href="/privacy">{t("legal.privacyNav")}</Link>
-      </p>
+      </div>
+
+      <p>{t("footer")}</p>
     </footer>
   );
 }
