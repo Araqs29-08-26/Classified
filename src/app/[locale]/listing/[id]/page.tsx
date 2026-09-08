@@ -17,6 +17,7 @@ import {
 import ContactReveal from "./ContactReveal";
 import PatternNumber from "../../PatternNumber";
 import ReportButton from "./ReportButton";
+import FavoriteButton from "./FavoriteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -201,6 +202,8 @@ export default async function ListingPage({
           )}
 
           <ContactReveal listingId={listing.id} />
+
+          <FavoriteButton listingId={listing.id} />
         </div>
 
         <ReportButton listingId={listing.id} />

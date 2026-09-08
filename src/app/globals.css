@@ -1976,3 +1976,112 @@ textarea:focus {
     color:var(--accent-ink)
   }
 }
+
+
+/* --- личный кабинет --- */
+.account-head {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:18px
+}
+
+.account-tabs {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:18px
+}
+
+.account-list {
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+
+.account-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  padding:14px 16px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:12px
+}
+
+.account-row-main {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  text-decoration:none;
+  color:inherit;
+  min-width:0
+}
+
+.account-row-number {
+  font-size:16px;
+  font-weight:600
+}
+
+.account-row-price {
+  font-family:IBM Plex Mono,ui-monospace,monospace;
+  font-size:14px;
+  color:var(--muted)
+}
+
+.account-row-actions {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap
+}
+
+.account-row-status {
+  font-size:12.5px;
+  color:var(--faint)
+}
+
+/* --- избранное --- */
+.favorite-btn {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+  padding:8px 14px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--surface);
+  color:var(--muted);
+  cursor:pointer;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:600
+}
+
+.favorite-btn:hover {
+  border-color:var(--accent);
+  color:var(--accent-ink)
+}
+
+.favorite-btn.active {
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  color:var(--accent-ink)
+}
+
+.favorite-btn span {
+  font-size:15px;
+  line-height:1
+}
+
+.favorite-hint {
+  display:inline-block;
+  margin-top:12px;
+  font-size:12.5px;
+  color:var(--faint)
+}

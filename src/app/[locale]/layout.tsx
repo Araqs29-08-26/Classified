@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
 import LanguageSwitcher from "./LanguageSwitcher";
+import AccountLink from "./AccountLink";
 import "../globals.css";
 
 // Страницы намеренно рендерятся на каждый запрос (как и на прежнем сайте):
@@ -71,6 +72,7 @@ export default async function LocaleLayout({
                 <Link href="/new" className="btn btn-accent">
                   {t("postAd")}
                 </Link>
+                <AccountLink />
                 <LanguageSwitcher />
               </nav>
             </div>

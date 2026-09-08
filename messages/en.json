@@ -6,7 +6,9 @@
     "sell": "Sell a number",
     "transfer": "Transfer",
     "rules": "Listing rules",
-    "support": "Support"
+    "support": "Support",
+    "login": "Sign in",
+    "account": "My account"
   },
   "home": {
     "eyebrow": "Araqs · beta",
@@ -382,5 +384,44 @@
     "error_empty": "Enter a number.",
     "error_notRecognized": "The number was not recognised — it needs 8 significant digits in a row, separated only by spaces, dots or hyphens.",
     "error_multipleNumbers": "The line contains several different numbers ({numbers}) — leave just one."
+  },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Enter your email — we'll send a sign-in code. No password needed.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "sendCode": "Send the code",
+    "sending": "Sending...",
+    "codeLabel": "Code from the email",
+    "codePlaceholder": "123456",
+    "confirm": "Sign in",
+    "checking": "Checking...",
+    "codeSentTo": "The code was sent to {email}. Check your inbox — it may land in spam.",
+    "changeEmail": "Use another email",
+    "signOut": "Sign out",
+    "errors": {
+      "send": "Couldn't send the code. Check the address and try again.",
+      "wrongCode": "Wrong code:"
+    }
+  },
+  "account": {
+    "title": "My account",
+    "signedInAs": "Signed in as {who}",
+    "myListings": "My listings",
+    "favorites": "Favourites",
+    "emptyListings": "You don't have any listings yet.",
+    "emptyFavorites": "You haven't added anything to favourites yet.",
+    "postFirst": "List a number",
+    "hide": "Unpublish",
+    "publish": "Publish again",
+    "statusActive": "Published",
+    "statusHidden": "Unpublished",
+    "statusSold": "Sold",
+    "statusReserved": "Reserved",
+    "working": "Saving...",
+    "loadFailed": "Couldn't load. Try refreshing the page.",
+    "addFavorite": "Add to favourites",
+    "removeFavorite": "Remove from favourites",
+    "signInToFavorite": "Sign in to add favourites"
   }
 }
