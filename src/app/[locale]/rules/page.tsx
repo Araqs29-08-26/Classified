@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 import { Link } from "@/i18n/navigation";
+import { EXTRA_LISTING_PRICE } from "@/lib/promoPrices";
+import RulesNav from "./RulesNav";
 
 export const dynamic = "force-dynamic";
 
@@ -19,29 +21,29 @@ export default async function RulesPage({
 }: {
   params: { locale: string };
 }) {
-  const t = await getTranslations({ locale });
+  const t = await getTranslations({ locale, namespace: "rules" });
+  const tNav = await getTranslations({ locale, namespace: "rulesNav" });
 
   return (
     <div className="legal">
-      <h1>{t("rules.title")}</h1>
+      <h1>{t("title")}</h1>
+      <RulesNav />
 
-      <p className="legal-intro">{t("rules.intro")}</p>
+      <p className="legal-intro">{t("intro")}</p>
 
-      <h2>{t("rules.promoTitle")}</h2>
-      <p>{t("rules.promoIntro")}</p>
+      <h2>{t("postingTitle")}</h2>
+      <p>{t("postingFree")}</p>
+      <p>{t("postingTerm")}</p>
+      <p>{t("postingSecond", { amount: EXTRA_LISTING_PRICE })}</p>
 
-      <ul>
-        <li>{t("rules.promoTop")}</li>
-        <li>{t("rules.promoHighlight")}</li>
-        <li>{t("rules.promoUrgent")}</li>
-        <li>{t("rules.promoExtra")}</li>
-      </ul>
+      <h2>{t("postingWhoTitle")}</h2>
+      <p>{t("postingWho")}</p>
 
-      <p>{t("rules.promoHow")}</p>
-      <p>{t("rules.promoUntil")}</p>
+      <h2>{t("postingForbiddenTitle")}</h2>
+      <p>{t("postingForbidden")}</p>
 
-      <p className="legal-intro">
-        {t("rules.termsNote")} <Link href="/terms">{t("legal.termsNav")}</Link>.
+      <p className="legal-note">
+        {t("termsNote")} <Link href="/rules/terms">{tNav("terms")}</Link>.
       </p>
     </div>
   );

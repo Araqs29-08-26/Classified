@@ -106,15 +106,10 @@ export default function NewListingClient() {
   const sellerPrice = Number(form.price) || 0;
   const transferFee = verdict?.ok ? verdict.transferFee : 0;
 
-  // Публикацию блокируем, пока номер не разобран или узор не дотягивает до Бронзового.
-  const blocked = !verdict || !verdict.ok || !verdict.publishable;
-  const blockReason = !verdict
-    ? null
-    : !verdict.ok
-      ? verdict.error
-      : !verdict.publishable
-        ? t("errors.notPublishable")
-        : null;
+  // Публикацию блокирует только неразобранный номер. Статус на неё не влияет:
+  // размещение бесплатное для всех статусов, включая обычные.
+  const blocked = !verdict || !verdict.ok;
+  const blockReason = verdict && !verdict.ok ? verdict.error : null;
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -208,7 +203,7 @@ export default function NewListingClient() {
     e.preventDefault();
 
     // Вторая проверка на всякий случай: кнопка и так заблокирована.
-    if (!verdict?.ok || !verdict.publishable) return;
+    if (!verdict?.ok) return;
 
     setLoading(true);
     setError(null);

@@ -1,14 +1,13 @@
 {
   "nav": {
-    "brand": "Araqs",
     "buy": "Buy a number",
-    "postAd": "+ List a number",
     "sell": "Sell a number",
-    "transfer": "Transfer",
-    "rules": "Listing rules",
+    "rules": "Rules",
+    "evaluate": "Value a number",
     "support": "Support",
     "login": "Sign in",
-    "account": "My account"
+    "account": "My account",
+    "brand": "Araqs"
   },
   "home": {
     "eyebrow": "Araqs · beta",
@@ -39,7 +38,6 @@
       "sortTotalDesc": "Total cost: high to low",
       "indexShort": "index",
       "statusHint": "The higher the tier, the rarer the pattern",
-      "notPublishedNote": "Numbers without a pattern are not published — the marketplace accepts Bronze and above",
       "totalPriceLabel": "Total cost for the buyer",
       "totalPriceHint": "Including the operator's transfer fee",
       "moreLabel": "More",
@@ -210,8 +208,7 @@
       "sendCode": "Couldn't send the SMS code. Check the number and try again.",
       "wrongCode": "Wrong code:",
       "sessionExpired": "Your session expired, please verify by SMS again.",
-      "saveFailed": "Couldn't save the listing:",
-      "notPublishable": "A number in the “Standard” tier isn't published — the marketplace accepts Bronze and above."
+      "saveFailed": "Couldn't save the listing:"
     },
     "ownership": {
       "title": "Verify the number being sold",
@@ -232,20 +229,37 @@
   },
   "sell": {
     "title": "Value a number",
-    "subtitle": "Get a recommended market price for your number, based on the same 8 tiers used across the marketplace.",
-    "inputLabel": "Your phone number",
+    "subtitle": "Enter a number — the engine breaks it down digit by digit, names its status and shows what such numbers sell for.",
+    "inputLabel": "Phone number",
     "placeholder": "+374 XX XXX XXX",
-    "button": "Get valuation",
+    "button": "Value it",
+    "error": "Enter a valid phone number (at least 6 digits).",
     "result": {
-      "tierLabel": "Your number looks like it falls into:",
-      "priceLabel": "Recommended selling price:",
-      "reasonPrefix": "Why: ",
-      "cta": "List this number",
-      "disclaimer": "This is an automatic estimate based on the digit pattern — you set the final price yourself when listing.",
-      "operatorNote": "Operator (from the number's prefix): {operator} — double-check when listing if the number has been ported to another operator.",
-      "operatorUnknown": "Couldn't detect the operator from this number — you'll set it manually when listing."
-    },
-    "error": "Enter a valid phone number (at least 6 digits)."
+      "breakdownTitle": "Number breakdown",
+      "legendCode": "operator code",
+      "legendPattern": "pattern found",
+      "indexLabel": "beauty index",
+      "rangeTitle": "What to ask for the number",
+      "rangeLow": "lower bound — the operator's price",
+      "rangeRec": "recommended",
+      "rangeHigh": "upper — the market level",
+      "rangeHint": "The seller picks a price inside the range. The lower bound is what the same new number costs at the operator; selling above it makes sense. The upper one is the level above which numbers of this status take a long time to sell.",
+      "buyerTitle": "What the buyer pays",
+      "buyerSeller": "Seller's price",
+      "buyerFee": "Transfer fee",
+      "buyerTotal": "Total cost",
+      "operatorNote": "Operator (by the number's code): {operator} — confirm when posting if the number has been ported.",
+      "operatorUnknown": "The operator could not be determined from the number — you will pick it manually when posting.",
+      "cta": "Post this number",
+      "certificateTitle": "Valuation certificate",
+      "certificateText": "A certified breakdown of the number as a separate document: status, index, pattern, price range and the fee calculation as of the issue date. Useful when the price needs backing up in front of a buyer.",
+      "certificateOrder": "Order a certificate",
+      "certificateOrdering": "Sending...",
+      "certificateDone": "The certificate request has been sent — we will get in touch.",
+      "certificateFailed": "The request could not be sent. Please try again.",
+      "certificateSignIn": "Sign in to order a certificate",
+      "disclaimer": "This is an automatic valuation based on the pattern of digits — you set the final price yourself when posting."
+    }
   },
   "numberTypes": {
     "Мобильный": "Mobile",
@@ -380,17 +394,17 @@
     "sitesTitle": "Operator websites"
   },
   "rules": {
-    "title": "Listing rules",
-    "intro": "Listing is free — for every tier and with no time limit. We take no commission on the deal and take no part in payments between the seller and the buyer.",
-    "termsNote": "Until separate listing rules are published, the site's general Terms of Use apply.",
-    "promoTitle": "Paid promotion",
-    "promoIntro": "The only paid thing on the marketplace is promoting a listing. It does not affect the number's valuation and does not change its tier — only how visible the listing is in the list.",
-    "promoTop": "Top of search — 1000 ֏. The listing moves into the top block and stays on the first page of search under any sort order.",
-    "promoHighlight": "Colour highlight — 2000 ֏. The card is outlined in colour and stands out from the rest.",
-    "promoUrgent": "Urgent — 700 ֏. A mark appears in the listing row showing the seller is in a hurry.",
-    "promoHow": "Promotion is switched on in your account: press «Promote listing» on your listing and a window with services and prices opens. Online payment is not connected yet, so an administrator will contact you after you order.",
-    "promoUntil": "Promotion runs until the date shown, after which the listing returns to the general list. The listing itself stays where it is.",
-    "promoExtra": "The second and each further listing by the same seller — 500 ֏. The first listing is free."
+    "title": "Rules",
+    "intro": "The marketplace brings a seller and a buyer together. The engine values the number; payment and transfer happen between you two — we do not take part in the settlement.",
+    "postingTitle": "Posting",
+    "postingFree": "Posting a listing is free — for every status of a number, ordinary ones included. We take no commission on the deal.",
+    "postingTerm": "A listing stays on the marketplace for 6 months. After that it leaves the catalogue and you can post it again — free as well.",
+    "postingSecond": "The first listing is always free. The second and each further one costs {amount} ֏ — or you take out a «Shop» subscription and pay no surcharge.",
+    "postingWhoTitle": "Who may post",
+    "postingWho": "The owner of the number may post a listing. The seller's phone is confirmed by SMS when posting. Optionally the number being sold can be confirmed too — then a «Verified» mark appears in search results.",
+    "postingForbiddenTitle": "What may not be posted",
+    "postingForbidden": "Someone else's numbers without the owner's knowledge; invented prices and statuses; one number split across several listings; contact details instead of a description.",
+    "termsNote": "The full terms of using the marketplace are in the section"
   },
   "support": {
     "title": "Support",
@@ -459,5 +473,33 @@
     "orderedTitle": "Request sent",
     "orderedText": "We have received the promotion request for number {number}. We will contact you at the email address on your account.",
     "orderFailed": "The request could not be sent. Please try again or write to support."
+  },
+  "rulesNav": {
+    "posting": "Posting",
+    "transfer": "Transfer",
+    "promo": "Promotion",
+    "terms": "Terms of use",
+    "sectionLabel": "Rules sections"
+  },
+  "promoPage": {
+    "title": "Promotion",
+    "intro": "Posting a listing is free. Only the services that make a listing more visible are paid, along with subscriptions for people who trade numbers regularly.",
+    "perListingTitle": "Services for a single listing",
+    "perListingNote": "Ordered in your account, on your own listing. They last 30 days.",
+    "subscriptionsTitle": "Monthly subscriptions",
+    "shopTitle": "Shop",
+    "shopIntro": "For sellers who keep many numbers on the marketplace: no surcharge for the second and further listings.",
+    "shop50": "up to 50 numbers",
+    "shop100": "up to 100 numbers",
+    "shopUnlimited": "no limit on the number of listings",
+    "hunterTitle": "Hunter",
+    "hunterText": "You describe the combination of digits you want, and the moment such a number goes on sale you get an urgent notification. The subscription is monthly.",
+    "perMonth": "per month",
+    "order": "Order",
+    "ordering": "Sending...",
+    "ordered": "Request sent — we will get in touch.",
+    "orderFailed": "The request could not be sent. Please try again.",
+    "signInToOrder": "Sign in to order",
+    "payNote": "Online payment is not connected yet. An administrator contacts you about the request; later the «Order» button will lead straight to a payment page."
   }
 }

@@ -68,7 +68,8 @@ function OperatorBadge({ op, small }: { op: string; small?: boolean }) {
  * Статусы в фильтре — от дорогого к дешёвому и без «Обычного»: номера без узора
  * на площадке не публикуются, фильтровать по ним нечего.
  */
-const PUBLISHABLE_TIERS = TIERS.map((x) => x.name).filter((n) => n !== "Обычный");
+/** Все восемь статусов: обычные номера тоже размещаются и тоже ищутся. */
+const ALL_TIERS = TIERS.map((x) => x.name);
 
 /** Готовые узоры: каждый — семейство кодов, которые возвращает движок. */
 const PRESETS = [
@@ -209,7 +210,7 @@ export default function HomeClient({
 
   const tierCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const tier of PUBLISHABLE_TIERS) counts[tier] = 0;
+    for (const tier of ALL_TIERS) counts[tier] = 0;
     for (const l of listings) counts[l.status_tier] = (counts[l.status_tier] ?? 0) + 1;
     return counts;
   }, [listings]);
@@ -468,7 +469,7 @@ export default function HomeClient({
           <div className="filter-group-label">{t("filters.statusLabel")}</div>
           <p className="filters-hint">{t("filters.statusHint")}</p>
           <div className="tier-list">
-            {PUBLISHABLE_TIERS.map((tier) => {
+            {ALL_TIERS.map((tier) => {
               const active = selectedTiers.includes(tier);
               return (
                 <label key={tier} className={"tier-row" + (active ? " active" : "")}>
@@ -489,7 +490,7 @@ export default function HomeClient({
               );
             })}
           </div>
-          <p className="filters-note">{t("filters.notPublishedNote")}</p>
+
         </div>
 
         <div className="filter-group">

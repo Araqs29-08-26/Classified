@@ -15,7 +15,29 @@ import ru from "./araqs/messages.ru.json";
 import hy from "./araqs/messages.hy.json";
 import en from "./araqs/messages.en.json";
 
-const DICTIONARIES: Record<string, Record<string, string>> = { ru, hy, en };
+/**
+ * Одна поправка к словарям движка.
+ *
+ * Движок называет обычные номера непубликуемыми — так было, пока за размещение
+ * брали деньги и площадка принимала только номера с узором. Размещение стало
+ * бесплатным для всех статусов, поэтому строка заменена. Расчёт при этом не
+ * трогается: статус, индекс и сбор движок считает как считал, меняется только
+ * пояснение к обычному номеру.
+ */
+const NOT_PUBLISHABLE = "note.notPublishable";
+
+const PUBLISHABLE_ANYWAY: Record<string, string> = {
+  ru: "Узор не найден — номер обычный. Разместить его всё равно можно: размещение бесплатное для всех статусов.",
+  hy: "Նախշ չի գտնվել — համարը սովորական է։ Այն միևնույն է կարելի է տեղադրել. տեղադրումն անվճար է բոլոր կարգավիճակների համար։",
+  en: "No pattern found — the number is an ordinary one. You can still post it: posting is free for every status.",
+};
+
+const DICTIONARIES: Record<string, Record<string, string>> = Object.fromEntries(
+  Object.entries({ ru, hy, en }).map(([locale, dict]) => [
+    locale,
+    { ...dict, [NOT_PUBLISHABLE]: PUBLISHABLE_ANYWAY[locale] },
+  ])
+);
 
 export type Operator = "viva" | "team" | "ucom";
 

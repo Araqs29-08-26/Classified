@@ -8,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
 import LanguageSwitcher from "./LanguageSwitcher";
 import AccountLink from "./AccountLink";
+import SupportButton from "./SupportButton";
 import "../globals.css";
 
 // Страницы намеренно рендерятся на каждый запрос (как и на прежнем сайте):
@@ -57,20 +58,16 @@ export default async function LocaleLayout({
                 <Link href="/" className="nav-link">
                   {t("buy")}
                 </Link>
-                <Link href="/sell" className="nav-link">
+                <Link href="/new" className="nav-link">
                   {t("sell")}
-                </Link>
-                <Link href="/transfer" className="nav-link">
-                  {t("transfer")}
                 </Link>
                 <Link href="/rules" className="nav-link">
                   {t("rules")}
                 </Link>
-                <Link href="/support" className="nav-link">
-                  {t("support")}
-                </Link>
-                <Link href="/new" className="btn btn-accent">
-                  {t("postAd")}
+                {/* Оценка — вход для того, кто ещё не решил, продавать ли:
+                    сначала человек узнаёт цену, а размещает уже потом. */}
+                <Link href="/sell" className="btn btn-accent">
+                  {t("evaluate")}
                 </Link>
                 <AccountLink />
                 <LanguageSwitcher />
@@ -79,6 +76,9 @@ export default async function LocaleLayout({
           </header>
 
           <main className="wrap">{children}</main>
+
+          {/* Поддержка ушла из меню в угол экрана: она нужна редко, но всегда. */}
+          <SupportButton />
 
           <SiteFooter locale={locale} />
         </NextIntlClientProvider>
@@ -94,13 +94,13 @@ async function SiteFooter({ locale }: { locale: string }) {
     <footer className="site-footer">
       <p>{t("footer")}</p>
       <p className="footer-links">
-        <Link href="/transfer">{t("nav.transfer")}</Link>
+        <Link href="/rules">{t("rulesNav.posting")}</Link>
         <span aria-hidden="true">·</span>
-        <Link href="/rules">{t("nav.rules")}</Link>
+        <Link href="/rules/transfer">{t("rulesNav.transfer")}</Link>
         <span aria-hidden="true">·</span>
-        <Link href="/support">{t("nav.support")}</Link>
+        <Link href="/rules/promo">{t("rulesNav.promo")}</Link>
         <span aria-hidden="true">·</span>
-        <Link href="/terms">{t("legal.termsNav")}</Link>
+        <Link href="/rules/terms">{t("rulesNav.terms")}</Link>
         <span aria-hidden="true">·</span>
         <Link href="/privacy">{t("legal.privacyNav")}</Link>
       </p>

@@ -12,7 +12,10 @@ const STATIC_PATHS: Array<{
   { path: "", changeFrequency: "hourly", priority: 1 },
   { path: "/sell", changeFrequency: "monthly", priority: 0.5 },
   { path: "/new", changeFrequency: "monthly", priority: 0.5 },
-  { path: "/terms", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/rules", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/rules/transfer", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/rules/promo", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/rules/terms", changeFrequency: "monthly", priority: 0.4 },
   { path: "/privacy", changeFrequency: "monthly", priority: 0.5 },
 ];
 

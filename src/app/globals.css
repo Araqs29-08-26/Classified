@@ -2167,6 +2167,346 @@ textarea:focus {
 }
 
 
+/* --- разбор номера на странице оценки --- */
+.breakdown {
+  max-width:620px;
+  margin-top:24px
+}
+
+.breakdown h2 {
+  font-size:17px;
+  margin:26px 0 10px
+}
+
+.breakdown h2:first-child {
+  margin-top:0
+}
+
+.breakdown-legend {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  margin:8px 0 0;
+  font-size:12.5px;
+  color:var(--faint)
+}
+
+.legend-code,
+.legend-lit {
+  display:inline-block;
+  width:13px;
+  height:13px;
+  border-radius:4px;
+  border:1px solid var(--line)
+}
+
+.legend-code {
+  border-style:dashed;
+  background:transparent
+}
+
+.legend-lit {
+  margin-left:12px;
+  background:var(--accent-soft);
+  border-color:var(--accent)
+}
+
+.breakdown-head {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:16px
+}
+
+.breakdown-index {
+  font-size:13px;
+  color:var(--muted)
+}
+
+.breakdown-index b {
+  font-size:19px;
+  color:var(--ink);
+  margin-right:4px
+}
+
+.breakdown-pattern {
+  margin:10px 0 0;
+  font-size:15px
+}
+
+.breakdown-notes {
+  margin:10px 0 0;
+  padding-left:20px;
+  font-size:13.5px;
+  color:var(--muted);
+  line-height:1.6
+}
+
+.breakdown-hint {
+  margin:10px 0 0;
+  font-size:12.5px;
+  color:var(--faint);
+  line-height:1.55
+}
+
+/* --- диапазон цены --- */
+.range-bar {
+  position:relative;
+  height:8px;
+  border-radius:6px;
+  background:linear-gradient(90deg,var(--accent-2-soft),var(--accent-soft));
+  margin:6px 0 10px
+}
+
+.range-mark {
+  position:absolute;
+  top:-4px;
+  width:4px;
+  height:16px;
+  border-radius:3px;
+  background:var(--accent);
+  transform:translateX(-2px)
+}
+
+.range-ends {
+  display:flex;
+  justify-content:space-between;
+  gap:12px
+}
+
+.range-ends span {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  flex:1
+}
+
+.range-ends em {
+  font-style:normal;
+  font-size:11.5px;
+  color:var(--faint);
+  line-height:1.3
+}
+
+.range-ends b {
+  font-size:15px
+}
+
+.range-rec {
+  text-align:center;
+  align-items:center
+}
+
+.range-rec b {
+  font-size:19px;
+  color:var(--accent-ink)
+}
+
+.range-high {
+  text-align:right;
+  align-items:flex-end
+}
+
+/* --- что платит покупатель --- */
+.money-table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px
+}
+
+.money-table td {
+  padding:10px 0;
+  border-bottom:1px solid var(--line);
+  vertical-align:top
+}
+
+.money-note {
+  display:block;
+  font-size:12px;
+  color:var(--faint);
+  margin-top:3px;
+  line-height:1.45
+}
+
+.money-total td {
+  border-bottom:0;
+  font-weight:600;
+  font-size:16px
+}
+
+.breakdown-actions {
+  margin-top:18px
+}
+
+.certificate {
+  margin-top:18px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--bg);
+  padding:14px 16px
+}
+
+.certificate b {
+  font-size:15px
+}
+
+.certificate p {
+  margin:6px 0 12px;
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.55
+}
+
+
+/* --- подразделы «Правил» --- */
+.rules-nav {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:0 0 22px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--line)
+}
+
+.rules-nav-item {
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:7px 14px;
+  font-size:13.5px;
+  color:var(--muted);
+  text-decoration:none;
+  background:#fff
+}
+
+.rules-nav-item:hover {
+  border-color:var(--accent)
+}
+
+.rules-nav-item.active {
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  color:var(--accent-ink);
+  font-weight:600
+}
+
+
+/* --- список платных услуг с ценой и кнопкой заказа --- */
+.service-list {
+  list-style:none;
+  margin:12px 0 20px;
+  padding:0;
+  display:grid;
+  gap:10px
+}
+
+.service {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fff;
+  padding:13px 16px
+}
+
+.service-body {
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  flex:1;
+  min-width:200px
+}
+
+.service-body b {
+  font-size:15px
+}
+
+.service-body span {
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.5
+}
+
+.service-price {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:2px;
+  white-space:nowrap;
+  font-size:16px;
+  font-weight:600;
+  color:var(--accent-ink)
+}
+
+.service-period {
+  font-size:12px;
+  font-weight:400;
+  color:var(--faint)
+}
+
+.order-slot {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:4px
+}
+
+.order-button {
+  padding:8px 16px;
+  font-size:13.5px;
+  white-space:nowrap
+}
+
+.order-done {
+  font-size:13px;
+  color:var(--success);
+  max-width:220px;
+  text-align:right
+}
+
+.order-error {
+  font-size:12.5px;
+  color:var(--danger, #b3261e)
+}
+
+
+/* --- поддержка кружком в углу экрана --- */
+.support-fab {
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:40;
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--accent);
+  color:#fff;
+  font-size:22px;
+  font-weight:700;
+  text-decoration:none;
+  box-shadow:0 6px 18px rgba(27,36,48,.22)
+}
+
+.support-fab:hover {
+  background:var(--accent-ink)
+}
+
+.visually-hidden {
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  white-space:nowrap
+}
+
+
 /* --- правила переоформления: по блоку на оператора --- */
 .operator-rules {
   display:grid;
