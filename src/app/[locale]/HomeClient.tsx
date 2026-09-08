@@ -590,6 +590,8 @@ export default function HomeClient({
 
         <div className="filter-group">
           <div className="filter-group-label">{t("filters.digitCountLabel")}</div>
+          {/* Два списка подряд, без текста между ними: «не менее N раз»
+              читается прямо в самом списке, а не собирается из кусочков. */}
           <div className="count-filter">
             <select value={countDigit} onChange={(e) => setCountDigit(e.target.value)}>
               <option value="">{t("filters.digitAny")}</option>
@@ -599,7 +601,6 @@ export default function HomeClient({
                 </option>
               ))}
             </select>
-            <span>{t("filters.timesLabel")}</span>
             <select
               value={countMin}
               onChange={(e) => setCountMin(Number(e.target.value))}
@@ -607,11 +608,12 @@ export default function HomeClient({
             >
               {[2, 3, 4, 5, 6, 7, 8].map((n) => (
                 <option key={n} value={n}>
-                  {t("filters.times", { n })}
+                  {t("filters.timesOption", { n })}
                 </option>
               ))}
             </select>
           </div>
+          <p className="filters-hint">{t("filters.digitCountHint")}</p>
         </div>
 
         <div className="filter-group">

@@ -888,6 +888,12 @@ label {
   margin-bottom:14px
 }
 
+input[type=checkbox],
+input[type=radio] {
+  width:auto;
+  height:auto
+}
+
 input,
 select,
 textarea {
@@ -2919,10 +2925,20 @@ textarea:focus {
 }
 
 .count-filter {
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px
+}
+
+@media (min-width:520px) {
+  .count-filter {
+    grid-template-columns:1fr 1fr
+  }
+}
+
+/* В узкой боковой колонке два списка в ряд не помещаются — ставим столбиком. */
+.board .filters .count-filter {
+  grid-template-columns:1fr
 }
 
 .count-filter span {
