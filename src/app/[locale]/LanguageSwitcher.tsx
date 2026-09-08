@@ -20,8 +20,15 @@ export default function LanguageSwitcher() {
 
   // usePathname() из next-intl отдаёт путь без строки параметров. Без этой склейки
   // смена языка сбрасывала бы всё, что стоит после «?».
-  const query = searchParams.toString();
-  const href = query ? `${pathname}?${query}` : pathname;
+  //
+  // Адрес читаем живьём из строки браузера, а не из useSearchParams(): страницы
+  // записывают в него состояние поиска через history.replaceState, не поднимая
+  // роутер, и useSearchParams() о таких правках не знает.
+  function hrefWithQuery() {
+    const query =
+      typeof window === "undefined" ? searchParams.toString() : window.location.search.slice(1);
+    return query ? `${pathname}?${query}` : pathname;
+  }
 
   return (
     <div
@@ -38,7 +45,7 @@ export default function LanguageSwitcher() {
             lang={code}
             className={"lang-btn" + (active ? " active" : "")}
             aria-pressed={active}
-            onClick={() => router.replace(href, { locale: code as any })}
+            onClick={() => router.replace(hrefWithQuery(), { locale: code as any })}
           >
             {label}
           </button>

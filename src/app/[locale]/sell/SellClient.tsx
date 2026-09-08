@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
@@ -13,14 +14,29 @@ export default function SellClient() {
   const tTiers = useTranslations("tiers");
   const tEngine = useTranslations("engine");
 
-  const [phone, setPhone] = useState("+374");
-  const [result, setResult] = useState<EngineResult | null>(null);
-  const [detected, setDetected] = useState<ReturnType<typeof detect> | null>(null);
+  // Номер берётся из адреса, если он там есть: иначе смена языка сбрасывала бы
+  // и введённый номер, и показанную оценку.
+  const searchParams = useSearchParams();
+  const fromUrl = searchParams.get("number") ?? "";
+
+  const [phone, setPhone] = useState(fromUrl || "+374");
+  const [result, setResult] = useState<EngineResult | null>(
+    fromUrl ? evaluateNumber(fromUrl) : null
+  );
+  const [detected, setDetected] = useState<ReturnType<typeof detect> | null>(
+    fromUrl ? detect(fromUrl) : null
+  );
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setResult(evaluateNumber(phone));
     setDetected(detect(phone));
+
+    // Оценённый номер уходит в адрес — так его можно и переслать, и сохранить,
+    // и не потерять при смене языка.
+    const q = new URLSearchParams(window.location.search);
+    q.set("number", phone);
+    window.history.replaceState(null, "", `${window.location.pathname}?${q}`);
   }
 
   // Причину отказа объясняет сам движок: он лучше знает, что именно не так —

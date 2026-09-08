@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
@@ -23,6 +23,7 @@ type Props = {
   initialType?: string;
   initialSort?: string;
   initialMask?: string;
+  initialPreset?: string;
 };
 
 function OperatorBadge({ op, small }: { op: string; small?: boolean }) {
@@ -65,6 +66,7 @@ export default function HomeClient({
   initialType = "",
   initialSort = "",
   initialMask = "",
+  initialPreset = "",
 }: Props) {
   const t = useTranslations("home");
   const tTier = useTranslations("tiers");
@@ -86,7 +88,7 @@ export default function HomeClient({
   );
   const [sort, setSort] = useState<string>(initialSort);
   const [mask, setMask] = useState<string>(initialMask);
-  const [preset, setPreset] = useState<string>("");
+  const [preset, setPreset] = useState<string>(initialPreset);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
 
   const toggle = (
@@ -153,6 +155,26 @@ export default function HomeClient({
       }),
     [listings]
   );
+
+  // Состояние поиска пишется в адрес страницы, иначе при смене языка оно теряется:
+  // страница перезагружается, а фильтры живут только в памяти вкладки.
+  // replaceState вместо роутера — правка адреса не должна дёргать сервер на каждую цифру.
+  useEffect(() => {
+    const q = new URLSearchParams();
+    if (selectedOperators.length) q.set("operator", selectedOperators.join(","));
+    if (selectedTiers.length) q.set("tier", selectedTiers.join(","));
+    if (selectedTypes.length) q.set("type", selectedTypes.join(","));
+    if (sort) q.set("sort", sort);
+    if (/\d/.test(mask)) q.set("mask", mask);
+    if (preset) q.set("preset", preset);
+
+    const query = q.toString();
+    window.history.replaceState(
+      null,
+      "",
+      query ? `${window.location.pathname}?${query}` : window.location.pathname
+    );
+  }, [selectedOperators, selectedTiers, selectedTypes, sort, mask, preset]);
 
   const presetPrefixes = PRESETS.find((p) => p.id === preset)?.prefixes;
 

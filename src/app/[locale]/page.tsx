@@ -11,6 +11,7 @@ type SearchParams = {
   type?: string;
   sort?: string;
   mask?: string;
+  preset?: string;
 };
 
 export default async function HomePage({
@@ -44,6 +45,7 @@ export default async function HomePage({
       initialType={searchParams.type ?? ""}
       initialSort={searchParams.sort ?? ""}
       initialMask={searchParams.mask ?? ""}
+      initialPreset={searchParams.preset ?? ""}
     />
   );
 }
