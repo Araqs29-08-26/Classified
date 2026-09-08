@@ -1787,3 +1787,82 @@ textarea:focus {
 .more-toggles input {
   flex-shrink:0
 }
+
+
+/* --- доска: фильтры слева, список справа --- */
+.board {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:16px;
+  align-items:start;
+  margin:24px 0
+}
+
+@media (min-width:900px) {
+  .board {
+    grid-template-columns:280px minmax(0,1fr);
+    gap:20px
+  }
+  .board .filters {
+    position:sticky;
+    top:16px;
+    max-height:calc(100vh - 32px);
+    overflow-y:auto
+  }
+}
+
+/* Внутри боковой колонки фильтры компактнее: места меньше, а групп больше. */
+.board .filters {
+  margin:0;
+  padding:14px;
+  gap:14px
+}
+
+.board .filters .filter-group-label {
+  font-size:11px
+}
+
+.board .filters .filters-hint,
+.board .filters .filters-note {
+  font-size:11.5px
+}
+
+.board .filters .tier-row {
+  padding:5px 8px;
+  gap:8px
+}
+
+.board .filters .tier-row-text b {
+  font-size:12.5px
+}
+
+.board .filters .tier-row-text span {
+  font-size:11px
+}
+
+.board .filters .operator-toggle-row,
+.board .filters .type-toggle-row {
+  gap:6px
+}
+
+.board .filters .type-toggle {
+  padding:5px 11px;
+  font-size:12.5px
+}
+
+.board .filters .more-toggles label {
+  font-size:12.5px;
+  gap:8px
+}
+
+.board .filters .price-range {
+  max-width:none
+}
+
+.board-results {
+  min-width:0
+}
+
+.board-results .listing-cards {
+  margin-top:0
+}

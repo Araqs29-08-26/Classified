@@ -23,6 +23,24 @@ const PREFIX_TO_OPERATOR: Record<string, string> = {
   "44": "Ucom",
 };
 
+/**
+ * Коды фиксированной (городской) связи Еревана.
+ *
+ * 10 — Team Telecom (бывший АрменТел / Beeline), исторический и самый массовый код.
+ * 11 и 12 — Ucom, фиксированная телефония по оптоволокну.
+ * 15 — OVIO (бывший Ростелеком Армения / GNC-Alfa). Этого оператора на площадке
+ * пока нет в списке, поэтому оператор остаётся неопределённым, а продавец
+ * указывает его сам.
+ *
+ * Как и с мобильными, MNP делает код лишь подсказкой, а не гарантией.
+ */
+const LANDLINE_PREFIX_TO_OPERATOR: Record<string, string | null> = {
+  "10": "Team Telecom",
+  "11": "Ucom",
+  "12": "Ucom",
+  "15": null,
+};
+
 /** Оставить только цифры и срезать код страны 374 либо ведущий 0. */
 function digits(input: string): string {
   let d = input.replace(/\D/g, "");
@@ -40,10 +58,19 @@ export function detect(input: string): {
   numberType: string;
 } {
   const d = digits(input);
+  const prefix = d.slice(0, 2);
 
   if (d.length === 8) {
+    // Городские коды Еревана тоже восьмизначные, поэтому проверяем их первыми:
+    // иначе +374 11 22 07 44 считался бы мобильным с неизвестным оператором.
+    if (prefix in LANDLINE_PREFIX_TO_OPERATOR) {
+      return {
+        operator: LANDLINE_PREFIX_TO_OPERATOR[prefix],
+        numberType: "Городской",
+      };
+    }
     return {
-      operator: PREFIX_TO_OPERATOR[d.slice(0, 2)] ?? null,
+      operator: PREFIX_TO_OPERATOR[prefix] ?? null,
       numberType: "Мобильный",
     };
   }

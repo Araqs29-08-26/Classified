@@ -278,7 +278,8 @@ export default function HomeClient({
         <p>{t("warningBanner")}</p>
       </div>
 
-      <div className="filters">
+      <div className="board">
+        <aside className="filters">
         <div className="filter-group">
           <div className="filter-group-label">{t("filters.operatorLabel")}</div>
           <div className="operator-toggle-row">
@@ -448,8 +449,9 @@ export default function HomeClient({
             {t("filters.maskClear")}
           </button>
         )}
-      </div>
+        </aside>
 
+        <div className="board-results">
       {visible.length === 0 && !hasActiveFilters && (
         <div className="empty-state">
           <h2>{t("empty.title")}</h2>
@@ -476,6 +478,8 @@ export default function HomeClient({
           ))}
         </div>
       )}
+        </div>
+      </div>
     </>
   );
 }
