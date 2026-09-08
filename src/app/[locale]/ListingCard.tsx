@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
+import type { IndexRecord } from "@/lib/numberSearch";
 import { OPERATOR_META, formatPrice, type Listing } from "@/lib/supabase";
 import PatternNumber from "./PatternNumber";
 
@@ -18,6 +19,8 @@ export type ValuedListing = {
   patternTo: number | null;
   fee: number;
   total: number;
+  /** Запись для модуля поиска: маска, счётчики цифр, вид узора. */
+  search: IndexRecord | null;
 };
 
 /**

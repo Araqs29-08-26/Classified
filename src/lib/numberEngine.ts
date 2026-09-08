@@ -115,6 +115,20 @@ export const OPERATOR_CODE: Record<string, Operator> = {
   "Team Telecom": "team",
 };
 
+/** Подставить значения в строку словаря: «оканчиваются на {mask}». */
+export function fillMessage(
+  template: string,
+  params: Record<string, string | number>
+): string {
+  return engine.fill(template, params);
+}
+
+/** Строка из словаря движка по коду. Если ключа нет, вернётся сам код — так пропажа видна. */
+export function engineMessage(code: string, locale: string): string {
+  const dict = DICTIONARIES[locale] ?? DICTIONARIES.ru;
+  return dict[code] ?? code;
+}
+
 export function evaluateNumber(input: string, options?: EngineOptions): EngineResult {
   const { locale = "ru", ...rest } = options ?? {};
   return engine.evaluate(input, {

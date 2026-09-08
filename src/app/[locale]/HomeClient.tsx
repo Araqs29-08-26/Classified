@@ -4,7 +4,21 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
-import { evaluateNumber, INDEX_RANGE, OPERATOR_CODE } from "@/lib/numberEngine";
+import {
+  engineMessage,
+  evaluateNumber,
+  fillMessage,
+  INDEX_RANGE,
+  OPERATOR_CODE,
+} from "@/lib/numberEngine";
+import {
+  buildIndex,
+  findSimilar,
+  parseQuery,
+  PATTERN_FAMILIES,
+  runSearch,
+  type IndexRecord,
+} from "@/lib/numberSearch";
 import {
   NUMBER_TYPES,
   OPERATORS,
@@ -14,7 +28,7 @@ import {
   type Listing,
 } from "@/lib/supabase";
 import ListingCard, { activePromo, type ValuedListing } from "./ListingCard";
-import DigitSearch, { EMPTY_MASK, matchesDigits } from "./DigitSearch";
+import DigitSearch, { EMPTY_MASK } from "./DigitSearch";
 
 type Props = {
   listings: Listing[];
@@ -100,6 +114,8 @@ export default function HomeClient({
           patternTo: v.ok ? v.patternTo : null,
           fee,
           total: l.price + fee,
+          // Запись для модуля поиска: маска, счётчики цифр, вид узора.
+          search: v.ok ? buildIndex(v) : null,
         };
       }),
     [listings]
@@ -126,6 +142,10 @@ export default function HomeClient({
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [onlyDescribed, setOnlyDescribed] = useState(false);
+  // Чего маска не даёт в принципе: «цифра 4 встречается не менее пяти раз».
+  const [countDigit, setCountDigit] = useState("");
+  const [countMin, setCountMin] = useState(2);
+  const [family, setFamily] = useState("");
 
   const toggle = (
     setter: React.Dispatch<React.SetStateAction<string[]>>,
@@ -148,6 +168,8 @@ export default function HomeClient({
     !!preset ||
     onlyVerified ||
     onlyDescribed ||
+    !!countDigit ||
+    !!family ||
     priceRange[0] > 0 ||
     priceRange[1] < maxPrice;
 
@@ -160,6 +182,8 @@ export default function HomeClient({
     setPreset("");
     setOnlyVerified(false);
     setOnlyDescribed(false);
+    setCountDigit("");
+    setFamily("");
     setPriceRange([0, maxPrice]);
   }
 
@@ -239,9 +263,45 @@ export default function HomeClient({
 
   const presetPrefixes = PRESETS.find((p) => p.id === preset)?.prefixes;
 
+  // Запрос собирается модулем поиска: он же объясняет его человеку строкой
+  // расшифровки. Ячейки дают маску из восьми позиций, поэтому where — «start»:
+  // маска покрывает весь номер, и позиция уже задана самими ячейками.
+  const query = useMemo(
+    () =>
+      parseQuery(/\d/.test(mask) ? mask.replace(/_/g, "?") : "", {
+        where: "start",
+        counts: countDigit ? [{ digit: countDigit, min: countMin }] : [],
+        family: family || null,
+      }),
+    [mask, countDigit, countMin, family]
+  );
+
+  /** Расшифровка запроса словами — обязательная страховка от «понял не так». */
+  const queryHint = useMemo(() => {
+    if (!/\d/.test(mask) && !countDigit && !family) return null;
+    return fillMessage(engineMessage(query.hint, locale), {
+      mask: mask.replace(/_/g, "?"),
+      digit: countDigit,
+      min: countMin,
+      n: countMin,
+    });
+  }, [query.hint, mask, countDigit, countMin, family, locale]);
+
+  /** Нужен ли модуль поиска: без маски, счётчика и вида узора он не при чём. */
+  const needsSearch = /\d/.test(mask) || !!countDigit || !!family;
+
+  /** Окна номеров, прошедших поиск. Сам поиск делает модуль, а не сайт. */
+  const searchHits = useMemo(() => {
+    if (!needsSearch) return null;
+    const records = valued
+      .map((x) => x.search)
+      .filter((r): r is IndexRecord => r !== null);
+    return new Set(runSearch(records, query).map((r) => r.w));
+  }, [needsSearch, valued, query]);
+
   const visible = useMemo(() => {
     const filtered = valued.filter(
-      ({ listing: l, patternCode, total }) =>
+      ({ listing: l, patternCode, total, search: rec }) =>
         (!selectedOperators.length || selectedOperators.includes(l.operator)) &&
         (!selectedTiers.length || selectedTiers.includes(l.status_tier)) &&
         (!selectedTypes.length || selectedTypes.includes(l.number_type)) &&
@@ -251,7 +311,8 @@ export default function HomeClient({
         !(total > priceRange[1]) &&
         (!onlyVerified || l.sms_verified) &&
         (!onlyDescribed || !!l.description) &&
-        (!/\d/.test(mask) || matchesDigits(l.phone_number, mask)) &&
+        // Маску, счётчики цифр и вид узора проверяет модуль поиска.
+        (!searchHits || (rec !== null && searchHits.has(rec.w))) &&
         (!presetPrefixes ||
           (patternCode !== null &&
             presetPrefixes.some((prefix) => patternCode.startsWith(prefix))))
@@ -283,6 +344,7 @@ export default function HomeClient({
     mask,
     priceRange,
     presetPrefixes,
+    searchHits,
     onlyVerified,
     onlyDescribed,
   ]);
@@ -449,6 +511,44 @@ export default function HomeClient({
 
 
         <div className="filter-group">
+          <div className="filter-group-label">{t("filters.digitCountLabel")}</div>
+          <div className="count-filter">
+            <select value={countDigit} onChange={(e) => setCountDigit(e.target.value)}>
+              <option value="">{t("filters.digitAny")}</option>
+              {"0123456789".split("").map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+            <span>{t("filters.timesLabel")}</span>
+            <select
+              value={countMin}
+              onChange={(e) => setCountMin(Number(e.target.value))}
+              disabled={!countDigit}
+            >
+              {[2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <option key={n} value={n}>
+                  {t("filters.times", { n })}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <div className="filter-group-label">{t("filters.familyLabel")}</div>
+          <select value={family} onChange={(e) => setFamily(e.target.value)}>
+            <option value="">{t("filters.familyAny")}</option>
+            {PATTERN_FAMILIES.map((f) => (
+              <option key={f} value={f}>
+                {engineMessage(`family.${f}`, locale)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-group">
           <div className="filter-group-label">{t("filters.moreLabel")}</div>
           <div className="more-toggles">
             <label>
@@ -473,6 +573,14 @@ export default function HomeClient({
         </aside>
 
         <div className="board-results">
+          {/* Расшифровка запроса словами. Если модуль понял не так, человек
+              видит это сразу, а не после просмотра всей выдачи. */}
+          {queryHint && (
+            <p className="query-hint">
+              {queryHint} {t("filters.foundSuffix", { count: visible.length })}
+            </p>
+          )}
+
           <div className="results-head">
             <span className="results-count">{t("found", { count: visible.length })}</span>
 

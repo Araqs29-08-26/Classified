@@ -48,7 +48,14 @@
       "onlyDescribed": "With a description from the seller",
       "indexShortLabel": "index",
       "resetAll": "Clear all",
-      "otherOperator": "Other"
+      "otherOperator": "Other",
+      "digitCountLabel": "Digit in the number",
+      "digitAny": "Any",
+      "timesLabel": "at least",
+      "times": "{n} times",
+      "familyLabel": "Pattern kind",
+      "familyAny": "Any",
+      "foundSuffix": "Found: {count}"
     },
     "table": {
       "number": "Number",
@@ -366,22 +373,19 @@
   },
   "auth": {
     "title": "Sign in",
-    "subtitle": "Enter your email — we'll send a sign-in code. No password needed.",
+    "subtitle": "Enter your email — we'll send a sign-in link. No password needed.",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
-    "sendCode": "Send the code",
     "sending": "Sending...",
-    "codeLabel": "Code from the email",
-    "codePlaceholder": "123456",
-    "confirm": "Sign in",
-    "checking": "Checking...",
-    "codeSentTo": "The code was sent to {email}. Check your inbox — it may land in spam.",
-    "changeEmail": "Use another email",
     "signOut": "Sign out",
     "errors": {
-      "send": "Couldn't send the code. Check the address and try again.",
-      "wrongCode": "Wrong code:"
-    }
+      "send": "Couldn't send the code. Check the address and try again."
+    },
+    "sendLink": "Send the link",
+    "linkSentTitle": "Email sent",
+    "linkSentTo": "We've sent an email to {email}. Open it and follow the link — you'll land straight in your account.",
+    "linkSentSpam": "No email after a couple of minutes? Check spam — the sender may be unfamiliar to your mailbox.",
+    "sendAgain": "Send it again"
   },
   "account": {
     "title": "My account",
