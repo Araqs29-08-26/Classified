@@ -1553,64 +1553,113 @@ textarea:focus {
   color:var(--muted)
 }
 
-.digit-search {
+/* --- строка поиска по маске --- */
+.mask-search {
   display:flex;
   flex-direction:column;
-  gap:8px
+  gap:7px;
+  max-width:560px
 }
 
-.digit-cells {
+.mask-search-label {
+  font-size:13px;
+  color:var(--muted)
+}
+
+.mask-search-row {
   display:flex;
   align-items:center;
   gap:8px;
-  flex-wrap:wrap;
-  padding:10px 14px;
+  padding:6px 8px 6px 14px;
   background:var(--surface-2);
-  border-radius:14px;
-  width:fit-content;
-  max-width:100%
+  border-radius:14px
 }
 
-.digit-prefix {
-  font-family:IBM Plex Mono,ui-monospace,monospace;
-  font-size:17px;
-  color:var(--muted);
-  margin-right:4px
-}
-
-.digit-cell {
-  width:38px;
-  height:44px;
+.mask-search-input {
+  flex:1;
+  min-width:0;
+  height:46px;
   padding:0;
-  text-align:center;
+  border:0;
+  background:none;
   font-family:IBM Plex Mono,ui-monospace,monospace;
-  font-size:19px;
+  font-size:20px;
   font-weight:600;
-  color:var(--ink);
-  background:var(--surface);
+  letter-spacing:.06em;
+  color:var(--ink)
+}
+
+.mask-search-input:focus {
+  outline:none
+}
+
+.mask-search-input::placeholder {
+  color:var(--faint);
+  font-weight:400;
+  letter-spacing:normal
+}
+
+.mask-search-clear {
+  flex:none;
   border:1px solid var(--line);
-  border-radius:10px
+  background:var(--surface);
+  border-radius:20px;
+  padding:6px 12px;
+  font-size:12.5px;
+  color:var(--muted);
+  cursor:pointer
 }
 
-.digit-cell::placeholder {
-  color:var(--faint)
-}
-
-.digit-cell:focus {
-  outline:none;
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px var(--accent-soft)
-}
-
-.digit-cell.filled {
-  border-color:var(--accent);
-  color:var(--accent-ink)
-}
-
-.digit-hint {
+.mask-search-hint {
   margin:0;
   font-size:12.5px;
-  color:var(--faint)
+  color:var(--faint);
+  line-height:1.45
+}
+
+/* Четыре положения маски. Считаются по шести цифрам после кода оператора. */
+.where-row {
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:2px
+}
+
+.where-button {
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:20px;
+  padding:7px 14px;
+  font-size:13px;
+  color:var(--muted);
+  cursor:pointer
+}
+
+.where-button:hover {
+  border-color:var(--accent)
+}
+
+.where-button.active {
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  color:var(--accent-ink);
+  font-weight:600
+}
+
+/* Расшифровка запроса словами — прямо под полем, где человек её и ищет. */
+.mask-search-status {
+  margin:2px 0 0;
+  padding:9px 12px;
+  border-radius:10px;
+  background:var(--accent-2-soft);
+  color:var(--accent-2);
+  font-size:13px;
+  line-height:1.45
+}
+
+.mask-search-status.error {
+  background:var(--accent-soft);
+  color:var(--accent-ink)
 }
 
 /* --- готовые узоры --- */
@@ -1653,24 +1702,14 @@ textarea:focus {
   color:var(--accent-ink)
 }
 
-/* На узком экране ячейки делят ширину поровну, а не переносятся на вторую
-   строку: восемь цифр номера должны читаться одной строкой, как в макете. */
 @media (max-width:560px) {
-  .digit-cells {
-    display:grid;
-    grid-template-columns:auto repeat(8,minmax(0,1fr));
-    width:100%;
-    gap:4px;
-    padding:8px 10px
+  .mask-search-input {
+    font-size:17px
   }
-  .digit-cell {
-    width:100%;
-    height:44px;
-    font-size:16px
-  }
-  .digit-prefix {
-    font-size:13px;
-    margin-right:2px
+  .where-button {
+    flex:1;
+    padding:7px 8px;
+    text-align:center
   }
 }
 
@@ -2128,6 +2167,67 @@ textarea:focus {
 }
 
 
+/* --- правила переоформления: по блоку на оператора --- */
+.operator-rules {
+  display:grid;
+  gap:14px;
+  margin:12px 0 18px
+}
+
+.operator-rule {
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fff;
+  padding:16px 18px
+}
+
+.operator-rule h3 {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:0 0 8px;
+  font-size:17px
+}
+
+.operator-rule h3 .operator-logo {
+  width:26px;
+  height:26px;
+  object-fit:contain
+}
+
+.operator-rule p {
+  margin:0 0 10px;
+  font-size:14.5px;
+  line-height:1.6
+}
+
+.operator-rule a {
+  color:var(--accent-ink);
+  font-size:13.5px
+}
+
+.legal .legal-note {
+  font-size:13.5px;
+  color:var(--muted);
+  line-height:1.6
+}
+
+@media (min-width:860px) {
+  .operator-rules {
+    grid-template-columns:repeat(3,1fr)
+  }
+
+  .operator-rule {
+    display:flex;
+    flex-direction:column
+  }
+
+  .operator-rule a {
+    margin-top:auto
+  }
+}
+
+
 /* --- ссылки на сайты операторов --- */
 .operator-links {
   list-style:none;
@@ -2141,6 +2241,243 @@ textarea:focus {
 .operator-links a {
   color:var(--accent-ink);
   font-size:14px
+}
+
+
+/* --- необязательная проверка продаваемого номера --- */
+.ownership-check {
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px 16px;
+  margin:4px 0 18px;
+  background:var(--bg)
+}
+
+.ownership-head {
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  margin-bottom:6px
+}
+
+.ownership-head b {
+  font-size:15px
+}
+
+.ownership-optional {
+  font-size:12px;
+  color:var(--faint);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:1px 8px;
+  background:#fff
+}
+
+.ownership-intro {
+  margin:0 0 10px;
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.55
+}
+
+.ownership-done {
+  margin:0;
+  font-size:13px;
+  color:var(--success)
+}
+
+.ownership-error {
+  margin:8px 0 0;
+  font-size:13px;
+  color:var(--danger, #b3261e)
+}
+
+.ownership-code label {
+  display:block;
+  font-size:13px;
+  margin-bottom:5px;
+  color:var(--muted)
+}
+
+.ownership-code-row {
+  display:flex;
+  gap:8px
+}
+
+.ownership-code-row input {
+  flex:1;
+  min-width:0
+}
+
+
+/* --- окно продвижения --- */
+.modal-backdrop {
+  position:fixed;
+  inset:0;
+  z-index:50;
+  background:rgba(27,36,48,.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  overflow-y:auto
+}
+
+.modal {
+  background:#fff;
+  border-radius:18px;
+  border:1px solid var(--line);
+  padding:22px 24px;
+  width:100%;
+  max-width:560px;
+  box-shadow:0 18px 48px rgba(27,36,48,.18)
+}
+
+.modal h2 {
+  margin:0 0 6px;
+  font-size:21px
+}
+
+.promo-modal-sub {
+  margin:0 0 4px;
+  font-size:14px;
+  color:var(--muted)
+}
+
+.promo-modal-number {
+  margin:0 0 14px;
+  font-size:14px;
+  color:var(--faint)
+}
+
+.promo-services {
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:grid;
+  gap:10px
+}
+
+.promo-service {
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px 14px;
+  cursor:pointer
+}
+
+.promo-service.chosen {
+  border-color:var(--accent);
+  background:rgba(201,106,46,.06)
+}
+
+.promo-service input {
+  margin-top:3px;
+  width:16px;
+  height:16px;
+  accent-color:var(--accent)
+}
+
+.promo-service-body {
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  flex:1
+}
+
+.promo-service-body b {
+  font-size:15px
+}
+
+.promo-service-body span {
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.5
+}
+
+.promo-service-price {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:2px;
+  white-space:nowrap
+}
+
+.promo-service-price b {
+  font-size:15px;
+  color:var(--accent-ink)
+}
+
+.promo-service-price span {
+  font-size:12px;
+  color:var(--faint)
+}
+
+.promo-extra {
+  display:flex;
+  gap:12px;
+  margin-top:10px;
+  padding:12px 14px;
+  border:1px dashed var(--line);
+  border-radius:12px;
+  background:var(--bg)
+}
+
+.promo-extra-body {
+  display:flex;
+  flex-direction:column;
+  gap:3px
+}
+
+.promo-extra-body b {
+  font-size:14px
+}
+
+.promo-extra-body span {
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.5
+}
+
+.promo-total {
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid var(--line);
+  font-size:15px
+}
+
+.promo-total b {
+  font-size:18px
+}
+
+.promo-modal-note {
+  margin:12px 0 0;
+  font-size:12.5px;
+  color:var(--faint);
+  line-height:1.55
+}
+
+.promo-modal-foot {
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:16px
+}
+
+/* Кнопка, которая выглядит ссылкой: действие открывает окно, а не страницу. */
+.link-button {
+  background:none;
+  border:0;
+  padding:0;
+  font:inherit;
+  color:var(--accent-ink);
+  text-decoration:underline;
+  cursor:pointer
 }
 
 
@@ -2158,8 +2495,12 @@ textarea:focus {
 }
 
 
-/* --- расшифровка поискового запроса --- */
-.query-hint {
+/* --- похожие номера, когда точных совпадений нет --- */
+.similar-block {
+  margin-top:8px
+}
+
+.similar-title {
   margin:0 0 12px;
   padding:10px 13px;
   background:var(--accent-2-soft);

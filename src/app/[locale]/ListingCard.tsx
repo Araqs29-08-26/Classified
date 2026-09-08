@@ -61,7 +61,7 @@ export default function ListingCard({ item }: { item: ValuedListing }) {
           ) : (
             <div className="number mono">{l.phone_number}</div>
           )}
-          {l.sms_verified && (
+          {l.number_verified && (
             <span className="verified-mark">{t("verified")}</span>
           )}
         </div>

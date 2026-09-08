@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { useRouter } from "@/i18n/navigation";
 import { detect, normalizePhone } from "@/lib/phone";
+import { confirmOwnership, sendOwnershipCode } from "@/lib/verifyNumber";
 import {
   evaluateNumber,
   OPERATOR_CODE,
@@ -54,6 +55,12 @@ export default function NewListingClient() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /** Необязательная проверка продаваемого номера: код уходит на него самого. */
+  const [ownStep, setOwnStep] = useState<"idle" | "code" | "done">("idle");
+  const [ownCode, setOwnCode] = useState("");
+  const [ownBusy, setOwnBusy] = useState(false);
+  const [ownError, setOwnError] = useState<string | null>(null);
 
   const [operatorTouched, setOperatorTouched] = useState(false);
   const [typeTouched, setTypeTouched] = useState(false);
@@ -115,6 +122,11 @@ export default function NewListingClient() {
 
   /** Пока пользователь не менял селекты руками, оператор и тип подставляются по коду номера. */
   function onNumberChange(value: string) {
+    // Подтверждение относилось к прежнему номеру — начинаем заново.
+    setOwnStep("idle");
+    setOwnCode("");
+    setOwnError(null);
+
     setForm((prev) => {
       const next = { ...prev, phone_number: value };
       const d = detect(value);
@@ -158,6 +170,40 @@ export default function NewListingClient() {
     setStep("form");
   }
 
+  /** Код уходит на продаваемый номер — проверяем того, у кого SIM-карта. */
+  async function sendOwnCode() {
+    setOwnBusy(true);
+    setOwnError(null);
+
+    const message = await sendOwnershipCode(
+      "+374" + normalizePhone(form.phone_number)
+    );
+
+    setOwnBusy(false);
+    if (message) {
+      setOwnError(`${t("ownership.failed")} ${message}`);
+      return;
+    }
+    setOwnStep("code");
+  }
+
+  async function checkOwnCode() {
+    setOwnBusy(true);
+    setOwnError(null);
+
+    const message = await confirmOwnership(
+      "+374" + normalizePhone(form.phone_number),
+      ownCode
+    );
+
+    setOwnBusy(false);
+    if (message) {
+      setOwnError(`${t("ownership.failed")} ${message}`);
+      return;
+    }
+    setOwnStep("done");
+  }
+
   async function submitListing(e: React.FormEvent) {
     e.preventDefault();
 
@@ -196,8 +242,8 @@ export default function NewListingClient() {
       engine_version: verdict.version,
       evaluated_at: new Date().toISOString(),
       description: form.description || null,
-      // отметка «подтверждено» ставится, только если номер объявления совпал
-      // с номером, подтверждённым по SMS на первом шаге
+      // Отметка о совпадении с номером входа. Значок «Проверено» в выдаче
+      // ставит сама база по таблице подтверждений — с формы её не подделать.
       sms_verified: numberMatchesVerified,
     });
 
@@ -279,6 +325,67 @@ export default function NewListingClient() {
                   ? t("formStep.numberVerifiedHint")
                   : t("formStep.numberNotVerifiedHint")}
               </p>
+            )}
+          </div>
+
+          {/* Проверка ПРОДАВАЕМОГО номера — по желанию.
+              По SMS на первом шаге подтверждён номер продавца, а это другое:
+              здесь код уходит на выставляемый номер и доказывает, что SIM-карта
+              у того, кто подаёт объявление. Нужно при повторном размещении. */}
+          <div className="ownership-check">
+            <div className="ownership-head">
+              <b>{t("ownership.title")}</b>
+              <span className="ownership-optional">{t("ownership.optional")}</span>
+            </div>
+
+            {numberMatchesVerified ? (
+              <p className="ownership-done">{t("ownership.sameAsSeller")}</p>
+            ) : ownStep === "done" ? (
+              <p className="ownership-done">{t("ownership.done")}</p>
+            ) : (
+              <>
+                <p className="ownership-intro">{t("ownership.intro")}</p>
+
+                {ownStep === "idle" ? (
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    disabled={
+                      ownBusy || normalizePhone(form.phone_number).length !== 8
+                    }
+                    onClick={sendOwnCode}
+                  >
+                    {ownBusy
+                      ? t("ownership.sending")
+                      : normalizePhone(form.phone_number).length === 8
+                        ? t("ownership.send", { number: form.phone_number })
+                        : t("ownership.needNumber")}
+                  </button>
+                ) : (
+                  <div className="ownership-code">
+                    <label>{t("ownership.codeLabel")}</label>
+                    <div className="ownership-code-row">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={ownCode}
+                        onChange={(e) => setOwnCode(e.target.value)}
+                        placeholder={t("ownership.codePlaceholder")}
+                      />
+                      <button
+                        className="btn btn-accent"
+                        type="button"
+                        disabled={ownBusy || !ownCode}
+                        onClick={checkOwnCode}
+                      >
+                        {ownBusy ? t("ownership.checking") : t("ownership.check")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {ownError && <p className="ownership-error">{ownError}</p>}
+              </>
             )}
           </div>
 

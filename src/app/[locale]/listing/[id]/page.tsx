@@ -79,7 +79,7 @@ export default async function ListingPage({
         <div className="detail">
           <div className="detail-head">
             <span className={`tier-badge tier-${tier}`}>{t(`tiers.${tier}`)}</span>
-            {listing.sms_verified && (
+            {listing.number_verified && (
               <span className="verified-mark">{t("listing.verified")}</span>
             )}
           </div>

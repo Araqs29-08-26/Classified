@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { formatPrice, supabase, type Listing } from "@/lib/supabase";
 import { activePromo } from "../ListingCard";
+import PromoDialog from "./PromoDialog";
 import { displayWho, useSession } from "@/lib/useSession";
 
 type Tab = "listings" | "favorites";
@@ -31,6 +32,8 @@ export default function AccountClient() {
   const [favorites, setFavorites] = useState<Listing[] | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  /** Объявление, для которого открыто окно продвижения. */
+  const [promoFor, setPromoFor] = useState<Listing | null>(null);
 
   // Не вошедшему в кабинете делать нечего — отправляем на вход.
   useEffect(() => {
@@ -171,9 +174,13 @@ export default function AccountClient() {
                         })}
                       </>
                     ) : (
-                      <Link href="/support" title={t("promoRequestHint")}>
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={() => setPromoFor(l)}
+                      >
                         {t("promoRequest")}
-                      </Link>
+                      </button>
                     )}
                   </span>
                   <button
@@ -195,6 +202,10 @@ export default function AccountClient() {
             </div>
           ))}
         </div>
+      )}
+
+      {promoFor && (
+        <PromoDialog listing={promoFor} onClose={() => setPromoFor(null)} />
       )}
     </div>
   );

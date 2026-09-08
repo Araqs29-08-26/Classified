@@ -82,7 +82,10 @@ export type Listing = {
   price: number;
   status_tier: string;
   description: string | null;
+  /** УСТАРЕЛО: номер объявления совпал с номером входа продавца. */
   sms_verified: boolean;
+  /** Владение продаваемым номером подтверждено кодом из SMS на этот номер. */
+  number_verified: boolean;
   listing_status: string;
   created_at: string;
   updated_at: string;

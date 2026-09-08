@@ -18,6 +18,7 @@ import {
   PATTERN_FAMILIES,
   runSearch,
   type IndexRecord,
+  type MaskPosition,
 } from "@/lib/numberSearch";
 import {
   NUMBER_TYPES,
@@ -28,7 +29,7 @@ import {
   type Listing,
 } from "@/lib/supabase";
 import ListingCard, { activePromo, type ValuedListing } from "./ListingCard";
-import DigitSearch, { EMPTY_MASK, maskToQuery, matchesCode } from "./DigitSearch";
+import MaskSearch from "./MaskSearch";
 
 type Props = {
   listings: Listing[];
@@ -37,6 +38,7 @@ type Props = {
   initialType?: string;
   initialSort?: string;
   initialMask?: string;
+  initialWhere?: string;
   initialPreset?: string;
 };
 
@@ -86,6 +88,7 @@ export default function HomeClient({
   initialType = "",
   initialSort = "",
   initialMask = "",
+  initialWhere = "any",
   initialPreset = "",
 }: Props) {
   const locale = useLocale();
@@ -138,6 +141,14 @@ export default function HomeClient({
   );
   const [sort, setSort] = useState<string>(initialSort);
   const [mask, setMask] = useState<string>(initialMask);
+  /** Где в номере должна стоять маска. Считается по шести цифрам после кода. */
+  const [where, setWhere] = useState<MaskPosition>(
+    (["any", "start", "middle", "end"] as const).includes(
+      initialWhere as MaskPosition
+    )
+      ? (initialWhere as MaskPosition)
+      : "any"
+  );
   const [preset, setPreset] = useState<string>(initialPreset);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
   const [onlyVerified, setOnlyVerified] = useState(false);
@@ -164,7 +175,7 @@ export default function HomeClient({
     selectedOperators.length > 0 ||
     selectedTiers.length > 0 ||
     selectedTypes.length > 0 ||
-    /\d/.test(mask) ||
+    !!mask.trim() ||
     !!preset ||
     onlyVerified ||
     onlyDescribed ||
@@ -178,7 +189,8 @@ export default function HomeClient({
     setSelectedTiers([]);
     setSelectedTypes([]);
     setSort("");
-    setMask(EMPTY_MASK);
+    setMask("");
+    setWhere("any");
     setPreset("");
     setOnlyVerified(false);
     setOnlyDescribed(false);
@@ -212,7 +224,8 @@ export default function HomeClient({
     if (selectedTiers.length) q.set("tier", selectedTiers.join(","));
     if (selectedTypes.length) q.set("type", selectedTypes.join(","));
     if (sort) q.set("sort", sort);
-    if (/\d/.test(mask)) q.set("mask", mask);
+    if (mask.trim()) q.set("mask", mask.trim());
+    if (where !== "any") q.set("where", where);
     if (preset) q.set("preset", preset);
 
     const query = q.toString();
@@ -221,7 +234,7 @@ export default function HomeClient({
       "",
       query ? `${window.location.pathname}?${query}` : window.location.pathname
     );
-  }, [selectedOperators, selectedTiers, selectedTypes, sort, mask, preset]);
+  }, [selectedOperators, selectedTiers, selectedTypes, sort, mask, where, preset]);
 
   // Активные фильтры показываются чипами над списком: видно, что именно сузило
   // выдачу, и каждый снимается по отдельности, не сбрасывая остальные.
@@ -244,8 +257,8 @@ export default function HomeClient({
     ...(preset
       ? [{ key: "preset", label: t(`presets.${preset}`), clear: () => setPreset("") }]
       : []),
-    ...(/\d/.test(mask)
-      ? [{ key: "mask", label: mask.replace(/_/g, "·"), clear: () => setMask(EMPTY_MASK) }]
+    ...(mask.trim()
+      ? [{ key: "mask", label: mask.trim(), clear: () => setMask("") }]
       : []),
     ...(onlyVerified
       ? [{ key: "verified", label: t("filters.onlyVerified"), clear: () => setOnlyVerified(false) }]
@@ -263,42 +276,72 @@ export default function HomeClient({
 
   const presetPrefixes = PRESETS.find((p) => p.id === preset)?.prefixes;
 
-  // Ячейки → запрос модуля. Первые две — код оператора, его модуль в маске
-  // не учитывает: позиция маски считается по телу номера.
-  const cellQuery = useMemo(() => maskToQuery(mask), [mask]);
-
+  // Написанное человеком разбирает сам модуль: он знает и «?», и «*», и то,
+  // что «5x5» — это «пятёрка пять раз», а не маска. Сайт ничего не угадывает.
   const query = useMemo(
     () =>
-      parseQuery(cellQuery.bodyMask, {
-        where: cellQuery.where,
+      parseQuery(mask, {
+        where,
         counts: countDigit ? [{ digit: countDigit, min: countMin }] : [],
         family: family || null,
       }),
-    [cellQuery, countDigit, countMin, family]
+    [mask, where, countDigit, countMin, family]
   );
 
-  /** Расшифровка запроса словами — обязательная страховка от «понял не так». */
-  const queryHint = useMemo(() => {
-    if (!cellQuery.bodyMask && !countDigit && !family) return null;
-    return fillMessage(engineMessage(query.hint, locale), {
-      mask: cellQuery.bodyMask,
-      digit: countDigit,
-      min: countMin,
-      n: countMin,
-    });
-  }, [query.hint, cellQuery, countDigit, countMin, family, locale]);
+  /** Задан ли вообще запрос: пустая строка без условий — это «показать всё». */
+  const hasQuery = !!mask.trim() || !!countDigit || !!family;
+
+  /**
+   * Строка под полем поиска: расшифровка запроса словами либо причина отказа.
+   *
+   * Расшифровка обязательна — она страхует от «модуль понял не так». Части
+   * складываются: маска и «цифра не менее N раз» могут работать вместе.
+   */
+  const queryStatus = useMemo(() => {
+    if (query.error) {
+      // Пустой запрос — не ошибка, а обычное начальное состояние страницы.
+      const empty = query.error === "search.empty";
+      if (empty && !hasQuery) {
+        return { text: engineMessage("search.empty", locale), error: false };
+      }
+      return { text: engineMessage(query.error, locale), error: true };
+    }
+
+    const parts: string[] = [];
+    if (query.mask) {
+      parts.push(
+        fillMessage(engineMessage("search.hint." + query.where, locale), {
+          mask: query.mask,
+        })
+      );
+    }
+    for (const c of query.counts) {
+      parts.push(
+        fillMessage(engineMessage("search.hint.count", locale), {
+          digit: c.digit,
+          min: c.min,
+          n: c.min,
+        })
+      );
+    }
+    if (!parts.length) return null;
+    return { text: parts.join(" "), error: false };
+  }, [query, hasQuery, locale]);
 
   /** Нужен ли модуль поиска: без маски, счётчика и вида узора он не при чём. */
-  const needsSearch = !!cellQuery.bodyMask || !!countDigit || !!family;
+  const needsSearch = hasQuery && !query.error;
+
+  const records = useMemo(
+    () =>
+      valued.map((x) => x.search).filter((r): r is IndexRecord => r !== null),
+    [valued]
+  );
 
   /** Окна номеров, прошедших поиск. Сам поиск делает модуль, а не сайт. */
   const searchHits = useMemo(() => {
     if (!needsSearch) return null;
-    const records = valued
-      .map((x) => x.search)
-      .filter((r): r is IndexRecord => r !== null);
     return new Set(runSearch(records, query).map((r) => r.w));
-  }, [needsSearch, valued, query]);
+  }, [needsSearch, records, query]);
 
   const visible = useMemo(() => {
     const filtered = valued.filter(
@@ -310,12 +353,10 @@ export default function HomeClient({
         // плюс сбор оператора, и искать логично по тому, что он отдаст на руки.
         !(total < priceRange[0]) &&
         !(total > priceRange[1]) &&
-        (!onlyVerified || l.sms_verified) &&
+        (!onlyVerified || l.number_verified) &&
         (!onlyDescribed || !!l.description) &&
-        // Маску тела, счётчики цифр и вид узора проверяет модуль поиска;
-        // код оператора он не видит, поэтому первые две ячейки — отдельно.
+        // Маску, счётчики цифр и вид узора проверяет модуль поиска.
         (!searchHits || (rec !== null && searchHits.has(rec.w))) &&
-        (rec === null || matchesCode(rec.w, cellQuery.code)) &&
         (!presetPrefixes ||
           (patternCode !== null &&
             presetPrefixes.some((prefix) => patternCode.startsWith(prefix))))
@@ -348,10 +389,16 @@ export default function HomeClient({
     priceRange,
     presetPrefixes,
     searchHits,
-    cellQuery,
     onlyVerified,
     onlyDescribed,
   ]);
+
+  /** Похожие номера: считаются только когда точных совпадений нет. */
+  const similar = useMemo(() => {
+    if (!needsSearch || visible.length > 0) return [];
+    const windows = new Set(findSimilar(records, query).map((r) => r.w));
+    return valued.filter((x) => x.search !== null && windows.has(x.search.w));
+  }, [needsSearch, visible.length, records, query, valued]);
 
   return (
     <>
@@ -367,7 +414,13 @@ export default function HomeClient({
           <span>{t("operatorsCount", { count: OPERATORS.length })}</span>
         </div>
 
-        <DigitSearch mask={mask} onChange={setMask} />
+        <MaskSearch
+          mask={mask}
+          where={where}
+          onMaskChange={setMask}
+          onWhereChange={setWhere}
+          status={queryStatus}
+        />
 
         <div className="presets">
           <span className="presets-label">{t("presetsLabel")}</span>
@@ -577,14 +630,6 @@ export default function HomeClient({
         </aside>
 
         <div className="board-results">
-          {/* Расшифровка запроса словами. Если модуль понял не так, человек
-              видит это сразу, а не после просмотра всей выдачи. */}
-          {queryHint && (
-            <p className="query-hint">
-              {queryHint} {t("filters.foundSuffix", { count: visible.length })}
-            </p>
-          )}
-
           <div className="results-head">
             <span className="results-count">{t("found", { count: visible.length })}</span>
 
@@ -631,10 +676,23 @@ export default function HomeClient({
         </div>
       )}
 
-      {visible.length === 0 && hasActiveFilters && (
+      {visible.length === 0 && hasActiveFilters && similar.length === 0 && (
         <div className="empty-state">
           <h2>{t("emptyFiltered.title")}</h2>
           <p>{t("emptyFiltered.subtitle")}</p>
+        </div>
+      )}
+
+      {/* Пустая выдача — плохой ответ. Модуль умеет подобрать номера,
+          отличающиеся одной цифрой: чаще всего человеку подойдёт и такой. */}
+      {visible.length === 0 && similar.length > 0 && (
+        <div className="similar-block">
+          <p className="similar-title">{t("similarTitle")}</p>
+          <div className="listing-cards">
+            {similar.map((item) => (
+              <ListingCard key={item.listing.id} item={item} />
+            ))}
+          </div>
         </div>
       )}
 

@@ -34,6 +34,7 @@ export default async function RulesPage({
         <li>{t("rules.promoTop")}</li>
         <li>{t("rules.promoHighlight")}</li>
         <li>{t("rules.promoUrgent")}</li>
+        <li>{t("rules.promoExtra")}</li>
       </ul>
 
       <p>{t("rules.promoHow")}</p>
