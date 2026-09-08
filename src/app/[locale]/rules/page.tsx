@@ -27,6 +27,18 @@ export default async function RulesPage({
 
       <p className="legal-intro">{t("rules.intro")}</p>
 
+      <h2>{t("rules.promoTitle")}</h2>
+      <p>{t("rules.promoIntro")}</p>
+
+      <ul>
+        <li>{t("rules.promoTop")}</li>
+        <li>{t("rules.promoHighlight")}</li>
+        <li>{t("rules.promoUrgent")}</li>
+      </ul>
+
+      <p>{t("rules.promoHow")}</p>
+      <p>{t("rules.promoUntil")}</p>
+
       <p className="legal-intro">
         {t("rules.termsNote")} <Link href="/terms">{t("legal.termsNav")}</Link>.
       </p>

@@ -86,6 +86,23 @@ export const ENGINE_VERSION: string = engine.VERSION;
 /** Диапазон индекса красоты для каждого статуса, например «90–100». */
 export const INDEX_RANGE: Record<string, string> = engine.INDEX_RANGE;
 
+/** Прайсы операторов по категориям номера — на них считается сбор за переоформление. */
+export const OPERATOR_PRICES: Record<Operator, Record<string, number>> =
+  engine.OPERATOR_PRICES;
+
+/**
+ * Правила переоформления, как их знает движок.
+ *
+ * Вынесены наружу, чтобы страница «Переоформление» показывала ровно те числа,
+ * по которым считается сбор в объявлениях, а не переписанные руками.
+ */
+export const TRANSFER_RULES = {
+  vivaFixed: 500,
+  vivaFreeAfterMonths: { individual: 24, legal: 6 },
+  teamFixed: 700,
+  ucomFlatFee: 1000,
+} as const;
+
 /**
  * Названия операторов на сайте → коды движка.
  *

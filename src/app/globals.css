@@ -2126,3 +2126,33 @@ textarea:focus {
 .listing-card.promo-top {
   border-color:var(--accent)
 }
+
+
+/* --- ссылки на сайты операторов --- */
+.operator-links {
+  list-style:none;
+  margin:12px 0 0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:8px
+}
+
+.operator-links a {
+  color:var(--accent-ink);
+  font-size:14px
+}
+
+
+.account-row-promo {
+  font-size:12.5px;
+  color:var(--faint)
+}
+
+.account-row-promo b {
+  color:var(--accent-ink)
+}
+
+.account-row-promo a {
+  color:var(--accent-ink)
+}

@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Link, useRouter } from "@/i18n/navigation";
 import { formatPrice, supabase, type Listing } from "@/lib/supabase";
+import { activePromo } from "../ListingCard";
 import { displayWho, useSession } from "@/lib/useSession";
 
 type Tab = "listings" | "favorites";
@@ -20,6 +21,8 @@ export default function AccountClient() {
   const t = useTranslations("account");
   const tAuth = useTranslations("auth");
   const tTier = useTranslations("tiers");
+  const tHome = useTranslations("home");
+  const locale = useLocale();
   const router = useRouter();
   const { user, loading: sessionLoading } = useSession();
 
@@ -155,6 +158,23 @@ export default function AccountClient() {
                 <div className="account-row-actions">
                   <span className="account-row-status">
                     {t(STATUS_KEY[l.listing_status] ?? "statusActive")}
+                  </span>
+
+                  {/* Продвижение показываем всегда: и когда оно есть, и когда его нет,
+                      иначе продавец не узнает, что такая возможность существует. */}
+                  <span className="account-row-promo">
+                    {activePromo(l) ? (
+                      <>
+                        <b>{tHome(`promo.${activePromo(l)}`)}</b>{" "}
+                        {t("promoActiveUntil", {
+                          date: new Date(l.promo_until!).toLocaleDateString(locale),
+                        })}
+                      </>
+                    ) : (
+                      <Link href="/support" title={t("promoRequestHint")}>
+                        {t("promoRequest")}
+                      </Link>
+                    )}
                   </span>
                   <button
                     className="btn btn-ghost"

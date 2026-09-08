@@ -319,13 +319,6 @@ export default function HomeClient({
         </div>
       </section>
 
-      <div className="warning-banner">
-        <span className="warning-icon" aria-hidden="true">
-          ⚠️
-        </span>
-        <p>{t("warningBanner")}</p>
-      </div>
-
       <div className="board">
         <aside className="filters">
         <div className="filter-group">
@@ -541,6 +534,13 @@ export default function HomeClient({
         </div>
       )}
         </div>
+      </div>
+
+      <div className="warning-banner">
+        <span className="warning-icon" aria-hidden="true">
+          ⚠️
+        </span>
+        <p>{t("warningBanner")}</p>
       </div>
     </>
   );

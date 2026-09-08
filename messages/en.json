@@ -335,12 +335,29 @@
   "transfer": {
     "title": "Number transfer",
     "warning": "Attention! A phone number can only be re-registered at an official mobile operator office, with both the current and the new subscriber present along with their passports. The operator may charge a fee for the transfer, and its amount can depend on the number's category.",
-    "note": "Check the current terms and fee amount directly at your operator's office — the rules and rates are set by the operator and may change."
+    "note": "Check the current terms and fee amount directly at your operator's office — the rules and rates are set by the operator and may change.",
+    "rulesTitle": "What the operators charge",
+    "rulesIntro": "The site uses these rules to work out the fee shown in listings. The number's category is the same tier shown on the card.",
+    "colOperator": "Operator",
+    "colRule": "How the fee is calculated",
+    "vivaRule": "{fixed} ֏ plus the category fee. If the number has been owned for more than {months} months by an individual, or {monthsLegal} months by a company, the category fee is waived — only the {fixed} ֏ remains.",
+    "teamRule": "{fixed} ֏ plus the full category fee. No reductions for length of ownership.",
+    "ucomRule": "A flat {flat} ֏ for Bronze and Silver. For other categories, half the category fee.",
+    "priceTableTitle": "Category fees by operator",
+    "changeNote": "The rules and tariffs are set by the operator and may change. For the most current information, see your operator's own site:",
+    "otherOperatorsNote": "The rules of other telecoms operators can be found on their own websites."
   },
   "rules": {
     "title": "Listing rules",
-    "intro": "Detailed listing rules and pricing will be published here later.",
-    "termsNote": "Until separate listing rules are published, the site's general Terms of Use apply."
+    "intro": "Listing is free — for every tier and with no time limit. We take no commission on the deal and take no part in payments between the seller and the buyer.",
+    "termsNote": "Until separate listing rules are published, the site's general Terms of Use apply.",
+    "promoTitle": "Paid promotion",
+    "promoIntro": "The only paid thing on the marketplace is promoting a listing. It does not affect the number's valuation and does not change its tier — only how visible the listing is in the list.",
+    "promoTop": "Promoted — the listing appears first in the list under any sort order.",
+    "promoHighlight": "Highlighted — the card gets a coloured outline and stands out from the rest.",
+    "promoUrgent": "Urgent — the card gets a badge showing the seller is in a hurry.",
+    "promoHow": "Promotion is switched on in your account, on your own listing. Payment isn't connected yet: until it is, an administrator turns promotion on at your request via the support page.",
+    "promoUntil": "Promotion runs until the date shown, after which the listing returns to the general list. The listing itself stays where it is."
   },
   "support": {
     "title": "Support",
@@ -384,6 +401,11 @@
     "loadFailed": "Couldn't load. Try refreshing the page.",
     "addFavorite": "Add to favourites",
     "removeFavorite": "Remove from favourites",
-    "signInToFavorite": "Sign in to add favourites"
+    "signInToFavorite": "Sign in to add favourites",
+    "promoTitle": "Promotion",
+    "promoNone": "Not promoted",
+    "promoActiveUntil": "Active until {date}",
+    "promoRequest": "Request promotion",
+    "promoRequestHint": "Payment isn't connected yet — write to support and we'll turn promotion on by hand."
   }
 }
