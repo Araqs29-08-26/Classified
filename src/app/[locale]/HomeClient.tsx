@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
-import { evaluateNumber, OPERATOR_CODE } from "@/lib/numberEngine";
+import { evaluateNumber, INDEX_RANGE, OPERATOR_CODE } from "@/lib/numberEngine";
 import {
   NUMBER_TYPES,
   OPERATORS,
@@ -48,6 +48,12 @@ function OperatorBadge({ op, small }: { op: string; small?: boolean }) {
 
 
 
+/**
+ * Статусы в фильтре — от дорогого к дешёвому и без «Обычного»: номера без узора
+ * на площадке не публикуются, фильтровать по ним нечего.
+ */
+const PUBLISHABLE_TIERS = TIERS.map((x) => x.name).filter((n) => n !== "Обычный");
+
 /** Готовые узоры: каждый — семейство кодов, которые возвращает движок. */
 const PRESETS = [
   { id: "mirror", prefixes: ["pal."] },
@@ -71,65 +77,6 @@ export default function HomeClient({
   const t = useTranslations("home");
   const tTier = useTranslations("tiers");
   const tType = useTranslations("numberTypes");
-
-  const maxPrice = useMemo(
-    () => Math.max(TIERS[0].price, ...listings.map((l) => l.price), 1),
-    [listings]
-  );
-
-  const [selectedOperators, setSelectedOperators] = useState<string[]>(
-    splitParam(initialOperator)
-  );
-  const [selectedTiers, setSelectedTiers] = useState<string[]>(
-    splitParam(initialTier)
-  );
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(
-    splitParam(initialType)
-  );
-  const [sort, setSort] = useState<string>(initialSort);
-  const [mask, setMask] = useState<string>(initialMask);
-  const [preset, setPreset] = useState<string>(initialPreset);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
-
-  const toggle = (
-    setter: React.Dispatch<React.SetStateAction<string[]>>,
-    value: string
-  ) =>
-    setter((prev) =>
-      prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value]
-    );
-
-  const setMin = (value: number) =>
-    setPriceRange(([, hi]) => [Math.max(0, Math.min(value, hi)), hi]);
-  const setMax = (value: number) =>
-    setPriceRange(([lo]) => [lo, Math.min(maxPrice, Math.max(value, lo))]);
-
-  const hasActiveFilters =
-    selectedOperators.length > 0 ||
-    selectedTiers.length > 0 ||
-    selectedTypes.length > 0 ||
-    /\d/.test(mask) ||
-    !!preset ||
-    priceRange[0] > 0 ||
-    priceRange[1] < maxPrice;
-
-  function resetFilters() {
-    setSelectedOperators([]);
-    setSelectedTiers([]);
-    setSelectedTypes([]);
-    setSort("");
-    setMask(EMPTY_MASK);
-    setPreset("");
-    setPriceRange([0, maxPrice]);
-  }
-
-  // Счётчики считаются по всему списку, без учёта активных фильтров.
-  const operatorCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const op of OPERATORS) counts[op] = 0;
-    for (const l of listings) counts[l.operator] = (counts[l.operator] ?? 0) + 1;
-    return counts;
-  }, [listings]);
 
   // Оценка для каждого объявления. Сохранённая при публикации важнее пересчитанной:
   // объявление должно помнить, по какой версии движка его оценили.
@@ -156,6 +103,80 @@ export default function HomeClient({
     [listings]
   );
 
+  // Верхняя граница ползунка — по полной стоимости, ведь по ней и фильтруем.
+  const maxPrice = useMemo(
+    () => Math.max(TIERS[0].price, ...valued.map((x) => x.total), 1),
+    [valued]
+  );
+
+  const [selectedOperators, setSelectedOperators] = useState<string[]>(
+    splitParam(initialOperator)
+  );
+  const [selectedTiers, setSelectedTiers] = useState<string[]>(
+    splitParam(initialTier)
+  );
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(
+    splitParam(initialType)
+  );
+  const [sort, setSort] = useState<string>(initialSort);
+  const [mask, setMask] = useState<string>(initialMask);
+  const [preset, setPreset] = useState<string>(initialPreset);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
+  const [onlyVerified, setOnlyVerified] = useState(false);
+  const [onlyDescribed, setOnlyDescribed] = useState(false);
+
+  const toggle = (
+    setter: React.Dispatch<React.SetStateAction<string[]>>,
+    value: string
+  ) =>
+    setter((prev) =>
+      prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value]
+    );
+
+  const setMin = (value: number) =>
+    setPriceRange(([, hi]) => [Math.max(0, Math.min(value, hi)), hi]);
+  const setMax = (value: number) =>
+    setPriceRange(([lo]) => [lo, Math.min(maxPrice, Math.max(value, lo))]);
+
+  const hasActiveFilters =
+    selectedOperators.length > 0 ||
+    selectedTiers.length > 0 ||
+    selectedTypes.length > 0 ||
+    /\d/.test(mask) ||
+    !!preset ||
+    onlyVerified ||
+    onlyDescribed ||
+    priceRange[0] > 0 ||
+    priceRange[1] < maxPrice;
+
+  function resetFilters() {
+    setSelectedOperators([]);
+    setSelectedTiers([]);
+    setSelectedTypes([]);
+    setSort("");
+    setMask(EMPTY_MASK);
+    setPreset("");
+    setOnlyVerified(false);
+    setOnlyDescribed(false);
+    setPriceRange([0, maxPrice]);
+  }
+
+  // Счётчики считаются по всему списку, без учёта активных фильтров.
+  const operatorCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const op of OPERATORS) counts[op] = 0;
+    for (const l of listings) counts[l.operator] = (counts[l.operator] ?? 0) + 1;
+    return counts;
+  }, [listings]);
+
+  const tierCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const tier of PUBLISHABLE_TIERS) counts[tier] = 0;
+    for (const l of listings) counts[l.status_tier] = (counts[l.status_tier] ?? 0) + 1;
+    return counts;
+  }, [listings]);
+
+
   // Состояние поиска пишется в адрес страницы, иначе при смене языка оно теряется:
   // страница перезагружается, а фильтры живут только в памяти вкладки.
   // replaceState вместо роутера — правка адреса не должна дёргать сервер на каждую цифру.
@@ -180,12 +201,16 @@ export default function HomeClient({
 
   const visible = useMemo(() => {
     const filtered = valued.filter(
-      ({ listing: l, patternCode }) =>
+      ({ listing: l, patternCode, total }) =>
         (!selectedOperators.length || selectedOperators.includes(l.operator)) &&
         (!selectedTiers.length || selectedTiers.includes(l.status_tier)) &&
         (!selectedTypes.length || selectedTypes.includes(l.number_type)) &&
-        !(l.price < priceRange[0]) &&
-        !(l.price > priceRange[1]) &&
+        // Диапазон считается по ПОЛНОЙ стоимости: покупатель платит цену продавца
+        // плюс сбор оператора, и искать логично по тому, что он отдаст на руки.
+        !(total < priceRange[0]) &&
+        !(total > priceRange[1]) &&
+        (!onlyVerified || l.sms_verified) &&
+        (!onlyDescribed || !!l.description) &&
         (!/\d/.test(mask) || matchesDigits(l.phone_number, mask)) &&
         (!presetPrefixes ||
           (patternCode !== null &&
@@ -210,6 +235,8 @@ export default function HomeClient({
     mask,
     priceRange,
     presetPrefixes,
+    onlyVerified,
+    onlyDescribed,
   ]);
 
   return (
@@ -278,27 +305,30 @@ export default function HomeClient({
 
         <div className="filter-group">
           <div className="filter-group-label">{t("filters.statusLabel")}</div>
-          <div className="tier-toggle-grid">
-            {TIERS.map((tier) => {
-              const active = selectedTiers.includes(tier.name);
+          <p className="filters-hint">{t("filters.statusHint")}</p>
+          <div className="tier-list">
+            {PUBLISHABLE_TIERS.map((tier) => {
+              const active = selectedTiers.includes(tier);
               return (
-                <label
-                  key={tier.name}
-                  className={"tier-toggle" + (active ? " active" : "")}
-                >
+                <label key={tier} className={"tier-row" + (active ? " active" : "")}>
                   <input
                     type="checkbox"
                     checked={active}
-                    onChange={() => toggle(setSelectedTiers, tier.name)}
+                    onChange={() => toggle(setSelectedTiers, tier)}
                   />
-                  <span className="tier-toggle-icon" aria-hidden="true">
-                    {TIER_EMOJI[tier.name]}
+                  <span className={`tier-edge tier-bar-${tier}`} aria-hidden="true" />
+                  <span className="tier-row-text">
+                    <b>{tTier(tier)}</b>
+                    <span>
+                      {t("filters.indexShortLabel")} {INDEX_RANGE[tier]}
+                    </span>
                   </span>
-                  {tTier(tier.name)}
+                  <span className="tier-row-count">{tierCounts[tier] ?? 0}</span>
                 </label>
               );
             })}
           </div>
+          <p className="filters-note">{t("filters.notPublishedNote")}</p>
         </div>
 
         <div className="filter-group">
@@ -322,7 +352,8 @@ export default function HomeClient({
         </div>
 
         <div className="filter-group">
-          <div className="filter-group-label">{t("filters.priceLabel")}</div>
+          <div className="filter-group-label">{t("filters.totalPriceLabel")}</div>
+          <p className="filters-hint">{t("filters.totalPriceHint")}</p>
           <div className="price-range">
             <div className="price-range-track-wrap">
               <div className="price-range-fill" />
@@ -386,6 +417,27 @@ export default function HomeClient({
           </select>
         </div>
 
+        <div className="filter-group">
+          <div className="filter-group-label">{t("filters.moreLabel")}</div>
+          <div className="more-toggles">
+            <label>
+              <input
+                type="checkbox"
+                checked={onlyVerified}
+                onChange={(e) => setOnlyVerified(e.target.checked)}
+              />
+              <span>{t("filters.onlyVerified")}</span>
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={onlyDescribed}
+                onChange={(e) => setOnlyDescribed(e.target.checked)}
+              />
+              <span>{t("filters.onlyDescribed")}</span>
+            </label>
+          </div>
+        </div>
 
         {hasActiveFilters && (
           <button

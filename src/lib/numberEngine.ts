@@ -56,6 +56,9 @@ export type EngineOptions = {
   entity?: "individual" | "legal";
 };
 
+/** Диапазон индекса красоты для каждого статуса, например «90–100». */
+export const INDEX_RANGE: Record<string, string> = engine.INDEX_RANGE;
+
 export const ENGINE_VERSION: string = engine.VERSION;
 
 /** Названия операторов на сайте → коды, которые понимает движок. */

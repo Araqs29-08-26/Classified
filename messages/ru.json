@@ -35,7 +35,16 @@
       "sortIndex": "Сначала красивее",
       "sortTotalAsc": "Полная стоимость: дешевле",
       "sortTotalDesc": "Полная стоимость: дороже",
-      "indexShort": "индекс"
+      "indexShort": "индекс",
+      "statusHint": "Чем выше — тем реже узор",
+      "notPublishedNote": "Номера без узора не публикуются — площадка принимает от Бронзового и выше",
+      "totalPriceLabel": "Полная стоимость для покупателя",
+      "totalPriceHint": "С учётом сбора оператора за переоформление",
+      "moreLabel": "Ещё",
+      "onlyVerified": "Владение подтверждено по SMS",
+      "onlyMobile": "Только мобильные",
+      "onlyDescribed": "С описанием от продавца",
+      "indexShortLabel": "индекс"
     },
     "table": {
       "number": "Номер",

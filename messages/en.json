@@ -35,7 +35,16 @@
       "sortIndex": "Most beautiful first",
       "sortTotalAsc": "Total cost: low to high",
       "sortTotalDesc": "Total cost: high to low",
-      "indexShort": "index"
+      "indexShort": "index",
+      "statusHint": "The higher the tier, the rarer the pattern",
+      "notPublishedNote": "Numbers without a pattern are not published — the marketplace accepts Bronze and above",
+      "totalPriceLabel": "Total cost for the buyer",
+      "totalPriceHint": "Including the operator's transfer fee",
+      "moreLabel": "More",
+      "onlyVerified": "Ownership verified by SMS",
+      "onlyMobile": "Mobile only",
+      "onlyDescribed": "With a description from the seller",
+      "indexShortLabel": "index"
     },
     "table": {
       "number": "Number",
