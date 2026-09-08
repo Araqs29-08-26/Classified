@@ -1653,17 +1653,23 @@ textarea:focus {
   color:var(--accent-ink)
 }
 
-@media (max-width:480px) {
+/* На узком экране ячейки делят ширину поровну, а не переносятся на вторую
+   строку: восемь цифр номера должны читаться одной строкой, как в макете. */
+@media (max-width:560px) {
   .digit-cells {
-    gap:5px;
+    display:grid;
+    grid-template-columns:auto repeat(8,minmax(0,1fr));
+    width:100%;
+    gap:4px;
     padding:8px 10px
   }
   .digit-cell {
-    width:32px;
+    width:100%;
     height:44px;
-    font-size:17px
+    font-size:16px
   }
   .digit-prefix {
-    font-size:15px
+    font-size:13px;
+    margin-right:2px
   }
 }
