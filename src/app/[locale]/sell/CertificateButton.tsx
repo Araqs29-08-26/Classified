@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
-import { formatAmount, supabase } from "@/lib/supabase";
+import { formatPrice, supabase } from "@/lib/supabase";
 import { CERTIFICATE_PRICE } from "@/lib/promoPrices";
 import { useSession } from "@/lib/useSession";
 
@@ -64,7 +64,7 @@ export default function CertificateButton({
       >
         {state === "sending"
           ? t("certificateOrdering")
-          : `${t("certificateOrder")} — ${formatAmount(CERTIFICATE_PRICE)}`}
+          : `${t("certificateOrder")} — ${formatPrice(CERTIFICATE_PRICE)}`}
       </button>
       {state === "failed" && <p className="order-error">{t("certificateFailed")}</p>}
     </>

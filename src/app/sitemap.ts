@@ -35,7 +35,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { data } = await supabase
     .from("listings")
     .select("id, updated_at")
-    .eq("listing_status", "active");
+    .eq("listing_status", "active")
+    .gt("expires_at", new Date().toISOString());
 
   for (const listing of data ?? []) {
     for (const locale of routing.locales) {

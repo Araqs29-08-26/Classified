@@ -87,6 +87,8 @@ export type Listing = {
   /** Владение продаваемым номером подтверждено кодом из SMS на этот номер. */
   number_verified: boolean;
   listing_status: string;
+  /** До какого момента объявление показывается в каталоге. */
+  expires_at: string | null;
   created_at: string;
   updated_at: string;
   number_type: string;

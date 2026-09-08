@@ -76,6 +76,35 @@ export default function AccountClient() {
     void load();
   }, [load]);
 
+  /** Истёкшее объявление — оно ещё в кабинете, но уже не в каталоге. */
+  function isExpired(listing: Listing): boolean {
+    return !!listing.expires_at && new Date(listing.expires_at) <= new Date();
+  }
+
+  /**
+   * Разместить заново.
+   *
+   * Срок отсчитывается заново от сегодняшнего дня, а дата создания остаётся
+   * прежней: по ней видно, как давно номер продаётся.
+   */
+  async function repost(listing: Listing) {
+    setBusyId(listing.id);
+    const until = new Date();
+    until.setMonth(until.getMonth() + 6);
+
+    const { error } = await supabase
+      .from("listings")
+      .update({
+        expires_at: until.toISOString(),
+        listing_status: "active",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", listing.id);
+
+    setBusyId(null);
+    if (!error) void load();
+  }
+
   async function setStatus(listing: Listing, status: string) {
     setBusyId(listing.id);
     const { error } = await supabase
@@ -160,7 +189,9 @@ export default function AccountClient() {
               {tab === "listings" && (
                 <div className="account-row-actions">
                   <span className="account-row-status">
-                    {t(STATUS_KEY[l.listing_status] ?? "statusActive")}
+                    {isExpired(l)
+                      ? t("statusExpired")
+                      : t(STATUS_KEY[l.listing_status] ?? "statusActive")}
                   </span>
 
                   {/* Продвижение показываем всегда: и когда оно есть, и когда его нет,
@@ -183,20 +214,31 @@ export default function AccountClient() {
                       </button>
                     )}
                   </span>
-                  <button
-                    className="btn btn-ghost"
-                    type="button"
-                    disabled={busyId === l.id}
-                    onClick={() =>
-                      setStatus(l, l.listing_status === "active" ? "hidden" : "active")
-                    }
-                  >
-                    {busyId === l.id
-                      ? t("working")
-                      : l.listing_status === "active"
-                        ? t("hide")
-                        : t("publish")}
-                  </button>
+                  {isExpired(l) ? (
+                    <button
+                      className="btn btn-accent"
+                      type="button"
+                      disabled={busyId === l.id}
+                      onClick={() => repost(l)}
+                    >
+                      {busyId === l.id ? t("working") : t("repost")}
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-ghost"
+                      type="button"
+                      disabled={busyId === l.id}
+                      onClick={() =>
+                        setStatus(l, l.listing_status === "active" ? "hidden" : "active")
+                      }
+                    >
+                      {busyId === l.id
+                        ? t("working")
+                        : l.listing_status === "active"
+                          ? t("hide")
+                          : t("publish")}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

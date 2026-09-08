@@ -1,12 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useRouter } from "@/i18n/navigation";
 import { detect, normalizePhone } from "@/lib/phone";
 import { confirmOwnership, sendOwnershipCode } from "@/lib/verifyNumber";
+import { EXTRA_LISTING_PRICE } from "@/lib/promoPrices";
+import { displayWho, useSession } from "@/lib/useSession";
+import { Link } from "@/i18n/navigation";
 import {
   evaluateNumber,
   OPERATOR_CODE,
@@ -50,7 +53,21 @@ export default function NewListingClient() {
 
   const guessed = qNumber ? detect(qNumber) : null;
 
+  const { user, loading: sessionLoading } = useSession();
+
   const [step, setStep] = useState<Step | "done">("phone");
+
+  /**
+   * Сколько объявлений уже есть и есть ли подписка «Магазин».
+   *
+   * Первое объявление бесплатно всегда; за второе и следующие берётся доплата,
+   * если только подписка её не снимает. null — ещё не считали.
+   */
+  const [ownCount, setOwnCount] = useState<number | null>(null);
+  const [hasShop, setHasShop] = useState(false);
+  const [payState, setPayState] = useState<"idle" | "sending" | "done" | "failed">(
+    "idle"
+  );
   const [phone, setPhone] = useState("+374");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -81,9 +98,47 @@ export default function NewListingClient() {
     description: "",
   });
 
+  // Вход нужен только тому, кто ещё не вошёл: продавец, уже подтвердивший
+  // телефон или почту, не должен проходить SMS заново на каждое объявление.
+  useEffect(() => {
+    if (!sessionLoading && user && step === "phone") setStep("form");
+  }, [sessionLoading, user, step]);
+
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+
+    void (async () => {
+      const [mine, subs] = await Promise.all([
+        supabase
+          .from("listings")
+          .select("id", { count: "exact", head: true })
+          .eq("seller_id", user.id),
+        supabase
+          .from("subscriptions")
+          .select("plan, paid_until")
+          .eq("user_id", user.id)
+          .gt("paid_until", new Date().toISOString()),
+      ]);
+      if (!alive) return;
+      setOwnCount(mine.count ?? 0);
+      setHasShop(
+        (subs.data ?? []).some((s: { plan: string }) => s.plan.startsWith("shop"))
+      );
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+
+  /** Требуется ли доплата за это объявление. */
+  const needsPayment = ownCount !== null && ownCount > 0 && !hasShop;
+
   const autofilled = Boolean(qNumber && qTier);
   const numberMatchesVerified =
-    normalizePhone(form.phone_number) === normalizePhone(phone);
+    normalizePhone(form.phone_number) ===
+    normalizePhone(user?.phone ? `+${user.phone}` : phone);
 
   const isViva = form.operator === "Viva";
   // Спрашиваем только у Viva и только «дольше двух лет или нет»: точный срок —
@@ -199,6 +254,13 @@ export default function NewListingClient() {
     setOwnStep("done");
   }
 
+  /**
+   * Отправить объявление.
+   *
+   * Когда за размещение нужно доплатить, объявление всё равно сохраняется —
+   * но скрытым, а рядом ложится заявка на оплату. Иначе продавцу пришлось бы
+   * набирать всё заново после того, как деньги дойдут.
+   */
   async function submitListing(e: React.FormEvent) {
     e.preventDefault();
 
@@ -219,7 +281,9 @@ export default function NewListingClient() {
       return;
     }
 
-    const { error: err } = await supabase.from("listings").insert({
+    const { data: saved, error: err } = await supabase
+      .from("listings")
+      .insert({
       seller_id: user.id,
       phone_number: form.phone_number,
       operator: form.operator,
@@ -240,14 +304,33 @@ export default function NewListingClient() {
       // Отметка о совпадении с номером входа. Значок «Проверено» в выдаче
       // ставит сама база по таблице подтверждений — с формы её не подделать.
       sms_verified: numberMatchesVerified,
-    });
+      // Платное объявление ждёт оплаты скрытым, бесплатное публикуется сразу.
+      listing_status: needsPayment ? "hidden" : "active",
+      })
+      .select("id")
+      .single();
 
-    setLoading(false);
     if (err) {
+      setLoading(false);
       setError(`${t("errors.saveFailed")} ${err.message}`);
       return;
     }
 
+    if (needsPayment) {
+      setPayState("sending");
+      const { error: payErr } = await supabase.from("promo_requests").insert({
+        listing_id: saved?.id ?? null,
+        requester_id: user.id,
+        kinds: ["extra_listing"],
+        amount: EXTRA_LISTING_PRICE,
+      });
+      setLoading(false);
+      setPayState(payErr ? "failed" : "done");
+      if (!payErr) setStep("done");
+      return;
+    }
+
+    setLoading(false);
     setStep("done");
     setTimeout(() => router.push("/"), 1200);
   }
@@ -298,6 +381,12 @@ export default function NewListingClient() {
       {step === "form" && (
         <form className="card" onSubmit={submitListing}>
           {autofilled && <div className="notice">{t("autofillNotice")}</div>}
+
+          {user && (
+            <p className="signed-in-note">
+              {t("signedInAs", { who: displayWho(user) })}
+            </p>
+          )}
 
           <div className="field">
             <label>{t("formStep.numberLabel")}</label>
@@ -544,17 +633,45 @@ export default function NewListingClient() {
 
           {blockReason && verdict?.ok && <div className="notice">{blockReason}</div>}
 
+          {hasShop && ownCount !== null && ownCount > 0 && (
+            <p className="paid-note">{t("shopActive")}</p>
+          )}
+
+          {needsPayment && (
+            <div className="paid-block">
+              <b>{t("paidTitle")}</b>
+              <p>{t("paidText", { amount: EXTRA_LISTING_PRICE })}</p>
+              <p className="paid-links">
+                <Link href="/rules/promo">{t("paidSubscribe")}</Link>
+              </p>
+              {payState === "failed" && (
+                <p className="order-error">{t("paidFailed")}</p>
+              )}
+            </div>
+          )}
+
           <button
             className="btn btn-accent"
             type="submit"
             disabled={loading || blocked}
           >
-            {loading ? t("formStep.loading") : t("formStep.button")}
+            {loading
+              ? t("formStep.loading")
+              : needsPayment
+                ? t("paidOrder", { amount: formatPrice(EXTRA_LISTING_PRICE) })
+                : t("formStep.button")}
           </button>
         </form>
       )}
 
-      {step === "done" && (
+      {step === "done" && payState === "done" && (
+        <div className="empty-state">
+          <h2>{t("doneStep.title")}</h2>
+          <p>{t("paidDone")}</p>
+        </div>
+      )}
+
+      {step === "done" && payState !== "done" && (
         <div className="empty-state">
           <h2>{t("doneStep.title")}</h2>
           <p>{t("doneStep.subtitle")}</p>

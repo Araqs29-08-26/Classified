@@ -208,6 +208,18 @@ export default function HomeClient({
     return counts;
   }, [listings]);
 
+  const presetCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of PRESETS) {
+      counts[p.id] = valued.filter(
+        (x) =>
+          x.patternCode !== null &&
+          p.prefixes.some((prefix) => x.patternCode!.startsWith(prefix))
+      ).length;
+    }
+    return counts;
+  }, [valued]);
+
   const tierCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const tier of ALL_TIERS) counts[tier] = 0;
@@ -423,20 +435,6 @@ export default function HomeClient({
           status={queryStatus}
         />
 
-        <div className="presets">
-          <span className="presets-label">{t("presetsLabel")}</span>
-          {PRESETS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={"chip" + (preset === p.id ? " active" : "")}
-              aria-pressed={preset === p.id}
-              onClick={() => setPreset(preset === p.id ? "" : p.id)}
-            >
-              {t(`presets.${p.id}`)}
-            </button>
-          ))}
-        </div>
       </section>
 
       <div className="board">
@@ -568,6 +566,28 @@ export default function HomeClient({
         </div>
 
 
+        <details className="filter-extra">
+          <summary>{t("filters.extraLabel")}</summary>
+
+        <div className="filter-group">
+          <div className="filter-group-label">{t("presetsLabel")}</div>
+          <div className="presets">
+            {PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={"chip" + (preset === p.id ? " active" : "")}
+                aria-pressed={preset === p.id}
+                disabled={presetCounts[p.id] === 0}
+                onClick={() => setPreset(preset === p.id ? "" : p.id)}
+              >
+                {t(`presets.${p.id}`)}
+                <span className="chip-count">{presetCounts[p.id] ?? 0}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="filter-group">
           <div className="filter-group-label">{t("filters.digitCountLabel")}</div>
           <div className="count-filter">
@@ -627,6 +647,8 @@ export default function HomeClient({
             </label>
           </div>
         </div>
+
+        </details>
 
         </aside>
 

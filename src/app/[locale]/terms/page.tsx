@@ -1,4 +1,4 @@
-import { redirect } from "@/i18n/navigation";
+import { redirect } from "next/navigation";
 
 /** Старый адрес условий использования — раздел переехал в «Правила». */
 export default function TermsMoved({
@@ -6,5 +6,5 @@ export default function TermsMoved({
 }: {
   params: { locale: string };
 }) {
-  redirect({ href: "/rules/terms", locale });
+  redirect(`/${locale}/rules/terms`);
 }

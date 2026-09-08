@@ -60,7 +60,8 @@
       "whereStart": "At the start",
       "whereMiddle": "In the middle",
       "whereEnd": "At the end",
-      "whereHint": "Start and end are counted over the six digits after the operator code."
+      "whereHint": "Start and end are counted over the six digits after the operator code.",
+      "extraLabel": "More filters"
     },
     "table": {
       "number": "Number",
@@ -82,7 +83,7 @@
       "title": "Couldn't load listings"
     },
     "verified": "✓ number verified",
-    "searchTitle": "Find a number by your own digits",
+    "searchTitle": "Find your beautiful number",
     "searchSubtitle": "Type the digits you want to see in the number. «?» stands for any single digit, «*» for any number of them.",
     "presetsLabel": "Ready-made patterns",
     "counters": "{count, plural, one {# listing} other {# listings}}",
@@ -225,7 +226,17 @@
       "needNumber": "Enter the number being sold first.",
       "failed": "The number could not be confirmed.",
       "change": "Enter a different code"
-    }
+    },
+    "checking": "Checking whether you are signed in...",
+    "signedInAs": "You are signed in as {who}. The listing will be posted from this account.",
+    "paidTitle": "This is not your first listing",
+    "paidText": "The first listing is free. The second and each further one costs {amount} ֏. Or take a «Shop» subscription — with it there is no surcharge.",
+    "paidOrder": "Post for {amount} ֏",
+    "paidSubscribe": "See the subscriptions",
+    "paidOrdering": "Sending...",
+    "paidDone": "The request has been sent. We will publish the listing after payment — an administrator will contact you.",
+    "paidFailed": "The request could not be sent. Please try again.",
+    "shopActive": "You have a «Shop» subscription — no surcharge for this listing."
   },
   "sell": {
     "title": "Value a number",
@@ -425,7 +436,14 @@
     "linkSentTitle": "Email sent",
     "linkSentTo": "We've sent an email to {email}. Open it and follow the link — you'll land straight in your account.",
     "linkSentSpam": "No email after a couple of minutes? Check spam — the sender may be unfamiliar to your mailbox.",
-    "sendAgain": "Send it again"
+    "sendAgain": "Send it again",
+    "callback": {
+      "checking": "Checking the link from the email...",
+      "failedTitle": "The link did not work",
+      "failedText": "Most often this means the link has already been used or has expired — it lasts about an hour. Request a new one.",
+      "noSession": "The link opened but the sign-in did not happen. Request a new email and open the link in full, without cutting it short.",
+      "tryAgain": "Send a new link"
+    }
   },
   "account": {
     "title": "My account",
@@ -449,7 +467,10 @@
     "promoTitle": "Promotion",
     "promoNone": "Not promoted",
     "promoActiveUntil": "Active until {date}",
-    "promoRequest": "Request promotion"
+    "promoRequest": "Request promotion",
+    "statusExpired": "Expired",
+    "repost": "Post again",
+    "expiresOn": "Until {date}"
   },
   "promo": {
     "title": "Promote a listing",

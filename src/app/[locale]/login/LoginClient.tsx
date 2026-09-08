@@ -30,8 +30,10 @@ export default function LoginClient() {
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        // Возвращаем человека сразу в кабинет и на том же языке, с которого он уходил.
-        emailRedirectTo: `${window.location.origin}/${locale}/account`,
+        // Ссылка ведёт на страницу разбора, а та уже уводит в кабинет. Раньше
+        // письмо вело прямо в кабинет, и при неудаче он молча отправлял на
+        // вход — со стороны это выглядело как «ссылка не работает».
+        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback`,
       },
     });
 

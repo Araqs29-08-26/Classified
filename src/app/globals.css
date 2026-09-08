@@ -1839,22 +1839,87 @@ textarea:focus {
 
 @media (min-width:900px) {
   .board {
-    grid-template-columns:280px minmax(0,1fr);
+    grid-template-columns:264px minmax(0,1fr);
     gap:20px
   }
   .board .filters {
     position:sticky;
-    top:16px;
-    max-height:calc(100vh - 32px);
-    overflow-y:auto
+    top:16px
   }
 }
 
 /* Внутри боковой колонки фильтры компактнее: места меньше, а групп больше. */
 .board .filters {
   margin:0;
-  padding:14px;
-  gap:14px
+  padding:13px;
+  gap:12px;
+  min-width:0;
+  overflow:visible
+}
+
+.board .filters * {
+  min-width:0
+}
+
+.board .filters select,
+.board .filters input {
+  max-width:100%
+}
+
+/* Редкие фильтры свёрнуты: колонка помещается на экран целиком. */
+.filter-extra {
+  border-top:1px solid var(--line);
+  padding-top:12px
+}
+
+.filter-extra > summary {
+  cursor:pointer;
+  list-style:none;
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  gap:6px
+}
+
+.filter-extra > summary::-webkit-details-marker {
+  display:none
+}
+
+.filter-extra > summary::after {
+  content:"▾";
+  font-size:10px;
+  color:var(--faint)
+}
+
+.filter-extra[open] > summary::after {
+  content:"▴"
+}
+
+.filter-extra > summary:hover {
+  color:var(--accent-ink)
+}
+
+.filter-extra .filter-group {
+  margin-top:12px
+}
+
+/* Счётчик на готовом узоре: сразу видно, что за кнопкой ничего нет. */
+.chip-count {
+  margin-left:6px;
+  font-size:11px;
+  color:var(--faint)
+}
+
+.chip:disabled {
+  opacity:.45;
+  cursor:default
+}
+
+.chip:disabled:hover {
+  border-color:var(--line)
 }
 
 .board .filters .filter-group-label {

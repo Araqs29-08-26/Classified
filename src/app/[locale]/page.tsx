@@ -28,6 +28,9 @@ export default async function HomePage({
     .from("listings")
     .select("*")
     .eq("listing_status", "active")
+    // Объявление держится полгода; истёкшее уходит из каталога, но остаётся
+    // у продавца в кабинете — оттуда его можно разместить заново.
+    .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false });
 
   if (error) {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
-import { formatAmount } from "@/lib/supabase";
+import { formatPrice } from "@/lib/supabase";
 import {
   EXTRA_LISTING_PRICE,
   HUNTER_PRICE,
@@ -48,7 +48,7 @@ export default async function PromoRulesPage({
               <b>{tPromo(`${kind}Title`)}</b>
               <span>{tPromo(`${kind}Text`)}</span>
             </span>
-            <span className="service-price">{formatAmount(PROMO_PRICES[kind])}</span>
+            <span className="service-price">{formatPrice(PROMO_PRICES[kind])}</span>
           </li>
         ))}
         <li className="service">
@@ -56,7 +56,7 @@ export default async function PromoRulesPage({
             <b>{tPromo("extraTitle")}</b>
             <span>{tPromo("extraText", { amount: EXTRA_LISTING_PRICE })}</span>
           </span>
-          <span className="service-price">{formatAmount(EXTRA_LISTING_PRICE)}</span>
+          <span className="service-price">{formatPrice(EXTRA_LISTING_PRICE)}</span>
         </li>
       </ul>
 
@@ -74,7 +74,7 @@ export default async function PromoRulesPage({
               </b>
             </span>
             <span className="service-price">
-              {formatAmount(s.price)}
+              {formatPrice(s.price)}
               <span className="service-period">{t("perMonth")}</span>
             </span>
             <OrderButton kind={s.plan} amount={s.price} />
@@ -91,7 +91,7 @@ export default async function PromoRulesPage({
             <b>{t("hunterTitle")}</b>
           </span>
           <span className="service-price">
-            {formatAmount(HUNTER_PRICE)}
+            {formatPrice(HUNTER_PRICE)}
             <span className="service-period">{t("perMonth")}</span>
           </span>
           <OrderButton kind="hunter" amount={HUNTER_PRICE} />
