@@ -1,49 +1,19 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
+import { formatAmount } from "@/lib/supabase";
+import { OPERATOR_TRANSFER, UCOM_FLAT } from "@/lib/transferPrices";
 import { TRANSFER_RULES } from "@/lib/numberEngine";
 import RulesNav from "../RulesNav";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Правила переоформления — отдельным блоком на каждого оператора.
- *
- * Сводных таблиц здесь нет намеренно: у операторов разные правила, и в общей
- * таблице нюансы каждого теряются. Точные суммы по категориям операторы
- * публикуют не полностью, поэтому цифры показываются только те, что оператор
- * называет сам, — остальное человек узнаёт в офисе.
- */
-const OPERATORS = [
-  {
-    key: "viva",
-    name: "Viva",
-    url: "https://www.viva.am",
-    logo: "/operators/viva.png",
-    body: "vivaBody",
-    params: {
-      fixed: TRANSFER_RULES.vivaFixed,
-      months: TRANSFER_RULES.vivaFreeAfterMonths.individual,
-      monthsLegal: TRANSFER_RULES.vivaFreeAfterMonths.legal,
-    },
-  },
-  {
-    key: "team",
-    name: "Team Telecom",
-    url: "https://www.telecomarmenia.am",
-    logo: "/operators/team.png",
-    body: "teamBody",
-    params: { fixed: TRANSFER_RULES.teamFixed },
-  },
-  {
-    key: "ucom",
-    name: "Ucom",
-    url: "https://www.ucom.am",
-    logo: "/operators/ucom.png",
-    body: "ucomBody",
-    params: { flat: TRANSFER_RULES.ucomFlatFee },
-  },
-] as const;
+/** Логотипы лежат рядом с остальными: они же на карточках объявлений. */
+const LOGO: Record<string, string> = {
+  viva: "/operators/viva.png",
+  team: "/operators/team.png",
+  ucom: "/operators/ucom.png",
+};
 
 export async function generateMetadata({
   params: { locale },
@@ -60,6 +30,17 @@ export default async function TransferPage({
   params: { locale: string };
 }) {
   const t = await getTranslations({ locale, namespace: "transfer" });
+  const tTiers = await getTranslations({ locale, namespace: "tiers" });
+
+  /** Название категории: у Viva это наш статус, у Team есть своя «Никелевая». */
+  const categoryName = (tier: string) =>
+    tier === "Никелевый" ? t("nickel") : tTiers(tier);
+
+  const rule: Record<string, string> = {
+    viva: t("vivaRule", { fixed: TRANSFER_RULES.vivaFixed }),
+    team: t("teamRule", { fixed: TRANSFER_RULES.teamFixed }),
+    ucom: t("ucomRule", { flat: UCOM_FLAT }),
+  };
 
   return (
     <div className="legal">
@@ -78,29 +59,63 @@ export default async function TransferPage({
       <p>{t("howSteps")}</p>
 
       <h2>{t("byOperator")}</h2>
+      <p className="legal-note">{t("ourScaleNote")}</p>
 
-      <div className="operator-rules">
-        {OPERATORS.map((op) => (
-          <section key={op.key} className="operator-rule">
-            <h3>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={op.logo} alt="" className="operator-logo" />
-              {op.name}
-            </h3>
-            <p>{t(op.body, op.params)}</p>
-            <a href={op.url} target="_blank" rel="noopener noreferrer">
-              {op.url.replace("https://", "")}
-            </a>
-          </section>
-        ))}
-      </div>
+      {OPERATOR_TRANSFER.map((op) => (
+        <section key={op.key} className="operator-block">
+          <h3>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={LOGO[op.key]} alt="" className="operator-logo" />
+            {op.name}
+          </h3>
 
-      <p className="legal-note">{t("unpublished")}</p>
+          <p>{rule[op.key]}</p>
+          {op.key === "team" && <p>{t("teamContract")}</p>}
+          {op.key === "ucom" && <p>{t("ucomNoObligation")}</p>}
+
+          <table className="category-table">
+            <thead>
+              <tr>
+                <th>{t("colCategory")}</th>
+                <th className="col-right">{t("colPrice")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {op.categories.map((c) => (
+                <tr key={c.tier}>
+                  <td>{categoryName(c.tier)}</td>
+                  <td className="col-right mono">
+                    {formatAmount(c.price)} ֏
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Категорий выше «Бриллиантового» у этих операторов нет — так и
+              сказано. Заполнять пробел похожей цифрой значило бы выдумывать. */}
+          {op.key !== "viva" && (
+            <p className="legal-note">
+              <b>{t("notPublishedTitle")}.</b> {t("notPublished")}
+            </p>
+          )}
+
+          <ul className="operator-links">
+            {op.links.map((link) => (
+              <li key={link.url}>
+                <a href={link.url} target="_blank" rel="noopener noreferrer">
+                  {t(link.key)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+
+      <p className="legal-note">{t("sourceNote")}</p>
 
       <h2>{t("otherOperatorsTitle")}</h2>
       <p>{t("otherOperatorsNote")}</p>
-
-      <p className="legal-note">{t("note")}</p>
     </div>
   );
 }
