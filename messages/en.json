@@ -346,6 +346,22 @@
           "body": "We may update these terms from time to time. The current version is always available on this page; the last-updated date is shown at the top."
         },
         {
+          "title": "Paying for the marketplace's services",
+          "body": "Posting listings is free. Only promotion services, monthly subscriptions and the fee for a seller's second and further listings are paid — they are listed with their prices under «Rules → Promotion». All prices are in Armenian drams (AMD) and include all applicable taxes. Payment is made by bank card on the acquiring bank's secure page; the card number is never passed to the Araqs site and is not stored by us."
+        },
+        {
+          "title": "When a service counts as delivered",
+          "body": "A promotion is switched on once the payment arrives and runs for 30 calendar days from that moment. A monthly subscription runs for 30 calendar days from the moment it is switched on. The fee for a second and further listings relates to that specific listing and counts as delivered once it is published."
+        },
+        {
+          "title": "Cancellation and refunds",
+          "body": "If a service was paid for but never switched on, the money is refunded in full. If the service is running, the refund covers the unused whole days of its term. To request a refund, write to support quoting the payment date and the listing; we reply within three business days. Refunds go back to the same card the payment came from; how quickly it lands depends on the cardholder's bank."
+        },
+        {
+          "title": "Company details",
+          "body": "COMPANY DETAILS GO HERE: the full name of the legal entity or sole trader, tax number, registered address and phone. The acquiring bank requires them before card payments can be enabled. Filled in by the owner of the marketplace."
+        },
+        {
           "title": "Contact",
           "body": "For questions about these terms, contact us at support@araqs.com."
         }
@@ -431,8 +447,18 @@
   },
   "support": {
     "title": "Support",
-    "intro": "Have a question or a suggestion about the site? Write to the developers — we'll reply by email.",
-    "emailButton": "Send an email"
+    "intro": "A question or a suggestion about the site? Write to us — we will reply to whichever contact you give.",
+    "contactLabel": "Where to reply",
+    "contactPlaceholder": "Email or phone number",
+    "messageLabel": "What happened",
+    "messagePlaceholder": "Describe the question in your own words",
+    "send": "Send",
+    "sending": "Sending...",
+    "doneTitle": "Your message has been sent",
+    "doneText": "We will read it and reply to the contact you gave.",
+    "failed": "It could not be sent. Please try again, or write to the address below.",
+    "orMail": "You can also send a plain email:",
+    "copied": "Address copied"
   },
   "auth": {
     "title": "Sign in and sign up",

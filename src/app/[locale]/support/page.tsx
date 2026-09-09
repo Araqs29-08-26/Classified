@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
+import SupportForm from "./SupportForm";
+
 export const dynamic = "force-dynamic";
 
 // ВНИМАНИЕ: адрес поддержки захардкожен здесь и в текстах словаря
@@ -27,14 +29,8 @@ export default async function SupportPage({
   return (
     <div className="legal">
       <h1>{t("title")}</h1>
-
       <p className="legal-intro">{t("intro")}</p>
-
-      <p>
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="btn btn-accent">
-          {t("emailButton")}
-        </a>
-      </p>
+      <SupportForm email={SUPPORT_EMAIL} />
     </div>
   );
 }

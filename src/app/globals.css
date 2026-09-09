@@ -2655,6 +2655,23 @@ textarea:focus {
 }
 
 
+/* --- поддержка --- */
+.support-mail {
+  margin:14px 0 0;
+  font-size:13.5px;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap
+}
+
+.support-copied {
+  font-size:12.5px;
+  color:var(--success)
+}
+
+
 /* --- вход: два способа, согласие на рассылку --- */
 .way-tabs {
   display:flex;
