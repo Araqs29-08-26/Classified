@@ -39,7 +39,19 @@ export default function SupportForm({ email }: { email: string }) {
       message,
     });
 
-    setState(error ? "failed" : "done");
+    if (error) {
+      setState("failed");
+      return;
+    }
+
+    // Письмо администратору — уже после того, как обращение сохранено.
+    // Если почта не отправится, обращение всё равно на месте, и человеку
+    // незачем видеть ошибку: для него всё сделано.
+    void supabase.functions.invoke("notify-support", {
+      body: { contact, message },
+    });
+
+    setState("done");
   }
 
   return (
