@@ -96,6 +96,9 @@ export default function HomeClient({
   const locale = useLocale();
   const t = useTranslations("home");
   const tTier = useTranslations("tiers");
+  /** Короткие названия — для узкой колонки фильтров. */
+  const tShort = useTranslations("tiersShort");
+  const tOpShort = useTranslations("operatorsShort");
   const tType = useTranslations("numberTypes");
 
   // Оценка для каждого объявления. Сохранённая при публикации важнее пересчитанной:
@@ -485,7 +488,9 @@ export default function HomeClient({
                   onClick={() => toggle(setSelectedOperators, op)}
                 >
                   <OperatorBadge op={op} />
-                  <span className="operator-toggle-name">{op === "Другие" ? t("filters.otherOperator") : op}</span>
+                  <span className="operator-toggle-name">
+                    {op === "Viva" || op === "Ucom" ? op : tOpShort(op)}
+                  </span>
                   <span className="operator-toggle-count">
                     {operatorCounts[op] ?? 0}
                   </span>
@@ -509,11 +514,8 @@ export default function HomeClient({
                     onChange={() => toggle(setSelectedTiers, tier)}
                   />
                   <span className={`tier-edge tier-bar-${tier}`} aria-hidden="true" />
-                  <span className="tier-row-text">
-                    <b>{tTier(tier)}</b>
-                    <span>
-                      {t("filters.indexShortLabel")} {INDEX_RANGE[tier]}
-                    </span>
+                  <span className="tier-row-text" title={tTier(tier)}>
+                    <b>{tShort(tier)}</b>
                   </span>
                   <span className="tier-row-count">{tierCounts[tier] ?? 0}</span>
                 </label>

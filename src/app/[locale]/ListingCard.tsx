@@ -124,8 +124,9 @@ export default function ListingCard({ item }: { item: ValuedListing }) {
           <span>{tCost("total")}</span>
           <b>{formatPrice(item.total)}</b>
         </div>
-        <span className="listing-card-view">{t("view")}</span>
       </div>
+
+      <span className="listing-card-view">{t("view")}</span>
     </Link>
   );
 }

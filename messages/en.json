@@ -533,5 +533,19 @@
     "orderFailed": "The request could not be sent. Please try again.",
     "signInToOrder": "Sign in to order",
     "payNote": "Online payment is not connected yet. An administrator contacts you about the request; later the «Order» button will lead straight to a payment page."
+  },
+  "tiersShort": {
+    "Премиум": "Premium",
+    "Элит": "Elite",
+    "Бриллиантовый": "Diamond",
+    "Платиновый": "Platinum",
+    "Золотой": "Gold",
+    "Серебряный": "Silver",
+    "Бронзовый": "Bronze",
+    "Обычный": "Ordinary"
+  },
+  "operatorsShort": {
+    "Team Telecom": "Team",
+    "Другие": "Other"
   }
 }
