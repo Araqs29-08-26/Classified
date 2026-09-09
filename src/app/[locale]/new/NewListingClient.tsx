@@ -344,6 +344,7 @@ export default function NewListingClient() {
 
       {step === "phone" && (
         <form className="card" onSubmit={sendCode}>
+          <p className="signed-in-note">{t("phoneStep.intro")}</p>
           <div className="field">
             <label>{t("phoneStep.label")}</label>
             <input

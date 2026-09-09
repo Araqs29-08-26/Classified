@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { Link, useRouter } from "@/i18n/navigation";
 import { supabase } from "@/lib/supabase";
+import { rememberContact } from "@/lib/profile";
 
 /**
  * Возврат по ссылке из письма.
@@ -35,13 +36,17 @@ export default function AuthCallbackClient() {
 
     // Сессию из ссылки клиент разбирает сам; нам остаётся дождаться результата.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session && alive) router.replace("/account");
+      if (!session || !alive) return;
+      void rememberContact(null).then(() => router.replace("/account"));
     });
 
     void supabase.auth.getSession().then(({ data }) => {
       if (!alive) return;
-      if (data.session) router.replace("/account");
-      else setError(t("noSession"));
+      if (data.session) {
+        void rememberContact(null).then(() => router.replace("/account"));
+      } else {
+        setError(t("noSession"));
+      }
     });
 
     return () => {

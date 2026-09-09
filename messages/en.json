@@ -169,7 +169,8 @@
       "label": "Your phone number (for sign-in and verification)",
       "placeholder": "+374XXXXXXXX",
       "button": "Send SMS code",
-      "loading": "Sending..."
+      "loading": "Sending...",
+      "intro": "To post a number you need to sign in — by email or by a phone number, which does not have to be the one you are selling. No passwords to remember: a code comes to your phone, a sign-in link to your email."
     },
     "codeStep": {
       "label": "Code from SMS",
@@ -434,20 +435,37 @@
     "emailButton": "Send an email"
   },
   "auth": {
-    "title": "Sign in",
-    "subtitle": "Enter your email — we'll send a sign-in link. No password needed.",
-    "emailLabel": "Email",
+    "title": "Sign in and sign up",
+    "subtitle": "No passwords here. You sign in with a code from an SMS or a link sent to your email — whichever suits you.",
+    "tabEmail": "By email",
+    "tabPhone": "By phone",
+    "emailLabel": "Email address",
     "emailPlaceholder": "you@example.com",
+    "phoneLabel": "Phone number",
+    "phonePlaceholder": "+374 XX XXX XXX",
+    "phoneHint": "It does not have to be the number you are selling.",
+    "sendLink": "Send the link",
+    "sendCode": "Send the code",
     "sending": "Sending...",
+    "codeLabel": "Code from the SMS",
+    "codePlaceholder": "6 digits",
+    "check": "Sign in",
+    "checking": "Checking...",
+    "changePhone": "Enter a different number",
+    "linkSentTitle": "Email sent",
+    "linkSentTo": "A sign-in link has gone to {email}. Open it on this device.",
+    "linkSentSpam": "If it is not there, check the spam folder.",
+    "sendAgain": "Send again",
+    "consent": "Send me what matters about your services — no more than once a month. You can unsubscribe at any time.",
+    "consentNote": "Optional. Signing in works the same without it.",
+    "remembered": "We will remember you on this device — next time you will not have to sign in again.",
     "signOut": "Sign out",
     "errors": {
-      "send": "Couldn't send the code. Check the address and try again."
+      "send": "The message could not be sent.",
+      "wrongCode": "That code did not work.",
+      "needEmail": "Enter an email address.",
+      "needPhone": "Enter a phone number."
     },
-    "sendLink": "Send the link",
-    "linkSentTitle": "Email sent",
-    "linkSentTo": "We've sent an email to {email}. Open it and follow the link — you'll land straight in your account.",
-    "linkSentSpam": "No email after a couple of minutes? Check spam — the sender may be unfamiliar to your mailbox.",
-    "sendAgain": "Send it again",
     "callback": {
       "checking": "Checking the link from the email...",
       "failedTitle": "The link did not work",
