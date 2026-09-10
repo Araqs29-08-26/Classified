@@ -591,5 +591,12 @@
   "operatorsShort": {
     "Team Telecom": "Team",
     "Другие": "Այլ"
+  },
+  "seo": {
+    "siteName": "Araqs",
+    "tagline": "Հայաստանի գեղեցիկ համարներ",
+    "listingTitle": "{number} — {tier} {operator} համար",
+    "listingDescription": "Գնել գեղեցիկ {number} համարը Հայաստանում։ Կարգավիճակ՝ «{tier}», {pattern}։ Վաճառողի գինը՝ {price}, օպերատորի վերաձևակերպման վճարով՝ {total}։",
+    "listingDescriptionPlain": "Գնել գեղեցիկ {number} համարը Հայաստանում։ Կարգավիճակ՝ «{tier}»։ Վաճառողի գինը՝ {price}, օպերատորի վերաձևակերպման վճարով՝ {total}։"
   }
 }

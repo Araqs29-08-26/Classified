@@ -10,6 +10,8 @@ import {
   type Listing,
 } from "@/lib/supabase";
 import { evaluateNumber, OPERATOR_CODE } from "@/lib/numberEngine";
+import { routing } from "@/i18n/routing";
+import { SITE_URL } from "@/lib/site";
 import ContactReveal from "./ContactReveal";
 import PatternNumber from "../../PatternNumber";
 import ReportButton from "./ReportButton";
@@ -42,12 +44,61 @@ export async function generateMetadata({
   if (!listing) return {};
 
   const t = await getTranslations({ locale: params.locale, namespace: "tiers" });
+  const tSeo = await getTranslations({ locale: params.locale, namespace: "seo" });
+
+  /**
+   * Заголовок и описание пишутся так, как человек ищет: номер, статус,
+   * оператор, цена. Прежний вариант «65 000 ֏ · Araqs» в выдаче не говорил
+   * ничего и не содержал ни одного слова, по которому его можно найти.
+   */
+  const verdict = evaluateNumber(listing.phone_number, {
+    operator: OPERATOR_CODE[listing.operator] ?? null,
+    heldOverLimit: listing.held_over_limit,
+    locale: params.locale,
+  });
+
+  const title = tSeo("listingTitle", {
+    number: listing.phone_number,
+    tier: t(listing.status_tier),
+    operator: listing.operator,
+  });
+
+  const total = verdict.ok ? listing.price + verdict.transferFee : listing.price;
+
+  const description = verdict.ok
+    ? tSeo("listingDescription", {
+        number: listing.phone_number,
+        tier: t(listing.status_tier),
+        pattern: verdict.pattern,
+        price: formatPrice(listing.price),
+        total: formatPrice(total),
+      })
+    : tSeo("listingDescriptionPlain", {
+        number: listing.phone_number,
+        tier: t(listing.status_tier),
+        price: formatPrice(listing.price),
+        total: formatPrice(total),
+      });
+
+  const url = `${SITE_URL}/${params.locale}/listing/${listing.id}`;
 
   return {
-    title: {
-      absolute: `${listing.phone_number} — ${t(listing.status_tier)} — Araqs`,
+    title: { absolute: `${title} — Araqs` },
+    description,
+    alternates: {
+      canonical: url,
+      languages: Object.fromEntries(
+        routing.locales.map((l) => [l, `${SITE_URL}/${l}/listing/${listing.id}`])
+      ),
     },
-    description: `${formatPrice(listing.price)} · Araqs`,
+    openGraph: {
+      type: "website",
+      siteName: "Araqs",
+      title,
+      description,
+      url,
+      locale: params.locale,
+    },
   };
 }
 
@@ -73,8 +124,43 @@ export default async function ListingPage({
   const fee = verdict.ok ? verdict.transferFee : 0;
   const logo = OPERATOR_META[listing.operator]?.logo;
 
+  /**
+   * Описание товара для поисковиков.
+   *
+   * Обычный текст страницы поисковик читает как текст и о цене догадывается.
+   * Эта разметка говорит прямо: это товар, вот цена, вот валюта, вот наличие —
+   * и тогда в выдаче под ссылкой появляется цена, а объявление попадает в
+   * товарные подборки. Для доски объявлений это самая полезная разметка.
+   *
+   * Телефон продавца сюда не попадает: он и на странице показывается только
+   * по нажатию, а в разметке был бы виден всем сборщикам сразу.
+   */
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: `${listing.phone_number} — ${t(`tiers.${tier}`)}`,
+    category: t(`numberTypes.${listing.number_type}`),
+    brand: { "@type": "Brand", name: listing.operator },
+    offers: {
+      "@type": "Offer",
+      price: listing.price,
+      priceCurrency: "AMD",
+      availability:
+        listing.listing_status === "active"
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      url: `${SITE_URL}/${params.locale}/listing/${listing.id}`,
+      seller: { "@type": "Organization", name: "Araqs" },
+    },
+  };
+
   return (
     <div className="listing-layout">
+      {/* Разметка невидима человеку и предназначена только поисковику. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <div className="listing-main">
         <div className="detail">
           <div className="detail-head">

@@ -22,6 +22,7 @@ export async function generateMetadata({
   params: { locale: string };
 }): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: "home" });
+  const tSeo = await getTranslations({ locale, namespace: "seo" });
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -30,6 +31,29 @@ export async function generateMetadata({
       template: "Araqs — %s",
     },
     description: t("subtitle"),
+    /**
+     * Связь языковых версий между собой.
+     *
+     * Без неё поисковик считает три перевода одной страницы дублями и
+     * показывает в выдаче только один — обычно не тот, на языке которого
+     * человек искал.
+     */
+    alternates: {
+      canonical: `${SITE_URL}/${locale}`,
+      languages: Object.fromEntries([
+        ...routing.locales.map((l) => [l, `${SITE_URL}/${l}`]),
+        ["x-default", `${SITE_URL}/${routing.defaultLocale}`],
+      ]),
+    },
+    /** Как выглядит ссылка, когда её отправляют в мессенджере. */
+    openGraph: {
+      type: "website",
+      siteName: tSeo("siteName"),
+      title: `Araqs — ${t("title")}`,
+      description: t("subtitle"),
+      url: `${SITE_URL}/${locale}`,
+      locale,
+    },
   };
 }
 

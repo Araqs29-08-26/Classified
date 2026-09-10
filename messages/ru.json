@@ -591,5 +591,12 @@
   "operatorsShort": {
     "Team Telecom": "Team",
     "Другие": "Другие"
+  },
+  "seo": {
+    "siteName": "Araqs",
+    "tagline": "Красивые номера Армении",
+    "listingTitle": "{number} — {tier} номер {operator}",
+    "listingDescription": "Купить красивый номер {number} в Армении. Статус «{tier}», {pattern}. Цена продавца {price}, со сбором оператора за переоформление — {total}.",
+    "listingDescriptionPlain": "Купить красивый номер {number} в Армении. Статус «{tier}». Цена продавца {price}, со сбором оператора за переоформление — {total}."
   }
 }
