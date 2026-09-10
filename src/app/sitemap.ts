@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { routing } from "@/i18n/routing";
+import { LANDINGS } from "@/lib/landing";
 import { supabase } from "@/lib/supabase";
 import { SITE_URL } from "@/lib/site";
 
@@ -17,6 +18,12 @@ const STATIC_PATHS: Array<{
   { path: "/rules/promo", changeFrequency: "monthly", priority: 0.5 },
   { path: "/rules/terms", changeFrequency: "monthly", priority: 0.4 },
   { path: "/privacy", changeFrequency: "monthly", priority: 0.5 },
+  // Подборки под поисковые запросы обновляются вместе с каталогом.
+  ...LANDINGS.map((l) => ({
+    path: `/numbers/${l.slug}`,
+    changeFrequency: "hourly" as const,
+    priority: 0.8,
+  })),
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

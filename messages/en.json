@@ -598,5 +598,60 @@
     "listingTitle": "{number} — {tier} {operator} number",
     "listingDescription": "Buy the beautiful number {number} in Armenia. Status «{tier}», {pattern}. Seller's price {price}, {total} including the operator's transfer fee.",
     "listingDescriptionPlain": "Buy the beautiful number {number} in Armenia. Status «{tier}». Seller's price {price}, {total} including the operator's transfer fee."
+  },
+  "company": "Glober LLC, Armenia · Yerevan, Komitas avenue 38/3-54 · +374 77 674 901",
+  "landing": {
+    "common": {
+      "found": "Matching numbers",
+      "empty": "There are no such numbers on the marketplace right now. Have a look at the full catalogue — there are others there — or get your own number valued.",
+      "toCatalog": "See all numbers",
+      "sellCta": "Value my number",
+      "alsoTitle": "Other selections"
+    },
+    "viva": {
+      "title": "Beautiful Viva numbers",
+      "h1": "Beautiful Viva numbers",
+      "intro": "Viva numbers on the 77, 93, 94, 98 and 49 codes. These are the ones sellers have listed on Araqs: with repeats, mirrored stretches, round endings and the other patterns that make a number beautiful.",
+      "body": [
+        "The status scale on the marketplace follows Viva's own, from Bronze to Premium. So for Viva numbers the status name on the site matches what the operator calls the category in their office.",
+        "Viva's transfer terms are the gentlest of the three: a flat 500 ֏ for the procedure plus the category price, and the category part is waived if the number has been owned for more than 24 months by an individual or 6 months by a company."
+      ]
+    },
+    "ucom": {
+      "title": "Beautiful Ucom numbers",
+      "h1": "Beautiful Ucom numbers",
+      "intro": "Ucom numbers on the mobile codes 55, 95, 41 and 44, plus landlines on 11 and 12. Every beautiful number of this operator listed on Araqs, with its pattern valued and the transfer fee already worked out.",
+      "body": [
+        "Ucom has its own scale of five categories: Bronze, Silver, Gold, Platinum and Diamond. The operator publishes nothing above Diamond, so for the rarest numbers the exact amount is quoted in their office.",
+        "Ucom calculates the transfer fee differently from the others: half the category price for Gold, Platinum and Diamond, and a flat 1,000 ֏ for Silver and Bronze. The stated tariffs apply without obligation."
+      ]
+    },
+    "team": {
+      "title": "Beautiful Team Telecom numbers",
+      "h1": "Beautiful Team Telecom numbers",
+      "intro": "Team Telecom numbers on the codes 91, 96, 99, 43 and 33, plus landlines on 10. In Armenia this operator was long known as Beeline, and earlier still as ArmenTel — if you are looking for «Beeline numbers», this is the place.",
+      "body": [
+        "Team has six categories, and one of them exists nowhere else: Nickel, the most affordable at 2,000 ֏. Above it come Bronze, Silver, Gold, Platinum and Diamond.",
+        "Transfers cost more at Team than at its neighbours: the full category price plus 700 ֏, with no reduction for length of ownership. Transferring a Silver number or above requires a contract with the Be Free postpaid package."
+      ]
+    },
+    "gold": {
+      "title": "Gold numbers of Armenia",
+      "h1": "Gold numbers",
+      "intro": "«Gold» is what the market calls numbers with a clear but not rarest pattern: three identical digits, a repeating pair, a round ending. Our engine gives Gold status to numbers with a beauty index between 45 and 54.",
+      "body": [
+        "Gold sits in the middle of the scale and is its most traded part. Such a number already sticks in the ear and is easy to dictate over the phone, yet costs several times less than a premium one. At the operators the Gold category costs around 60,000–65,000 ֏.",
+        "The beauty index is calculated by the engine, not claimed by the seller: it breaks the number down digit by digit, finds the pattern and assigns the status. So Gold on Araqs means the same thing on every listing."
+      ]
+    },
+    "vip": {
+      "title": "VIP numbers of Armenia — premium, elite, diamond",
+      "h1": "VIP numbers",
+      "intro": "The rarest part of the catalogue: the Premium, Elite and Diamond statuses, with a beauty index from 72 to 100. These are numbers you remember the first time you hear them — like 55 90 90 90, or mirrored stretches of six digits.",
+      "body": [
+        "The market calls them different things: VIP, exclusive, «a bomb». It amounts to the same: the pattern is visible at once and there is nothing to match it — the operator has only a handful of such combinations.",
+        "Prices start in the hundreds of thousands of drams and run past a million. The operator's transfer fee is added to the seller's price, and Viva, Ucom and Team each calculate it differently — the listing card shows the full amount already."
+      ]
+    }
   }
 }

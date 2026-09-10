@@ -5,6 +5,7 @@ import { getMessages, getTranslations } from "next-intl/server";
 
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { LANDINGS } from "@/lib/landing";
 import { SITE_URL } from "@/lib/site";
 import BrandMark from "./BrandMark";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -122,6 +123,16 @@ async function SiteFooter({ locale }: { locale: string }) {
         <span>Araqs</span>
       </div>
 
+      {/* Подборки в подвале — чтобы поисковик их обошёл, а человек нашёл.
+          Страница, на которую ниоткуда не ведёт ссылка, остаётся невидимой. */}
+      <div className="footer-links">
+        {LANDINGS.map((l) => (
+          <Link key={l.slug} href={`/numbers/${l.slug}`}>
+            {t(`landing.${l.slug}.h1`)}
+          </Link>
+        ))}
+      </div>
+
       <div className="footer-links">
         <Link href="/rules">{t("rulesNav.posting")}</Link>
         <Link href="/rules/transfer">{t("rulesNav.transfer")}</Link>
@@ -131,6 +142,9 @@ async function SiteFooter({ locale }: { locale: string }) {
       </div>
 
       <p>{t("footer")}</p>
+      {/* Владельца ищут в подвале — там это привычное место. Полные
+          реквизиты остаются в «Условиях использования». */}
+      <p className="footer-company">{t("company")}</p>
     </footer>
   );
 }
