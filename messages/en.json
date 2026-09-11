@@ -367,11 +367,11 @@
         },
         {
           "title": "Company details",
-          "body": "The marketplace is owned by Glober LLC, Republic of Armenia. Tax number: 00188092. Registration number: 264.110.1034792. Registered address: Republic of Armenia, 0012, Yerevan, Komitas avenue 38/3-54. Director: Vahagn Sevoyan. Registered on 31.08.2018."
+          "body": "The marketplace is owned by Glober LLC, Republic of Armenia. Tax number: 00188092. Registration number: 264.110.1034792. Registered address: Republic of Armenia, 0012, Yerevan, Komitas avenue 38/3-54. Registered on 31.08.2018."
         },
         {
           "title": "Contacts",
-          "body": "Write to us through the form on the Support page or to support@araqs.com. Phone: +374 77 674 901. We reply within three business days."
+          "body": "We take enquiries in writing: through the form on the Support page or by email at support@araqs.com. We reply within three business days. That way an enquiry leaves a record — for you and for us — and the correspondence can be attached to a dispute if it comes to one. The marketplace has no telephone line for enquiries."
         }
       ]
     },
@@ -607,7 +607,7 @@
     "listingDescription": "Buy the beautiful number {number} in Armenia. Status «{tier}», {pattern}. Price {price} — the operator's transfer fee already sits inside it.",
     "listingDescriptionPlain": "Buy the beautiful number {number} in Armenia. Status «{tier}». Price {price} — the operator's transfer fee already sits inside it."
   },
-  "company": "Glober LLC, Armenia · Yerevan, Komitas avenue 38/3-54 · +374 77 674 901",
+  "company": "Glober LLC, Republic of Armenia",
   "landing": {
     "common": {
       "found": "Matching numbers",
