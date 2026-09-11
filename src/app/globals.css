@@ -2722,6 +2722,51 @@ textarea:focus {
 }
 
 
+/* --- словарь --- */
+.glossary-table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:14.5px;
+  margin:14px 0 4px
+}
+
+.glossary-table th {
+  text-align:left;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--faint);
+  padding:0 16px 8px 0;
+  border-bottom:1px solid var(--line-strong)
+}
+
+.glossary-table td {
+  padding:12px 16px 12px 0;
+  border-bottom:1px solid var(--line);
+  color:var(--muted);
+  vertical-align:top;
+  line-height:1.55
+}
+
+.glossary-table td b {
+  color:var(--ink);
+  font-weight:600;
+  white-space:nowrap
+}
+
+/* Написания латиницей — данные, а не проза: моноширинным их легче сверять. */
+.glossary-also {
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:12.5px;
+  color:var(--faint)
+}
+
+.glossary-table tr:last-child td {
+  border-bottom:0
+}
+
+
 /* --- поддержка --- */
 .support-mail {
   margin:14px 0 0;

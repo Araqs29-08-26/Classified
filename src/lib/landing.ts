@@ -9,7 +9,8 @@ import type { Listing } from "./supabase";
  *
  * Ключевые слова взяты у владельца площадки — он знает рынок. Отдельно учтено,
  * что армянские запросы часто набирают латиницей: «gexecik hamar», «gold
- * hamar», «vip hamar». Это не выдумка, а то, как люди действительно пишут.
+ * hamar», «vip hamar». Это не выдумка, а то, как люди действительно пишут;
+ * такие написания разобраны на отдельной странице-словаре.
  */
 export type Landing = {
   slug: string;
@@ -17,6 +18,13 @@ export type Landing = {
   operators?: string[];
   /** По каким статусам отбирать. Пусто — по всем. */
   tiers?: string[];
+  /**
+   * По каким узорам отбирать — начала кодов движка.
+   *
+   * Коды вида «pal.5» или «run.3» выдаёт сам движок; сравниваем по началу,
+   * чтобы «зеркальные» покрывали и pal.4, и pal.5, и pal.6.
+   */
+  patterns?: string[];
 };
 
 export const LANDINGS: Landing[] = [
@@ -25,19 +33,35 @@ export const LANDINGS: Landing[] = [
   { slug: "team", operators: ["Team Telecom"] },
   { slug: "gold", tiers: ["Золотой"] },
   { slug: "vip", tiers: ["Премиум", "Элит", "Бриллиантовый"] },
+  { slug: "mirror", patterns: ["pal."] },
+  { slug: "triple", patterns: ["run.3", "run.4", "run.5", "run.6"] },
+  { slug: "round", patterns: ["zeros.tail."] },
 ];
 
 export function findLanding(slug: string): Landing | null {
   return LANDINGS.find((l) => l.slug === slug) ?? null;
 }
 
-/** Подходит ли объявление этой странице. */
-export function matchesLanding(landing: Landing, listing: Listing): boolean {
+/**
+ * Подходит ли объявление этой странице.
+ *
+ * Код узора приходит отдельным доводом: в объявлении он может быть не
+ * сохранён (старые записи), и тогда страница считает его движком.
+ */
+export function matchesLanding(
+  landing: Landing,
+  listing: Listing,
+  patternCode: string | null
+): boolean {
   if (landing.operators && !landing.operators.includes(listing.operator)) {
     return false;
   }
   if (landing.tiers && !landing.tiers.includes(listing.status_tier)) {
     return false;
+  }
+  if (landing.patterns) {
+    if (!patternCode) return false;
+    if (!landing.patterns.some((p) => patternCode.startsWith(p))) return false;
   }
   return true;
 }

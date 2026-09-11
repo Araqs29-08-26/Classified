@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
 import { findLanding, LANDINGS, matchesLanding } from "@/lib/landing";
 import { supabase, type Listing } from "@/lib/supabase";
+import { evaluateNumber, OPERATOR_CODE } from "@/lib/numberEngine";
 import LandingList from "./LandingList";
 
 export const dynamic = "force-dynamic";
@@ -68,9 +69,19 @@ export default async function LandingPage({
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false });
 
-  const listings = ((data ?? []) as Listing[]).filter((l) =>
-    matchesLanding(landing, l)
-  );
+  // Код узора у старых объявлений не сохранён — тогда считаем его движком.
+  const listings = ((data ?? []) as Listing[]).filter((l) => {
+    let patternCode = l.pattern_code;
+    if (!patternCode && landing.patterns) {
+      const v = evaluateNumber(l.phone_number, {
+        operator: OPERATOR_CODE[l.operator] ?? null,
+        heldOverLimit: l.held_over_limit,
+        locale,
+      });
+      patternCode = v.ok ? v.patternCode : null;
+    }
+    return matchesLanding(landing, l, patternCode);
+  });
 
   const body = t.raw("body") as string[];
 

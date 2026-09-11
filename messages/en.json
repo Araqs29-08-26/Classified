@@ -652,6 +652,88 @@
         "The market calls them different things: VIP, exclusive, «a bomb». It amounts to the same: the pattern is visible at once and there is nothing to match it — the operator has only a handful of such combinations.",
         "Prices start in the hundreds of thousands of drams and run past a million. The operator's transfer fee is added to the seller's price, and Viva, Ucom and Team each calculate it differently — the listing card shows the full amount already."
       ]
+    },
+    "mirror": {
+      "title": "Mirrored numbers",
+      "h1": "Mirrored numbers",
+      "intro": "A mirrored number reads the same left to right and right to left — 41 14 00 41, say, or the stretch 14 00 41. Such a number is almost impossible to write down wrong, and that is exactly why it is prized.",
+      "body": [
+        "The engine looks for mirrored stretches of four to six digits. The longer the mirror, the higher the beauty index and the status: a six-digit mirror usually reaches Elite or above.",
+        "Mirrored numbers are markedly rarer than repeats — an operator has few combinations of this shape. If none are listed right now, look again in a week, or have your own number valued."
+      ]
+    },
+    "triple": {
+      "title": "Numbers with three identical digits",
+      "h1": "Three identical digits in a row",
+      "intro": "The most recognisable pattern of all: three, four or more identical digits in a row — 55 90 90 90, 77 24 44 44. A number like this is dictated over the phone first time and sticks in the ear.",
+      "body": [
+        "Three identical digits is where this pattern's scale begins. Four in a row already costs markedly more; five and above turn up in single figures and land in Premium.",
+        "What matters is that the digits run consecutively: 44 84 14 14 is not a triple but a repeated pair, and it is valued on a different scale. The engine tells these cases apart itself."
+      ]
+    },
+    "round": {
+      "title": "Round numbers ending in zeros",
+      "h1": "Round numbers",
+      "intro": "A round number ends in zeros: 77 24 10 00, 55 90 20 000. The more zeros in the tail, the rounder the number and the higher its status.",
+      "body": [
+        "Two trailing zeros make for a noticeable but affordable number. Three is already a rarity; four or more turn up in single figures.",
+        "Companies are especially fond of round numbers: easy to print on a sign and to read out to a customer. If you are choosing a number for a business, start here."
+      ]
     }
+  },
+  "glossary": {
+    "title": "A glossary of beautiful numbers",
+    "h1": "Glossary: what beautiful numbers are called",
+    "intro": "The market calls the same thing by different names — in Armenian, in Russian and in Latin letters, all mixed together. Here is what stands behind each word.",
+    "spellingTitle": "Why one word gets spelled three ways",
+    "spellingBody": "Armenian words are often typed in Latin letters — it is quicker on a phone and more usual in messages. So «գեղեցիկ համար» also appears as «gexecik hamar» and «geghetsik hamar». It is the same word, and people mean the same thing by it.",
+    "colTerm": "What people say",
+    "colAlso": "How else it is written",
+    "colMeans": "What it means",
+    "terms": [
+      {
+        "term": "Գեղեցիկ համար",
+        "also": "gexecik hamar · geghetsik hamar · beautiful number",
+        "means": "The general name for any number with a pattern. The broadest word of all: both «gold» and «VIP» fall under it."
+      },
+      {
+        "term": "Գոլդ համար",
+        "also": "gold hamar · gold number",
+        "means": "A number with a clear pattern of middling rarity: three identical digits, a repeated pair, a round ending. Here that is the Gold status, beauty index 45–54."
+      },
+      {
+        "term": "VIP համար",
+        "also": "vip hamar · VIP NUMBER",
+        "means": "The rarest numbers. Here that means Premium, Elite and Diamond — index 72 to 100. The word is imprecise: different sellers use it for different things."
+      },
+      {
+        "term": "Բոմբ համար",
+        "also": "bomb hamar",
+        "means": "Colloquial. A number you remember instantly: 55 90 90 90 and the like. In meaning, the same as VIP."
+      },
+      {
+        "term": "ԲԱՑԱՌԻԿ",
+        "also": "bacarik · exclusive",
+        "means": "«Exclusive». Used for a number the operator has only a handful of. Usually the top of the scale."
+      },
+      {
+        "term": "Պլատին հեռախոսահամար",
+        "also": "platin hamar · platinum number",
+        "means": "The status between Gold and Diamond, index 60–69. At the operators this is a separate category with its own price."
+      },
+      {
+        "term": "Ադամանդ",
+        "also": "adamand · diamond",
+        "means": "The top category at Team and Ucom. Here it corresponds to the Diamond status, index 72–79."
+      },
+      {
+        "term": "Անվանափոխություն",
+        "also": "anvanapokhutyun · transfer",
+        "means": "Changing the owner of a number at the operator's office. The operator charges a fee for it, and Viva, Ucom and Team each calculate it differently."
+      }
+    ],
+    "afterTitle": "How our status differs from the operator's category",
+    "afterBody": "An operator names a category when it sells a new number, and each has its own scale. Our status is calculated by the engine from the number itself, identically for every listing: it breaks the digits down, finds the pattern and assigns a status with an index from 0 to 100.",
+    "ctaTitle": "What next"
   }
 }

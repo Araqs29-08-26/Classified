@@ -17,6 +17,7 @@ const STATIC_PATHS: Array<{
   { path: "/rules/transfer", changeFrequency: "monthly", priority: 0.6 },
   { path: "/rules/promo", changeFrequency: "monthly", priority: 0.5 },
   { path: "/rules/terms", changeFrequency: "monthly", priority: 0.4 },
+  { path: "/glossary", changeFrequency: "monthly", priority: 0.7 },
   { path: "/privacy", changeFrequency: "monthly", priority: 0.5 },
   // Подборки под поисковые запросы обновляются вместе с каталогом.
   ...LANDINGS.map((l) => ({

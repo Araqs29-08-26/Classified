@@ -145,6 +145,7 @@ async function SiteFooter({ locale }: { locale: string }) {
       </div>
 
       <div className="footer-links">
+        <Link href="/glossary">{t("glossary.title")}</Link>
         <Link href="/rules">{t("rulesNav.posting")}</Link>
         <Link href="/rules/transfer">{t("rulesNav.transfer")}</Link>
         <Link href="/rules/promo">{t("rulesNav.promo")}</Link>
