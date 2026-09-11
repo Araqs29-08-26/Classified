@@ -2558,7 +2558,18 @@ textarea:focus {
 }
 
 .breakdown-actions {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
   margin-top:18px
+}
+
+.share-row {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  width:100%
 }
 
 .certificate {

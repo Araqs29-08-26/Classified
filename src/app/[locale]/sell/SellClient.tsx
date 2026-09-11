@@ -15,6 +15,7 @@ import {
 } from "@/lib/numberEngine";
 import { formatPrice, formatAmount } from "@/lib/supabase";
 import PatternNumber from "../PatternNumber";
+import ShareReview from "./ShareReview";
 
 /**
  * Оценка номера — вход для того, кто ещё не решил, продавать ли.
@@ -37,7 +38,7 @@ export default function SellClient() {
 
   const [phone, setPhone] = useState(fromUrl || "+374");
   const [result, setResult] = useState<EngineResult | null>(
-    fromUrl ? evaluateNumber(fromUrl) : null
+    fromUrl ? evaluateNumber(fromUrl, { locale }) : null
   );
   const [detected, setDetected] = useState<ReturnType<typeof detect> | null>(
     fromUrl ? detect(fromUrl) : null
@@ -45,7 +46,7 @@ export default function SellClient() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setResult(evaluateNumber(phone));
+    setResult(evaluateNumber(phone, { locale }));
     setDetected(detect(phone));
 
     // Оценённый номер уходит в адрес — так его можно и переслать, и сохранить,
@@ -234,6 +235,15 @@ export default function SellClient() {
             <Link href={ctaHref} className="btn btn-accent">
               {tr("cta")}
             </Link>
+            {/* Разбор чужого номера часто смотрят, чтобы показать владельцу:
+                ссылка воспроизводит его целиком, считать заново не нужно. */}
+            <ShareReview
+              number={phone}
+              status={tTiers(result.status)}
+              index={result.index}
+              priceFrom={formatAmount(result.priceMin)}
+              priceTo={formatPrice(result.priceMax)}
+            />
           </div>
 
           <p className="notice" style={{ marginTop: 16, marginBottom: 0 }}>

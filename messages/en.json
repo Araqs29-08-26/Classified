@@ -276,6 +276,13 @@
       "disclaimer": "This is an automatic valuation based on the pattern of digits — you set the final price yourself when posting.",
       "featuresTitle": "What the number contains",
       "priceHint": "The seller picks a price inside the range. Above the upper bound, numbers of this status take a long time to sell — but such a price cannot be forbidden: the owner sets it."
+    },
+    "share": {
+      "button": "Send to a friend",
+      "title": "A number valued on Araqs",
+      "text": "I had {number} valued on Araqs: status “{status}”, beauty index {index}, market price {from} – {to}. Have a look:",
+      "copy": "Copy the link",
+      "copied": "Link copied"
     }
   },
   "numberTypes": {
