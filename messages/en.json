@@ -23,22 +23,16 @@
       "allTypes": "All number types",
       "apply": "Apply",
       "maskLabel": "Number mask",
-      "maskHint": "«?» is one digit of any value, «*» is any number of them. Spaces and hyphens are allowed.",
+      "maskHint": "“*” is one digit of any value: “5*5” finds 505, 515, 525. Spaces and hyphens do not matter.",
       "maskClear": "Clear",
       "operatorLabel": "Operator",
       "statusLabel": "Status",
       "typeLabel": "Number type",
       "priceLabel": "Price, ֏",
       "sortLabel": "Sort",
-      "priceFrom": "From",
-      "priceTo": "To",
       "sortIndex": "Most beautiful first",
-      "sortTotalAsc": "Total cost: low to high",
-      "sortTotalDesc": "Total cost: high to low",
       "indexShort": "index",
       "statusHint": "The higher the tier, the rarer the pattern",
-      "totalPriceLabel": "Total cost for the buyer",
-      "totalPriceHint": "Including the operator's transfer fee",
       "moreLabel": "Show only",
       "onlyVerified": "Ownership verified by SMS",
       "onlyMobile": "Mobile only",
@@ -50,7 +44,7 @@
       "familyLabel": "Pattern kind",
       "familyAny": "Any",
       "foundSuffix": "Found: {count}",
-      "maskPlaceholder": "e.g. 77 or 5?5?5",
+      "maskPlaceholder": "e.g. 77 or 5*5",
       "whereLabel": "Where to look",
       "whereAny": "Anywhere",
       "whereStart": "At the start",
@@ -60,7 +54,10 @@
       "extraLabel": "More filters",
       "digitCountHint": "For example, five fives — anywhere in the number",
       "timesLabel": "at least",
-      "timesUnit": "times"
+      "timesUnit": "times",
+      "priceHint": "The operator's transfer fee already sits inside it",
+      "priceAny": "Any",
+      "familyHint": "One number belongs to several kinds at once"
     },
     "table": {
       "number": "Number",
@@ -83,14 +80,6 @@
     },
     "verified": "✓ number verified",
     "searchTitle": "Find your beautiful number",
-    "presetsLabel": "Ready-made patterns",
-    "presets": {
-      "mirror": "Mirrored",
-      "triple": "Triples",
-      "pairRepeat": "Pairs",
-      "round": "Round",
-      "ladder": "Ladder"
-    },
     "found": "Found {count, plural, one {# number} other {# numbers}}",
     "view": "View",
     "promo": {
@@ -100,8 +89,7 @@
     },
     "similarTitle": "No exact matches. Here are numbers that differ by a single digit:",
     "find": "Search",
-    "legendAny": "— any single digit",
-    "legendMany": "— any number of digits",
+    "legendAny": "— one digit of any value",
     "valuerEyebrow": "Free, no sign-up",
     "valuerTitle": "What is your number worth?",
     "valuerText": "Status, pattern, market price and the operator's transfer fee",
@@ -112,8 +100,9 @@
     "filtersApply": "Show {count, plural, one {# number} other {# numbers}}",
     "filtersTitle": "More filters",
     "filtersClose": "Close",
-    "threeLinesTitle": "Why we show three lines of price.",
-    "threeLinesText": "Besides the seller's price the operator charges a transfer fee, and Viva, Ucom and Team each calculate it differently. On other marketplaces people find this out at the operator's office."
+    "onePriceTitle": "Why there is only one price.",
+    "onePriceText": "A buyer pays for the number, not for the operator. So the price in a listing is the whole of it: the operator's transfer fee already sits inside. The operator only affects how much of that sum the seller keeps.",
+    "legendTimes": "— a five five times, anywhere in the number"
   },
   "listing": {
     "verified": "✓ ownership verified by SMS",
@@ -134,11 +123,10 @@
     },
     "cost": {
       "title": "What it costs",
-      "seller": "Seller's price",
-      "fee": "{operator} transfer fee",
-      "feeUnknownOperator": "Transfer fee",
-      "total": "You'll pay",
-      "range": "Our estimate for this tier: {from} – {to}"
+      "price": "Price",
+      "feeInside": "including the transfer fee",
+      "sellerGets": "The seller receives",
+      "range": "Market range for this status: {from} – {to}"
     },
     "meta": {
       "operator": "operator",
@@ -194,9 +182,6 @@
       "button": "Publish listing",
       "loading": "Publishing...",
       "tierComputedHint": "The tier is set by the valuation engine from the digit pattern — it isn't chosen by hand.",
-      "sellerPriceLabel": "Seller's price",
-      "feeLabel": "Operator fee",
-      "totalLabel": "Total for the buyer",
       "indexOutOf": "out of 100",
       "tierLabel": "Number tier",
       "heldLabel": "Have you owned the number for more than two years?",
@@ -211,7 +196,10 @@
       "priceRangeFrom": "From",
       "priceRangeTypical": "We suggest",
       "priceRangeTo": "Up to",
-      "priceAboveMarket": "Numbers priced above the upper bound take a long time to sell — but the price is yours to set."
+      "priceAboveMarket": "Numbers priced above the upper bound take a long time to sell — but the price is yours to set.",
+      "priceHint": "This is the full price for the buyer: the operator's transfer fee already sits inside it.",
+      "feeInsideLabel": "including the transfer fee",
+      "sellerGetsLabel": "You will receive"
     },
     "doneStep": {
       "title": "Done!",
@@ -262,19 +250,16 @@
       "legendCode": "operator code",
       "legendPattern": "pattern found",
       "indexLabel": "beauty index",
-      "rangeTitle": "What to ask for the number",
-      "rangeLow": "lower bound — the operator's price",
+      "rangeTitle": "What the number is worth",
+      "rangeLow": "lower bound",
       "rangeRec": "recommended",
-      "rangeHigh": "upper — the market level",
-      "rangeHint": "The seller picks a price inside the range. The lower bound is what the same new number costs at the operator; selling above it makes sense. The upper one is the level above which numbers of this status take a long time to sell.",
-      "buyerTitle": "What the buyer pays",
-      "buyerSeller": "Seller's price",
-      "buyerFee": "Transfer fee",
-      "buyerTotal": "Total cost",
+      "rangeHigh": "upper bound",
       "operatorNote": "Operator (by the number's code): {operator} — confirm when posting if the number has been ported.",
       "operatorUnknown": "The operator could not be determined from the number — you will pick it manually when posting.",
       "cta": "Post this number",
-      "disclaimer": "This is an automatic valuation based on the pattern of digits — you set the final price yourself when posting."
+      "disclaimer": "This is an automatic valuation based on the pattern of digits — you set the final price yourself when posting.",
+      "featuresTitle": "What the number contains",
+      "priceHint": "The seller picks a price inside the range. Above the upper bound, numbers of this status take a long time to sell — but such a price cannot be forbidden: the owner sets it."
     }
   },
   "numberTypes": {
@@ -596,8 +581,8 @@
     "siteName": "Araqs",
     "tagline": "Beautiful phone numbers of Armenia",
     "listingTitle": "{number} — {tier} {operator} number",
-    "listingDescription": "Buy the beautiful number {number} in Armenia. Status «{tier}», {pattern}. Seller's price {price}, {total} including the operator's transfer fee.",
-    "listingDescriptionPlain": "Buy the beautiful number {number} in Armenia. Status «{tier}». Seller's price {price}, {total} including the operator's transfer fee."
+    "listingDescription": "Buy the beautiful number {number} in Armenia. Status «{tier}», {pattern}. Price {price} — the operator's transfer fee already sits inside it.",
+    "listingDescriptionPlain": "Buy the beautiful number {number} in Armenia. Status «{tier}». Price {price} — the operator's transfer fee already sits inside it."
   },
   "company": "Glober LLC, Armenia · Yerevan, Komitas avenue 38/3-54 · +374 77 674 901",
   "landing": {

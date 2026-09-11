@@ -507,106 +507,6 @@ a {
   color:var(--accent-ink)
 }
 
-.price-range {
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  max-width:420px
-}
-
-.price-range-track-wrap {
-  position:relative;
-  height:28px
-}
-
-.price-range-fill,
-.price-range-fill-active {
-  position:absolute;
-  top:50%;
-  transform:translateY(-50%);
-  height:4px;
-  border-radius:999px
-}
-
-.price-range-fill {
-  left:0;
-  right:0;
-  background:var(--surface-2)
-}
-
-.price-range-fill-active {
-  background:var(--accent)
-}
-
-.price-range input[type=range] {
-  position:absolute;
-  top:50%;
-  left:0;
-  right:0;
-  transform:translateY(-50%);
-  width:100%;
-  margin:0;
-  padding:0;
-  background:transparent;
-  -webkit-appearance:none;
-  -moz-appearance:none;
-  appearance:none;
-  pointer-events:none
-}
-
-.price-range input[type=range]::-webkit-slider-runnable-track {
-  -webkit-appearance:none;
-  background:transparent;
-  height:4px
-}
-
-.price-range input[type=range]::-moz-range-track {
-  background:transparent;
-  height:4px
-}
-
-.price-range input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance:none;
-  pointer-events:auto;
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  background:var(--accent);
-  border:3px solid var(--surface);
-  box-shadow:var(--shadow);
-  cursor:pointer;
-  margin-top:0
-}
-
-.price-range input[type=range]::-moz-range-thumb {
-  pointer-events:auto;
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  background:var(--accent);
-  border:3px solid var(--surface);
-  box-shadow:var(--shadow);
-  cursor:pointer
-}
-
-.price-range-inputs {
-  display:flex;
-  align-items:center;
-  gap:10px
-}
-
-.price-range-inputs input[type=number] {
-  width:auto;
-  flex:1 1;
-  min-width:0;
-  border-radius:999px;
-  text-align:center
-}
-
-.price-range-sep {
-  color:var(--faint)
-}
-
 .warning-banner {
   display:flex;
   align-items:flex-start;
@@ -2193,10 +2093,6 @@ textarea:focus {
 .board .filters .more-toggles label {
   font-size:12.5px;
   gap:8px
-}
-
-.board .filters .price-range {
-  max-width:none
 }
 
 .board-results {

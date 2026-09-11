@@ -22,6 +22,13 @@ export interface CountCondition {
 
 /** Запись поискового индекса. Кладётся в базу рядом с объявлением. */
 export interface IndexRecord {
+  /** Все группы узоров номера. Список: номер почти всегда попадает в несколько. */
+  fams: PatternFamily[];
+  zeros: number;        // сколько нулей в номере — «круглые цифры»
+  pa: number;           // пар одинаковых цифр по разбивке, включая разрозненные
+  maxrep: number;       // сколько раз встречается самая частая цифра
+  tail: string | null;  // цифра, на которую кончаются ВСЕ пары, иначе null
+  price?: number;       // цена объявления — для фильтра по цене
   w: string;                          // окно из 8 цифр — по нему маска
   dc: Record<string, number>;         // сколько раз встречается каждая цифра
   st: StatusCode;
@@ -42,8 +49,17 @@ export interface SearchQuery {
   mask: string | null;
   where: MaskPosition;
   counts: CountCondition[];
-  family: PatternFamily | null;
+  /** Список групп узора: подходит номер, где есть ХОТЯ БЫ ОДНА из них. */
+  families: PatternFamily[];
+  family: PatternFamily | null;   // устаревшее, оставлено для совместимости
   statusMin: StatusCode | null;
+  zerosMin: number | null;
+  pairsMin: number | null;
+  repeatMin: number | null;
+  sameTail: boolean;
+  priceMin: number | null;
+  /** null означает «без верхней границы» — потолка в поиске нет. */
+  priceMax: number | null;
   /** Код ошибки для словаря: "search.empty", "search.badChars", ... */
   error: string | null;
   /** Код подсказки для словаря: "search.hint.end", "search.hint.count". */
@@ -53,9 +69,23 @@ export interface SearchQuery {
 export interface ParseOptions {
   where?: MaskPosition;
   counts?: CountCondition[];
+  families?: PatternFamily[];
   family?: PatternFamily | null;
   statusMin?: StatusCode | null;
+  zerosMin?: number | null;
+  pairsMin?: number | null;
+  repeatMin?: number | null;
+  sameTail?: boolean;
+  priceMin?: number | null;
+  priceMax?: number | null;
 }
+
+/** Готовые диапазоны цены для витрины. У последнего max === null. */
+export interface PriceBucket { code: string; min: number; max: number | null; }
+export declare const PRICE_BUCKETS: PriceBucket[];
+export declare const FAMILIES: PatternFamily[];
+export declare function countAlignedPairs(w: string): number;
+export declare function sameTail(w: string): string | null;
 
 export declare const VERSION: string;
 export declare const STATUS_RANK: StatusCode[];

@@ -1,5 +1,5 @@
 /*!
- * ДВИЖОК ОЦЕНКИ КРАСОТЫ ТЕЛЕФОННЫХ НОМЕРОВ ARAQS — версия 3.1 (08.09.2026)
+ * ДВИЖОК ОЦЕНКИ КРАСОТЫ ТЕЛЕФОННЫХ НОМЕРОВ ARAQS — версия 5.0 (11.09.2026)
  *
  * Что делает: по армянскому мобильному номеру определяет узор, статус по
  * восьмиступенчатой шкале, индекс красоты 0-100, диапазон цены продавца,
@@ -40,7 +40,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
 "use strict";
 
-const VERSION = "3.1";
+const VERSION = "5.0";
 
 /* ===================== СПРАВОЧНИКИ ===================== */
 
@@ -99,6 +99,12 @@ const MARKET_P75 = {
   "Обычный":0, "Бронзовый":80000, "Серебряный":100000, "Золотой":380000,
   "Платиновый":500000, "Бриллиантовый":1100000, "Элит":1800000, "Премиум":2900000
 };
+// 25-й процентиль рынка — нижняя граница с версии 5.0, когда цена перестала
+// зависеть от оператора.
+const MARKET_P25 = {
+  "Обычный":0, "Бронзовый":21000, "Серебряный":20000, "Золотой":50000,
+  "Платиновый":50000, "Бриллиантовый":149000, "Элит":190000, "Премиум":760000
+};
 const MARKET_MED = {
   "Обычный":0, "Бронзовый":50000, "Серебряный":45000, "Золотой":105000,
   "Платиновый":180000, "Бриллиантовый":300000, "Элит":1200000, "Премиум":1500000
@@ -107,8 +113,9 @@ const MARKET_MED = {
    В версии 2.0 пороги 93/97 оставляли подуровень P1 пустым — на рынке
    премиальные номера не опускаются ниже индекса 93. */
 const PREMIUM_SUBLEVEL_INDEX = [["P3",98],["P2",95],["P1",0]];
+// Для подуровней Премиума — свои (нижняя, медиана, потолок).
 const PREMIUM_SUBLEVEL_MARKET = {
-  P1:[1000000,2500000], P2:[1500000,4000000], P3:[3000000,10000000]
+  P1:[700000,1000000,2500000], P2:[900000,1500000,4000000], P3:[1500000,3000000,10000000]
 };
 /* Насколько индекс двигает рекомендацию от рыночной медианы статуса. */
 const REC_SWING = 1.6;
@@ -251,8 +258,10 @@ function bestSeq(w){
     const step = steps[si]; let a = 0;
     while(a < w.length){
       let b = a;
-      while(b + 1 < w.length &&
-            ((((+w.charAt(b+1)) - (+w.charAt(b))) % 10) + 10) % 10 === ((step % 10) + 10) % 10) b++;
+      // ЛЕСТНИЦА НЕ ПЕРЕХОДИТ ЧЕРЕЗ ДЕВЯТКУ: 0123 — лестница, 8901 — нет.
+      // Раньше разность считалась по кругу, и 8901 получал статус за узор,
+      // которого никто не видит.
+      while(b + 1 < w.length && (+w.charAt(b+1)) - (+w.charAt(b)) === step) b++;
       if(b - a + 1 > best[0] && b >= 2) best = [b - a + 1, a, b];
       a = b > a ? b + 1 : a + 1;
     }
@@ -289,6 +298,35 @@ function pairChain(w){
 }
 
 function zerosTail(w){ return w.length - w.replace(/0+$/,"").length; }
+
+/* Пары одинаковых цифр по естественной разбивке номера, БЕЗ требования
+   соседства. 11 22 07 44 — это три пары, хотя они и не идут подряд.
+   Не путать с pairChain: там пары стоят вплотную, и это более сильный узор. */
+function alignedPairs(w){
+  const out = [];
+  for(let i = 0; i + 1 < w.length; i += 2)
+    if(w.charAt(i) === w.charAt(i+1)) out.push(w.slice(i, i+2));
+  return out;
+}
+
+/* Все пары заканчиваются одной цифрой: 44 84 14 14 -> "4".
+   По рынку: внутри «Золотого» такие номера стоят 250 000 против 100 000,
+   внутри «Премиума» 7 750 000 против 1 500 000. Случаев мало (10 из 380),
+   поэтому признак поднимает индекс, но не статус. */
+function sameTailDigit(w){
+  const t = w.charAt(1);
+  for(let i = 3; i < w.length; i += 2) if(w.charAt(i) !== t) return null;
+  return t;
+}
+
+/* Все пары НАЧИНАЮТСЯ одной цифрой. Считаем ради полноты, но на цену не
+   влияет: рынок за это не платит, в «Элите» такие номера даже дешевле.
+   Асимметрия закономерна — номер запоминается по окончаниям. */
+function sameHeadDigit(w){
+  const h = w.charAt(0);
+  for(let i = 2; i < w.length; i += 2) if(w.charAt(i) !== h) return null;
+  return h;
+}
 
 /* 44 55 66 77 — все четыре пары одинаковых цифр, и сами цифры идут подряд.
    В выборке рынка (385 объявлений) таких номеров не встретилось ни одного,
@@ -355,7 +393,16 @@ function analyze(w){
        втрое дороже, чем с двумя (медианы 300 000 и 78 000 ֏). */
     digit_counts:dc, dominant:domN, dominant_digit:domD,
     rhythm:rh[0], rhythm_digit:rh[1],
-    pairs_seq:pairsFormSequence(w)
+    pairs_seq:pairsFormSequence(w),
+    /* --- признаки, добавленные в версии 4.0 --- */
+    zeros_total:(w.match(/0/g) || []).length,
+    pairs_aligned:alignedPairs(w).length,
+    pairs_aligned_list:alignedPairs(w),
+    same_tail:sameTailDigit(w),
+    same_head:sameHeadDigit(w),
+    repeats:Object.keys(dc).filter(function(k){ return dc[k] >= 2; })
+      .map(function(k){ return [k, dc[k]]; })
+      .sort(function(a,b){ return b[1] - a[1] || (a[0] < b[0] ? -1 : 1); })
   };
 }
 
@@ -438,6 +485,12 @@ function beautyIndex(status, d){
   // цена растёт вместе с числом повторов доминирующей цифры.
   if(d.dominant >= 5) s += 2 * (d.dominant - 4);
   if(d.rhythm >= 4 && d.dominant < 6) s += 1;
+  // Нули где угодно. Подтверждено рынком в пяти статусах из семи.
+  if(d.zeros_total >= 2) s += Math.min(4, (d.zeros_total - 1) * 2);
+  // Все пары кончаются одной цифрой — надбавка скромная, случаев мало.
+  if(d.same_tail) s += 3;
+  // Разрозненные пары НАМЕРЕННО без надбавки: их учёт ухудшает
+  // предсказание цены (0.550 -> 0.544). Показываем, но в цену не кладём.
   return Math.max(0, Math.min(INDEX_TOP[status], s));
 }
 
@@ -462,22 +515,28 @@ function roundPrice(x){
   return Math.round(x / 1000) * 1000;
 }
 
-/* Диапазон цены продавца -> [нижняя, рекомендация, верхняя]. */
+/* РЫНОЧНАЯ ЦЕНА НОМЕРА -> [нижняя, рекомендация, верхняя].
+
+   Это то, что платит ПОКУПАТЕЛЬ целиком, вместе со сбором за переоформление:
+   сбор сидит внутри суммы, а не добавляется сверху. Поэтому границы НЕ
+   зависят от оператора — два одинаковых по узору номера стоят покупателю
+   одинаково, чья бы на них ни была симка. От оператора зависит не цена, а
+   то, сколько из неё достанется продавцу.
+
+   Параметр operator оставлен в сигнатуре ради совместимости вызовов, но на
+   числа больше не влияет. */
 function priceRange(operator, status, index, sublevel){
   if(status === "Обычный") return [0,0,0];
-  let op = String(operator || "viva").toLowerCase();
-  if(!OPERATOR_PRICES[op]) op = "viva";
-  let lo = OPERATOR_PRICES[op][status];
-  let med, hi;
+  let lo, med, hi;
   if(sublevel && PREMIUM_SUBLEVEL_MARKET[sublevel]){
-    med = PREMIUM_SUBLEVEL_MARKET[sublevel][0];
-    hi  = PREMIUM_SUBLEVEL_MARKET[sublevel][1];
+    lo  = PREMIUM_SUBLEVEL_MARKET[sublevel][0];
+    med = PREMIUM_SUBLEVEL_MARKET[sublevel][1];
+    hi  = PREMIUM_SUBLEVEL_MARKET[sublevel][2];
   } else {
+    lo  = MARKET_P25[status];
     med = MARKET_MED[status];
     hi  = MARKET_P75[status];
   }
-  // Оператор может оказаться дороже рынка (так бывает у Viva на верхних
-  // категориях). Диапазон всё равно обязан быть возрастающим.
   lo = Math.max(lo, 1000);
   hi = Math.max(hi, lo * 1.5);
   med = Math.min(Math.max(med, lo), hi);
@@ -493,6 +552,76 @@ function priceRange(operator, status, index, sublevel){
   let rec = med * Math.pow(REC_SWING, 2 * t - 1);
   rec = Math.min(Math.max(rec, lo), hi);
   return [roundPrice(lo), roundPrice(rec), roundPrice(hi)];
+}
+
+/* ===================== ВСЕ НАЙДЕННЫЕ ПРИЗНАКИ =====================
+   До версии 4.0 движок показывал только узор, определивший статус, а
+   остальное считал и выбрасывал. Теперь он отдаёт список: первым — тот,
+   что задал статус, следом остальные по убыванию значимости.
+
+   affects: "price" — признак заложен в индекс и, значит, в цену;
+            "info"  — показывается, но в цену не заложен (рынок не подтвердил). */
+
+function features(w, d, mainCode, mainParams, mainA, mainB, limit){
+  limit = limit || 5;
+  const out = [{ code:mainCode, params:Object.assign({}, mainParams),
+                 from:mainA, to:mainB, main:true, affects:"price" }];
+  const famMain = patternFamily(mainCode);
+  const last = w.length - 1;
+  const cand = [];
+  const add = (prio, code, params, a, b, affects) => cand.push([prio, {
+    code:code, params:params, from:(a === undefined ? -1 : a),
+    to:(b === undefined ? -1 : b), main:false, affects:(affects || "price") }]);
+
+  if(d.same_tail) add(1, "extra.sameTail", {digit:d.same_tail}, 1, last);
+  d.repeats.forEach(function(r){ if(r[1] >= 4) add(2, "extra.repeat", {digit:r[0], n:r[1]}); });
+  if(d.zeros_total >= 2 && famMain !== "zeros") add(3, "extra.zeros", {n:d.zeros_total});
+
+  // Показываем и тогда, когда основной узор — тоже пары, но их больше:
+  // движок говорил «две пары подряд» про 11 22 07 44, а пар там три.
+  const shownPairs = famMain === "pairs" ? d.pairs : 0;
+  if(d.pairs_aligned >= 2 && d.pairs_aligned > shownPairs)
+    add(4, "extra.pairsAligned", {n:d.pairs_aligned, text:d.pairs_aligned_list.join(" ")},
+        -1, -1, "info");
+
+  if(d.rhythm >= 4 && famMain !== "rhythm")
+    add(5, "extra.rhythm", {digit:d.rhythm_digit, n:d.rhythm}, 2, 7);
+  d.repeats.forEach(function(r){ if(r[1] === 3) add(6, "extra.repeat", {digit:r[0], n:r[1]}); });
+  if(d.run >= 3 && famMain !== "run")
+    add(7, "extra.run", {digit:d.run_digit, n:d.run}, d.run_a, d.run_b);
+  if(d.block_k && famMain !== "block")
+    add(8, "extra.block", {block:d.block_text, reps:d.block_r}, d.block_a, d.block_b);
+  if(d.zeros_tail >= 2 && famMain !== "zeros")
+    add(8, "extra.zerosTail", {n:d.zeros_tail}, d.zt_a, d.zt_b);
+  if(d.seq >= 4 && famMain !== "seq")
+    add(9, "extra.seq", {n:d.seq, text:d.seq_text}, d.seq_a, d.seq_b);
+  if(d.pal >= 5 && famMain !== "pal")
+    add(9, "extra.pal", {n:d.pal, text:d.pal_text}, d.pal_a, d.pal_b);
+  if(d.distinct <= 2 && famMain !== "distinct")
+    add(10, "extra.distinct", {n:d.distinct}, 2, 7);
+  if(d.same_head) add(11, "extra.sameHead", {digit:d.same_head}, 0, last - 1, "info");
+
+  cand.sort(function(a,b){ return a[0] - b[0]; });
+  for(let i = 0; i < cand.length && i < limit; i++) out.push(cand[i][1]);
+  return out;
+}
+
+/* Все группы узоров, что есть в номере. СПИСОК, а не одно значение: из-за
+   единственной группы фильтр «вид узора» на сайте показывал пустоту. */
+function featureFamilies(w, d, mainCode){
+  const set = {};
+  set[patternFamily(mainCode)] = true;
+  if(d.run >= 2)           set.run = true;
+  if(d.seq >= 3)           set.seq = true;
+  if(d.block_k)            set.block = true;
+  if(d.pal >= 4)           set.pal = true;
+  if(d.pairs_aligned >= 2) set.pairs = true;
+  if(d.zeros_total >= 2)   set.zeros = true;
+  if(d.rhythm >= 3)        set.rhythm = true;
+  if(d.distinct <= 3)      set.distinct = true;
+  if(d.same_tail)          set.tail = true;
+  delete set.none;
+  return Object.keys(set).sort();
 }
 
 /* ===================== СБОР ЗА ПЕРЕОФОРМЛЕНИЕ =====================
@@ -539,6 +668,35 @@ function transferFee(operator, status, monthsHeld, entity, heldOverLimit){
    Движок текстов не содержит. Словарь передаётся снаружи: объект вида
    { "run.5": "пять цифр {digit} подряд", ... }. Подстановка — по {имени}. */
 
+/* ЧИСЛИТЕЛЬНЫЕ.
+   «3 раз» вместо «3 раза» выглядит как недоделка, а склонение зависит от
+   языка, и движок про языки знать не должен. Решение: словарь может дать
+   для ключа не одну строку, а список форм, и сам объявляет своё правило
+   в ключе "_plural". Движок лишь выбирает номер формы.
+
+     "_plural": "ru",
+     "extra.zeros": ["{n} ноль в номере", "{n} нуля в номере", "{n} нулей в номере"]
+
+   Порядок форм: единственное, малое множественное, большое множественное.
+   Для языков с двумя формами (армянский, английский) хватает двух строк. */
+function pluralRu(n){
+  if(n % 10 === 1 && n % 100 !== 11) return 0;
+  if(n % 10 >= 2 && n % 10 <= 4 && !(n % 100 >= 12 && n % 100 <= 14)) return 1;
+  return 2;
+}
+function pluralOneOther(n){ return n === 1 ? 0 : 1; }
+const PLURAL_RULES = { ru: pluralRu, hy: pluralOneOther, en: pluralOneOther };
+
+function pickPlural(forms, params, rule){
+  if(typeof forms === "string") return forms;
+  if(!forms || !forms.length) return "";
+  let n = params && (params.n !== undefined ? params.n
+        : (params.min !== undefined ? params.min : params.reps));
+  n = parseInt(n, 10); if(isNaN(n)) n = 1;
+  const i = (PLURAL_RULES[rule] || pluralOneOther)(n);
+  return forms[Math.min(i, forms.length - 1)];
+}
+
 function fill(template, params){
   return String(template).replace(/\{(\w+)\}/g, function(m, key){
     return (params && params[key] !== undefined) ? String(params[key]) : m;
@@ -549,12 +707,15 @@ function fill(template, params){
    сам код, чтобы пропажа перевода была видна, а не молча пустая строка. */
 function localize(v, messages){
   if(!v || !messages) return v;
-  const get = (code, params) => (messages[code] !== undefined ? fill(messages[code], params) : code);
+  const rule = messages._plural || "en";
+  const get = (code, params) => (messages[code] !== undefined
+    ? fill(pickPlural(messages[code], params || {}, rule), params) : code);
   if(!v.ok){ v.error = get(v.errorCode, v.errorParams); v.notes = [v.error]; return v; }
   v.statusName = get("status." + v.statusCode, {});
   v.pattern = get(v.patternCode, v.patternParams);
   v.feeNote = get(v.feeCode, v.feeParams);
   v.notes = v.noteCodes.map(function(n){ return get(n.code, n.params); });
+  (v.features || []).forEach(function(f){ f.text = get(f.code, f.params); });
   return v;
 }
 
@@ -572,6 +733,8 @@ function evaluate(raw, options){
   const d = analyze(w);
   const c = classify(w, d);
   const index = beautyIndex(c.status, d);
+  const feats = features(w, d, c.patternCode, c.patternParams, c.a, c.b);
+  const fams = featureFamilies(w, d, c.patternCode);
 
   let sublevel = null;
   if(c.status === "Премиум"){
@@ -593,6 +756,11 @@ function evaluate(raw, options){
   const held = heldLongEnough(entity, heldOverLimit, monthsHeld);
   const band = priceRange(operator, c.status, index, sublevel);
   const fee = transferFee(operator, c.status, monthsHeld, entity, held);
+  const opPrice = OPERATOR_PRICES[operator][c.status] || 0;
+  // Сбор вычитается из рыночной цены. Если он съедает её целиком — у Viva
+  // на верхних категориях при владении меньше двух лет так и бывает —
+  // продавцу остаётся ноль, и это надо показать, а не спрятать.
+  const gets = band.map(function(x){ return Math.max(0, x - fee.amount); });
 
   // Пояснения тоже кодами: сайт переводит их своим словарём.
   const noteCodes = [];
@@ -601,10 +769,10 @@ function evaluate(raw, options){
   if(d.distinct <= 2) note("note.clean", {distinct:d.distinct});
   if(d.run_at_end && d.run >= 3) note("note.endsLast");
   if(operatorFromCode) note("note.operatorFromCode", {operator:OPERATOR_NAME[operator] || operator});
-  if(c.status !== "Обычный" && MARKET_MED[c.status] &&
-     OPERATOR_PRICES[operator][c.status] > MARKET_MED[c.status])
+  if(c.status !== "Обычный" && band[1] > 0 && fee.amount > band[1] * 0.5)
+    note("note.feeEatsPrice", {operator:OPERATOR_NAME[operator] || operator});
+  if(c.status !== "Обычный" && opPrice && band[1] && opPrice > band[1])
     note("note.operatorAboveMarket", {operator:OPERATOR_NAME[operator] || operator});
-  if(d.dominant >= 5) note("note.dominant", {digit:d.dominant_digit, n:d.dominant});
   if(operator === "viva" && held === null && c.status !== "Обычный")
     note("note.askHeldOver", {limit:VIVA_FREE_AFTER_MONTHS[entity] || 24});
   const rawStr = String(raw);
@@ -619,7 +787,7 @@ function evaluate(raw, options){
     status:c.status, statusCode:STATUS_CODE[c.status],
     sublevel:sublevel, index:index, indexRange:INDEX_RANGE[c.status],
     patternCode:c.patternCode, patternFamily:patternFamily(c.patternCode),
-    patternParams:c.patternParams,
+    patternParams:c.patternParams, features:feats, featureFamilies:fams,
     patternFrom:c.a, patternTo:c.b,
     operator:operator, operatorFromCode:operatorFromCode,
     monthsHeld:monthsHeld, heldOverLimit:held, entity:entity,
@@ -627,9 +795,10 @@ function evaluate(raw, options){
        «номер, где пять пятёрок», не привязываясь к месту цифры. */
     digitCounts:d.digit_counts, dominantDigit:d.dominant_digit, dominantCount:d.dominant,
     distinct:d.distinct,
-    sellerMin:band[0], sellerTypical:band[1], sellerMax:band[2],
+    priceMin:band[0], priceTypical:band[1], priceMax:band[2],
     transferFee:fee.amount, feeCode:fee.code, feeParams:fee.params,
-    totalMin:band[0] + fee.amount, totalTypical:band[1] + fee.amount, totalMax:band[2] + fee.amount,
+    sellerGetsMin:gets[0], sellerGetsTypical:gets[1], sellerGetsMax:gets[2],
+    operatorPrice:opPrice,
     publishable:c.status !== "Обычный",
     noteCodes:noteCodes, notes:[]
   }, options.messages);
@@ -644,12 +813,23 @@ function explain(v){
   let head = "0" + v.code + " " + v.body + "  →  " + (v.statusName || v.status);
   if(v.sublevel) head += " (" + v.sublevel + ")";
   head += ",  " + v.index + "/100";
-  const lines = [head, "", v.pattern || v.patternCode].concat(v.notes || []);
+  const lines = [head, "", v.pattern || v.patternCode];
+  const extra = (v.features || []).filter(function(f){ return !f.main; });
+  if(extra.length){
+    lines.push("а также:");
+    extra.forEach(function(f){
+      lines.push("   - " + (f.text || f.code) +
+                 (f.affects === "price" ? "" : "   (не влияет на цену)"));
+    });
+  }
+  (v.notes || []).forEach(function(n){ lines.push(n); });
   if(v.publishable){
     lines.push("",
-      money(v.sellerMin) + " – " + money(v.sellerMax) + " (" + money(v.sellerTypical) + ")",
-      money(v.transferFee) + "  " + (v.feeNote || v.feeCode),
-      money(v.totalMin) + " – " + money(v.totalMax));
+      "рыночная цена   " + money(v.priceMin) + " – " + money(v.priceMax) +
+        "   (рекомендуем " + money(v.priceTypical) + ")",
+      "сбор оператора  " + money(v.transferFee) + "  " + (v.feeNote || v.feeCode),
+      "продавцу        " + money(v.sellerGetsMin) + " – " + money(v.sellerGetsMax) +
+        "   (при рекомендованной " + money(v.sellerGetsTypical) + ")");
   }
   return lines.join("\n");
 }
@@ -661,6 +841,7 @@ return {
   OPERATOR_NAME: OPERATOR_NAME,
   OPERATOR_PRICES: OPERATOR_PRICES,
   CODE_OPERATOR_HINT: CODE_OPERATOR_HINT,
+  MARKET_P25: MARKET_P25,
   MARKET_P75: MARKET_P75,
   MARKET_MED: MARKET_MED,
   PREMIUM_SUBLEVEL_MARKET: PREMIUM_SUBLEVEL_MARKET,
@@ -673,6 +854,9 @@ return {
   transferFee: transferFee,
   priceRange: priceRange,
   patternFamily: patternFamily,
+  features: features,
+  featureFamilies: featureFamilies,
+  pickPlural: pickPlural,
   heldLongEnough: heldLongEnough,
   evaluate: evaluate,
   localize: localize,

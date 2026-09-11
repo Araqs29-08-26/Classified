@@ -2,11 +2,17 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
 import { detect } from "@/lib/phone";
-import { evaluateNumber, type EngineResult } from "@/lib/numberEngine";
+import {
+  engineMessage,
+  evaluateNumber,
+  fillMessage,
+  OPERATOR_NAME,
+  type EngineResult,
+} from "@/lib/numberEngine";
 import { formatPrice, formatAmount } from "@/lib/supabase";
 import PatternNumber from "../PatternNumber";
 
@@ -19,6 +25,7 @@ import PatternNumber from "../PatternNumber";
  * считал её единственно верной.
  */
 export default function SellClient() {
+  const locale = useLocale();
   const t = useTranslations("sell");
   const tr = useTranslations("sell.result");
   const tTiers = useTranslations("tiers");
@@ -56,16 +63,16 @@ export default function SellClient() {
     result && result.ok
       ? `/new?number=${encodeURIComponent(phone)}&tier=${encodeURIComponent(
           result.status
-        )}&price=${result.sellerTypical}&type=${encodeURIComponent(
+        )}&price=${result.priceTypical}&type=${encodeURIComponent(
           detected?.numberType ?? "Мобильный"
         )}${detected?.operator ? `&operator=${encodeURIComponent(detected.operator)}` : ""}`
       : "/new";
 
   // Где стоит отметка «рекомендуем» внутри полосы диапазона.
   const markPercent =
-    result && result.ok && result.sellerMax > result.sellerMin
-      ? ((result.sellerTypical - result.sellerMin) /
-          (result.sellerMax - result.sellerMin)) *
+    result && result.ok && result.priceMax > result.priceMin
+      ? ((result.priceTypical - result.priceMin) /
+          (result.priceMax - result.priceMin)) *
         100
       : 50;
 
@@ -119,6 +126,32 @@ export default function SellClient() {
 
           <p className="breakdown-pattern">{result.pattern}</p>
 
+          {/* Признаков в номере бывает несколько, и показывать надо все:
+              041 10 90 90 — это и пара «90», и три нуля. Прежняя версия
+              называла только тот узор, что задал статус. */}
+          {result.features.length > 1 && (
+            <>
+              <h2>{tr("featuresTitle")}</h2>
+              <ul className="feature-list">
+                {result.features.map((f, i) => (
+                  <li
+                    key={i}
+                    className={
+                      "feature" +
+                      (f.main ? " feature-main" : "") +
+                      (f.affects === "info" ? " feature-info" : "")
+                    }
+                  >
+                    <span>{f.text}</span>
+                    {f.affects === "info" && (
+                      <em>{engineMessage("extra.affects.info", locale)}</em>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
           {result.notes.length > 0 && (
             <ul className="breakdown-notes">
               {result.notes.map((note, i) => (
@@ -136,41 +169,60 @@ export default function SellClient() {
             <div className="range-ends">
               <span>
                 <em>{tr("rangeLow")}</em>
-                <b>{formatAmount(result.sellerMin)}</b>
+                <b>{formatAmount(result.priceMin)}</b>
               </span>
               <span className="range-rec">
                 <em>{tr("rangeRec")}</em>
-                <b>{formatPrice(result.sellerTypical)}</b>
+                <b>{formatPrice(result.priceTypical)}</b>
               </span>
               <span className="range-high">
                 <em>{tr("rangeHigh")}</em>
-                <b>{formatAmount(result.sellerMax)}</b>
+                <b>{formatAmount(result.priceMax)}</b>
               </span>
             </div>
-            <p className="breakdown-hint">{tr("rangeHint")}</p>
+            <p className="breakdown-hint">{tr("priceHint")}</p>
           </div>
 
-          <h2>{tr("buyerTitle")}</h2>
-
+          {/* Схема версии 5.0: сбор оператора сидит ВНУТРИ рыночной цены,
+              а не прибавляется к ней. Иначе два одинаковых по узору номера
+              стоили бы покупателю разных денег — только из-за симки. */}
           <table className="money-table">
             <tbody>
-              <tr>
-                <td>{tr("buyerSeller")}</td>
-                <td className="col-right mono">{formatAmount(result.sellerTypical)}</td>
+              <tr className="money-total">
+                <td>{engineMessage("price.marketLabel", locale)}</td>
+                <td className="col-right mono">
+                  {formatAmount(result.priceMin)} – {formatPrice(result.priceMax)}
+                </td>
               </tr>
               <tr>
                 <td>
-                  {tr("buyerFee")}
+                  {engineMessage("price.feeLabel", locale)}
                   <span className="money-note">{result.feeNote}</span>
                 </td>
-                <td className="col-right mono">{formatAmount(result.transferFee)}</td>
+                <td className="col-right mono">− {formatAmount(result.transferFee)}</td>
               </tr>
-              <tr className="money-total">
-                <td>{tr("buyerTotal")}</td>
-                <td className="col-right mono">{formatAmount(result.totalTypical)}</td>
+              <tr>
+                <td>{engineMessage("price.sellerLabel", locale)}</td>
+                <td className="col-right mono">
+                  {formatAmount(result.sellerGetsMin)} –{" "}
+                  {formatPrice(result.sellerGetsMax)}
+                </td>
               </tr>
             </tbody>
           </table>
+
+          <p className="breakdown-hint">
+            {engineMessage("price.rangeExplained", locale)}
+          </p>
+
+          {result.operatorPrice > 0 && (
+            <p className="breakdown-hint">
+              {fillMessage(engineMessage("price.operatorRef", locale), {
+                operator: OPERATOR_NAME[result.operator] ?? result.operator,
+                amount: formatPrice(result.operatorPrice),
+              })}
+            </p>
+          )}
 
           <p className="breakdown-hint">
             {detected?.operator

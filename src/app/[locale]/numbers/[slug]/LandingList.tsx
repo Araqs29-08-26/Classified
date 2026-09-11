@@ -42,7 +42,6 @@ export default function LandingList({
       patternFrom: v.ok ? v.patternFrom : null,
       patternTo: v.ok ? v.patternTo : null,
       fee,
-      total: l.price + fee,
       search: v.ok ? (buildIndex(v) as IndexRecord | null) : null,
     };
   });

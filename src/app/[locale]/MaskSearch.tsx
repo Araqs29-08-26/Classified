@@ -8,9 +8,14 @@ import type { MaskPosition } from "@/lib/numberSearch";
  * Строка поиска по маске номера.
  *
  * Ячейки по одной цифре умели только «эта цифра на этом месте», а модуль
- * поиска умеет заметно больше: «?» вместо одной любой цифры, «*» вместо
- * любого их количества и выбор места, где искать. Обычная строка отдаёт эти
- * возможности человеку целиком, а разбирает написанное сам модуль.
+ * поиска умеет заметно больше: звёздочка вместо одной любой цифры, «5x5»
+ * вместо «пятёрка пять раз» и выбор места, где искать. Обычная строка отдаёт
+ * эти возможности человеку целиком, а разбирает написанное сам модуль.
+ *
+ * Звёздочка — ровно ОДНА цифра, а не «сколько угодно». Так устроен поиск
+ * автомобильных номеров на roadpolice.am, который в Армении знают все:
+ * заводить свои знаки там, где у людей уже есть привычные, значит учить их
+ * заново.
  */
 export const WHERE_OPTIONS: { id: MaskPosition; key: string }[] = [
   { id: "any", key: "whereAny" },
@@ -90,8 +95,8 @@ export default function MaskSearch({
 
       <div className="mask-search-legend">
         <span className="mono">
-          <b>?</b> {t("legendAny")} <span aria-hidden="true">·</span> <b>*</b>{" "}
-          {t("legendMany")}
+          <b>*</b> {t("legendAny")} <span aria-hidden="true">·</span> <b>5x5</b>{" "}
+          {t("legendTimes")}
         </span>
         <span className="mask-search-sep" aria-hidden="true" />
         <div className="where-row" role="group" aria-label={tf("whereLabel")}>

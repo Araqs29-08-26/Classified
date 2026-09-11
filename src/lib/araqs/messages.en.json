@@ -1,5 +1,6 @@
 {
-  "_": "Text dictionary for the Araqs number valuation engine, English. Engine 3.1, search 1.0 (08.09.2026). Do not change the keys on the left. Placeholders in curly braces are filled in by the engine. If a key is missing, the engine returns the code itself, so a missing translation is visible immediately.",
+  "_": "Text dictionary for the Araqs number valuation engine, English. Engine 5.0, search 1.2 (11.09.2026). Do not change the keys on the left. Placeholders in curly braces are filled in by the engine. If a key is missing, the engine returns the code itself, so a missing translation is visible immediately.",
+  "_plural": "en",
   "status.plain": "Ordinary",
   "status.bronze": "Bronze",
   "status.silver": "Silver",
@@ -44,11 +45,52 @@
   "distinct.3": "the number uses only 3 distinct digits",
   "distinct.4": "the number uses 4 distinct digits",
   "none": "no pronounced pattern found",
+  "extra._": "--- additional features: everything else the number has ---",
+  "extra.repeat": [
+    "the digit {digit} appears {n} time",
+    "the digit {digit} appears {n} times"
+  ],
+  "extra.zeros": [
+    "{n} zero in the number — a round digit",
+    "{n} zeros in the number — round digits"
+  ],
+  "extra.pairsAligned": [
+    "{n} pair of identical digits by grouping ({text})",
+    "{n} pairs of identical digits by grouping ({text})"
+  ],
+  "extra.sameTail": "every pair ends in {digit}",
+  "extra.sameHead": "every pair starts with {digit}",
+  "extra.rhythm": [
+    "the digit {digit} appears on every other position, {n} time",
+    "the digit {digit} appears on every other position, {n} times"
+  ],
+  "extra.run": [
+    "{n} {digit} in a row",
+    "{n} {digit}s in a row"
+  ],
+  "extra.block": [
+    "the block “{block}” repeated {reps} time",
+    "the block “{block}” repeated {reps} times"
+  ],
+  "extra.seq": [
+    "{n} digit in sequence ({text})",
+    "{n} digits in sequence ({text})"
+  ],
+  "extra.pal": "a mirrored stretch “{text}”",
+  "extra.zerosTail": [
+    "{n} trailing zero",
+    "{n} trailing zeros"
+  ],
+  "extra.distinct": [
+    "only {n} distinct digit in the whole number",
+    "only {n} distinct digits in the whole number"
+  ],
+  "extra.affects.price": "counted in the price",
+  "extra.affects.info": "does not affect the price",
   "note._": "--- notes shown on the listing card ---",
   "note.crossesCode": "The pattern continues into the operator code — such numbers are rarer and valued higher.",
   "note.clean": "The number uses only {distinct} distinct digits — a very clean pattern.",
-  "note.dominant": "The digit {digit} appears {n} times — that noticeably raises the price within the status.",
-  "note.operatorAboveMarket": "{operator} charges more for a new number of this category than sellers typically ask on the market, so the lower bound of the range came out high.",
+  "note.operatorAboveMarket": "A new number of this category costs more at {operator} than such numbers usually sell for on the market.",
   "note.endsLast": "The pattern ends on the last digit of the number, which makes it easier to remember.",
   "note.operatorFromCode": "The operator was inferred from the code ({operator}) — check with the seller, the number may have been ported.",
   "note.askHeldOver": "Ask the seller whether they have held the number for more than two years: with Viva that changes the transfer fee from the full category price to 500 ֏.",
@@ -63,7 +105,7 @@
   "fee.ucom.flat": "Ucom: a flat {flat} ֏ for Silver and Bronze.",
   "fee.ucom.half": "Ucom: half of the category price.",
   "fee.unknownOperator": "Operator unknown — the estimate uses the Viva price list.",
-  "price.rangeExplained": "The lower bound is the operator's price for a comparable new number; the upper bound is the market level from listings. The seller picks the price within the range.",
+  "price.rangeExplained": "This is the full price for the buyer, transfer fee included. The fee depends on the operator and is taken out of this amount — which is why sellers on different operators end up with different sums.",
   "error._": "--- when the number could not be read ---",
   "error.empty": "Enter a number.",
   "error.notRecognized": "Number not recognised — eight significant digits are needed, separated only by spaces, dots or hyphens.",
@@ -85,12 +127,23 @@
   "family.block": "Repeated block",
   "family.pal": "Mirrored",
   "family.pairs": "Pairs",
-  "family.zeros": "Trailing zeros",
+  "family.zeros": "Zeros in the number",
   "family.rhythm": "Every other digit",
   "family.distinct": "Few distinct digits",
   "family.none": "No pattern",
   "where.any": "anywhere",
   "where.start": "at the start",
   "where.middle": "in the middle",
-  "where.end": "at the end"
+  "where.end": "at the end",
+  "family.tail": "Pairs with the same ending",
+  "price.to50k": "up to 50,000 ֏",
+  "price.50to150k": "50,000 – 150,000 ֏",
+  "price.150to500k": "150,000 – 500,000 ֏",
+  "price.500kto1m": "500,000 – 1,000,000 ֏",
+  "price.over1m": "over 1,000,000 ֏",
+  "note.feeEatsPrice": "{operator} will keep more than half the price as a transfer fee, leaving the seller little. Check how long the number has been held: with Viva the fee drops to 500 ֏ after two years.",
+  "price.marketLabel": "Market price of the number",
+  "price.feeLabel": "of which, transfer fee",
+  "price.sellerLabel": "The seller keeps",
+  "price.operatorRef": "A comparable new number at {operator} — {amount}"
 }

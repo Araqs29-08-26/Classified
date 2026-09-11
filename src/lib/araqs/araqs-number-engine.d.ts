@@ -23,9 +23,21 @@ export type Operator = "viva" | "team" | "ucom";
 /** Крупная группа узора. На экран — через словарь: "family." + код. */
 export type PatternFamily =
   | "run" | "seq" | "block" | "pal"
-  | "pairs" | "zeros" | "rhythm" | "distinct" | "none";
+  | "pairs" | "zeros" | "rhythm" | "distinct" | "tail" | "none";
 
 /** Пояснение к оценке: код текста плюс подстановки. */
+/** Один найденный признак. Первый в списке — тот, что задал статус. */
+export interface Feature {
+  code: string;                       // "extra.zeros", "run.5", ...
+  params: Record<string, string | number>;
+  from: number;                       // какие позиции окна подсветить, -1 если нечего
+  to: number;
+  main: boolean;                      // true только у признака, задавшего статус
+  /** "price" — заложен в индекс и в цену; "info" — показан, но в цену не входит. */
+  affects: "price" | "info";
+  text: string;                       // заполняется при локализации
+}
+
 export interface NoteCode {
   code: string;
   params: Record<string, string | number>;
@@ -66,6 +78,13 @@ export interface Verdict {
   patternCode: string;         // "block.pair.x2"
   patternFamily: PatternFamily;
   patternParams: Record<string, string | number>;
+  /**
+   * ВСЕ найденные признаки, а не один. Первым идёт тот, что задал статус,
+   * дальше остальные по убыванию значимости, не больше пяти.
+   */
+  features: Feature[];
+  /** Все группы узоров, что есть в номере — списком, для фильтра на сайте. */
+  featureFamilies: PatternFamily[];
   pattern: string;             // текст, если передан словарь
   /** Какие позиции окна подсветить. -1, если узора нет. */
   patternFrom: number;
@@ -83,19 +102,28 @@ export interface Verdict {
   dominantCount: number;
   distinct: number;            // сколько разных цифр в теле номера
 
-  /** Диапазон цены продавца: прайс оператора — рекомендация — рынок. */
-  sellerMin: number;
-  sellerTypical: number;
-  sellerMax: number;
+  /**
+   * РЫНОЧНАЯ ЦЕНА — то, что платит покупатель целиком, ВМЕСТЕ со сбором за
+   * переоформление. НЕ зависит от оператора: одинаковые по узору номера
+   * стоят покупателю одинаково, чья бы ни была симка.
+   */
+  priceMin: number;
+  priceTypical: number;
+  priceMax: number;
 
+  /** Сбор оператора — ВНУТРИ рыночной цены, не сверх неё. */
   transferFee: number;
   feeCode: string;
   feeParams: Record<string, string | number>;
   feeNote: string;             // текст, если передан словарь
 
-  totalMin: number;
-  totalTypical: number;
-  totalMax: number;
+  /** Что останется продавцу: цена минус сбор. Вот это от оператора зависит. */
+  sellerGetsMin: number;
+  sellerGetsTypical: number;
+  sellerGetsMax: number;
+
+  /** Прайс оператора на такой же НОВЫЙ номер — ориентир, не часть расчёта. */
+  operatorPrice: number;
 
   /** false — статус «Обычный», объявление не публикуется. */
   publishable: boolean;
@@ -114,9 +142,10 @@ export declare const STATUS_CODE: Record<string, StatusCode>;
 export declare const OPERATOR_NAME: Record<Operator, string>;
 export declare const OPERATOR_PRICES: Record<Operator, Record<string, number>>;
 export declare const CODE_OPERATOR_HINT: Record<string, Operator>;
+export declare const MARKET_P25: Record<string, number>;
 export declare const MARKET_P75: Record<string, number>;
 export declare const MARKET_MED: Record<string, number>;
-export declare const PREMIUM_SUBLEVEL_MARKET: Record<string, [number, number]>;
+export declare const PREMIUM_SUBLEVEL_MARKET: Record<string, [number, number, number]>;
 export declare const INDEX_RANGE: Record<string, string>;
 
 /** Главная функция. Разбирает любую запись номера и возвращает вердикт. */
@@ -137,7 +166,7 @@ export declare function localize(v: Verdict, messages: Record<string, string>): 
 /** Подстановка {имя} в строку словаря. */
 export declare function fill(template: string, params: Record<string, unknown>): string;
 
-/** Диапазон цены отдельно: [нижняя, рекомендация, верхняя]. */
+/** Рыночная цена отдельно: [нижняя, рекомендация, верхняя]. Операторо-независима. */
 export declare function priceRange(
   operator: Operator, status: string, index: number, sublevel?: Sublevel
 ): [number, number, number];
@@ -149,6 +178,25 @@ export declare function transferFee(
 ): { amount: number; code: string; params: Record<string, string | number> };
 
 export declare function patternFamily(patternCode: string): PatternFamily;
+
+export declare function features(
+  w: string, d: Record<string, unknown>, mainCode: string,
+  mainParams: Record<string, unknown>, mainA: number, mainB: number, limit?: number
+): Feature[];
+
+export declare function featureFamilies(
+  w: string, d: Record<string, unknown>, mainCode: string
+): PatternFamily[];
+
+/**
+ * Выбор формы числительного. Словарь может дать для ключа список форм и
+ * объявить своё правило в ключе "_plural" ("ru" | "hy" | "en"); движок лишь
+ * выбирает номер формы. Так «3 раз» не превращается в недоделку, а движок
+ * при этом не знает про грамматику конкретных языков.
+ */
+export declare function pickPlural(
+  forms: string | string[], params: Record<string, unknown>, rule: string
+): string;
 
 /** Готовый многострочный текст. Работает только с локализованным вердиктом. */
 export declare function explain(v: Verdict): string;

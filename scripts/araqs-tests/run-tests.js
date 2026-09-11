@@ -38,10 +38,41 @@ golden.cases.forEach(function (c) {
     return fail(c.input + " — код узора", c.expectPatternCode, v.patternCode);
   if (c.expectIndex !== null && v.index !== c.expectIndex)
     return fail(c.input + " — индекс", c.expectIndex, v.index);
-  if (c.expectSellerMin !== null && v.sellerMin !== c.expectSellerMin)
-    return fail(c.input + " — нижняя граница цены", c.expectSellerMin, v.sellerMin);
-  if (c.expectSellerMax !== null && v.sellerMax !== c.expectSellerMax)
-    return fail(c.input + " — верхняя граница цены", c.expectSellerMax, v.sellerMax);
+  if (c.expectPriceMin !== undefined && v.priceMin !== c.expectPriceMin)
+    return fail(c.input + " — нижняя граница рыночной цены", c.expectPriceMin, v.priceMin);
+  if (c.expectPriceMax !== undefined && v.priceMax !== c.expectPriceMax)
+    return fail(c.input + " — верхняя граница рыночной цены", c.expectPriceMax, v.priceMax);
+  // Рыночная цена НЕ должна зависеть от оператора — ради этого и затевалась
+  // версия 5.0. Проверяем прямо: три оператора, цена одна.
+  if (v.publishable) {
+    const byOp = ["viva", "team", "ucom"].map(function (op) {
+      const x = E.evaluate(c.input, { operator: op });
+      return x.priceMin + "/" + x.priceTypical + "/" + x.priceMax;
+    });
+    if (new Set(byOp).size !== 1)
+      return fail(c.input + " — цена разная у разных операторов", "одна цена", byOp.join(" | "));
+    // А вот остаток продавцу обязан от оператора зависеть, иначе сбор потерян.
+    const fees = ["viva", "team", "ucom"].map(function (op) {
+      return E.evaluate(c.input, { operator: op }).transferFee;
+    });
+    const gets = ["viva", "team", "ucom"].map(function (op) {
+      const x = E.evaluate(c.input, { operator: op });
+      return x.priceTypical - x.transferFee;
+    });
+    gets.forEach(function (g, i) {
+      const x = E.evaluate(c.input, { operator: ["viva","team","ucom"][i] });
+      if (Math.max(0, g) !== x.sellerGetsTypical)
+        fail(c.input + " — остаток продавцу посчитан неверно", Math.max(0, g), x.sellerGetsTypical);
+    });
+    if (fees[0] === fees[1] && fees[1] === fees[2] && fees[0] > 1000)
+      return fail(c.input + " — сбор одинаков у всех операторов", "разные сборы", fees.join(", "));
+  }
+  // Движок обязан показывать ВСЕ найденные признаки, а не только главный.
+  if (c.expectExtraFeatures !== undefined) {
+    const extra = v.features.filter(function (f) { return !f.main; }).length;
+    if (extra !== c.expectExtraFeatures)
+      return fail(c.input + " — дополнительных признаков", c.expectExtraFeatures, extra);
+  }
 });
 
 console.log("2. Разбор записи номера (" + letters.cases.length + ")");
@@ -89,12 +120,43 @@ console.log("4. Словари");
   // иначе на экран уйдёт текст с потерянным числом.
   Object.keys(ref).forEach(function (k) {
     if (dict[k] === undefined) return;
-    const need = (String(ref[k]).match(/\{\w+\}/g) || []).sort().join(",");
-    const have = (String(dict[k]).match(/\{\w+\}/g) || []).sort().join(",");
+    const uniq = v => Array.from(new Set(
+      (Array.isArray(v) ? v.join(" ") : String(v)).match(/\{\w+\}/g) || [])).sort().join(",");
+    const need = uniq(ref[k]);
+    const have = uniq(dict[k]);
     if (need !== have) fail("словарь " + lang + ", ключ " + k + " — подстановки",
                             need || "нет", have || "нет");
   });
 });
+
+console.log("5. Лестница не переходит через девятку");
+[["41234567", 7], ["98901234", 5], ["77109876", 4], ["55890123", 4], ["77123456", 6]]
+  .forEach(function (row) {
+    const got = E.analyze(row[0]).seq;
+    if (got !== row[1]) fail("лестница в " + row[0], row[1], got);
+  });
+if (E.analyze("89012345").seq_text.indexOf("89") === 0)
+  fail("лестница 8901", "обрыв на девятке", E.analyze("89012345").seq_text);
+
+console.log("6. Склонения числительных");
+["ru", "hy", "en"].forEach(function (lang) {
+  const dict = require("../../src/lib/araqs/messages." + lang + ".json");
+  if (!dict._plural) fail("словарь " + lang, "объявленное правило _plural", "нет");
+  Object.keys(dict).forEach(function (k) {
+    const v = dict[k];
+    if (k.charAt(0) === "_" || !Array.isArray(v)) return;
+    if (v.length < 2)
+      fail("словарь " + lang + ", ключ " + k, "минимум 2 формы", v.length);
+    // Список форм имеет смысл только там, где есть число, по которому выбирать.
+    if (v.every(function (f) { return !/\{(n|reps|min)\}/.test(String(f)); }))
+      fail("словарь " + lang + ", ключ " + k, "форму выбирает число {n}", "числа в строке нет");
+  });
+});
+if (E.pickPlural(["один", "два", "много"], {n: 1}, "ru") !== "один")  fail("склонение ru n=1", "один", "?");
+if (E.pickPlural(["один", "два", "много"], {n: 3}, "ru") !== "два")   fail("склонение ru n=3", "два", "?");
+if (E.pickPlural(["один", "два", "много"], {n: 7}, "ru") !== "много") fail("склонение ru n=7", "много", "?");
+if (E.pickPlural(["one", "many"], {n: 1}, "en") !== "one")            fail("склонение en n=1", "one", "?");
+if (E.pickPlural(["one", "many"], {n: 5}, "en") !== "many")           fail("склонение en n=5", "many", "?");
 
 console.log(failed === 0
   ? "\nВсё сошлось."

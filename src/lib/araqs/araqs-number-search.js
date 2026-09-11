@@ -28,10 +28,18 @@
  * «пятёрка не менее четырёх раз И номер оканчивается на 00 И статус от Золотого» —
  * ни один из изученных сайтов так не умеет.
  *
- * ПОДСТАНОВОЧНЫЕ ЗНАКИ В МАСКЕ
- *      ?  или  X   — ровно одна любая цифра:  «5?5» найдёт 505, 515, 525…
- *      *           — любое количество любых цифр (в том числе ноль)
- *      Пробелы, точки и дефисы внутри маски игнорируются.
+ * КОГДА ЧАСТЬ ЦИФР НЕ ВАЖНА
+ *      *   звёздочка — ровно ОДНА любая цифра: «5*5» найдёт 505, 515, 525…
+ *      Пробел и дефис — просто разделители, они игнорируются.
+ *
+ *      Почему именно звёздочка и почему одна цифра, а не «сколько угодно»:
+ *      ровно так работает поиск автомобильных номеров на roadpolice.am, а
+ *      этот сайт в Армении знают все. Их примеры — 11**111, 1*AA*1*: каждая
+ *      звёздочка стоит на месте одного символа. Заводить свою систему знаков
+ *      там, где у людей уже есть привычная, — значит учить их заново.
+ *
+ *      Знаки ? . X работают так же, для тех, кто привык к ним по другим
+ *      сайтам, но в интерфейсе показывается только звёздочка.
  *
  * КАК ЭТО РАБОТАЕТ НА САЙТЕ
  *      При подаче объявления один раз вызывается buildIndex(вердикт движка)
@@ -47,7 +55,24 @@
 })(typeof self !== "undefined" ? self : this, function () {
 "use strict";
 
-const VERSION = "1.0";
+const VERSION = "1.2";
+
+// Все группы узоров. Номер почти всегда попадает в несколько сразу, поэтому
+// в индексе это СПИСОК. В версии 1.0 группа была одна — та, что задала
+// статус, — и из-за этого фильтр «вид узора» показывал пустоту: номер с
+// парами и нулями числился только в «парах».
+const FAMILIES = ["run","seq","block","pal","pairs","zeros","rhythm","distinct","tail"];
+
+// Диапазоны цены для витрины. Последний намеренно БЕЗ верхней границы:
+// потолок в 1 100 000 отсекал весь верх рынка, где и находятся самые
+// дорогие номера. max: null означает «сколько угодно».
+const PRICE_BUCKETS = [
+  { code: "price.to50k",    min: 0,       max: 50000 },
+  { code: "price.50to150k", min: 50000,   max: 150000 },
+  { code: "price.150to500k",min: 150000,  max: 500000 },
+  { code: "price.500kto1m", min: 500000,  max: 1000000 },
+  { code: "price.over1m",   min: 1000000, max: null }
+];
 
 // Порядок статусов. Нужен, чтобы искать «от Золотого и выше»: в базе
 // хранится номер по этой шкале (st_rank), и сравнение становится обычным >=.
@@ -75,22 +100,42 @@ const STATUS_RANK = ["plain","bronze","silver","gold","platinum","diamond","elit
 function buildIndex(verdict){
   if(!verdict || !verdict.ok) return null;
   const dc = verdict.digitCounts || {};
+  const w = verdict.window;
+  const fams = verdict.featureFamilies || (verdict.patternFamily ? [verdict.patternFamily] : []);
   const rec = {
-    w: verdict.window,
+    w: w,
     dc: dc,
     st: verdict.statusCode,
     st_rank: STATUS_RANK.indexOf(verdict.statusCode),
     ix: verdict.index,
-    fam: verdict.patternFamily,
+    fams: fams.slice(),            // СПИСОК групп узора, а не одна
+    fam: fams[0] || "none",        // оставлено для совместимости
     pc: verdict.patternCode,
     dis: verdict.distinct !== undefined ? verdict.distinct
-         : new Set(String(verdict.window).slice(2).split("")).size,
-    op: verdict.operator
+         : new Set(String(w).slice(2).split("")).size,
+    op: verdict.operator,
+    // Признаки, по которым заказчик просил уметь искать напрямую.
+    zeros: (String(w).match(/0/g) || []).length,
+    pa: countAlignedPairs(w),                       // пары по разбивке
+    maxrep: Math.max.apply(null, Object.keys(dc).map(function(k){ return dc[k]; }).concat([0])),
+    tail: sameTail(w)                               // все пары кончаются на эту цифру
   };
-  // Плоские столбцы d0..d9 — для базы. В JS-поиске не используются,
-  // но пусть уходят в индекс, чтобы разработчик не считал их заново.
+  // Плоские столбцы для базы: d0..d9 и fam_* — их база индексирует напрямую.
   for(let d = 0; d <= 9; d++) rec["d" + d] = dc[String(d)] || 0;
+  FAMILIES.forEach(function(f){ rec["fam_" + f] = fams.indexOf(f) >= 0; });
   return rec;
+}
+
+function countAlignedPairs(w){
+  let n = 0;
+  for(let i = 0; i + 1 < w.length; i += 2) if(w.charAt(i) === w.charAt(i+1)) n++;
+  return n;
+}
+
+function sameTail(w){
+  const t = w.charAt(1);
+  for(let i = 3; i < w.length; i += 2) if(w.charAt(i) !== t) return null;
+  return t;
 }
 
 /* ===================== РАЗБОР ЗАПРОСА =====================
@@ -105,8 +150,10 @@ function buildIndex(verdict){
    показывать под строкой поиска: «ищем номера, где 77 стоит в конце».
    Это дешёвая страховка от молчаливого недопонимания. */
 
-const MASK_CHARS = "0123456789?X*";
-const SEPARATORS = "  .-–—()/";
+// Звёздочка — одна любая цифра, как на roadpolice.am. Точка, ? и X
+// принимаются как её синонимы, но в интерфейсе не показываются.
+const MASK_CHARS = "0123456789?X*.";
+const SEPARATORS = "  -–—()/+";   // плюс — для записи вида +374…
 
 function cleanMask(text){
   let out = "";
@@ -117,20 +164,53 @@ function cleanMask(text){
     if(MASK_CHARS.indexOf(ch) < 0) return null;   // посторонний символ
     out += ch;
   }
-  return out;
+  // ОСОБЫЙ СЛУЧАЙ: человек вставил в поиск целый номер, записанный точками.
+  // Продавцы на list.am так пишут постоянно — «096.33.33.48», — чтобы их
+  // номер не находился поиском. Если убрать точки и остаётся ровно столько
+  // цифр, сколько в номере, значит это номер, а не маска: точки тут
+  // разделители. Иначе запрос молча превратился бы в «096?33?33?48» и
+  // отвалился бы с ошибкой «слишком длинно», что человеку непонятно.
+  let onlyDigits = out.replace(/\./g, "");
+  if(/^[0-9]+$/.test(onlyDigits) && onlyDigits.length >= 6){
+    // Приводим к тем же 8 цифрам, по которым работает индекс: отбрасываем
+    // международный префикс и ведущий ноль, как это делает сам движок.
+    if(onlyDigits.indexOf("00374") === 0)     onlyDigits = onlyDigits.slice(5);
+    else if(onlyDigits.indexOf("374") === 0)  onlyDigits = onlyDigits.slice(3);
+    if(onlyDigits.length === 9 && onlyDigits.charAt(0) === "0") onlyDigits = onlyDigits.slice(1);
+    return onlyDigits;
+  }
+
+  // Все синонимы приводим к одному виду: каждый знак — РОВНО одна цифра.
+  // «Сколько угодно цифр» намеренно не поддерживается: на roadpolice.am
+  // такого нет, а лишняя возможность здесь только путает.
+  return out.replace(/[.X*]/g, "?");
 }
 
-/* «5x5», «5*5», «пять пятёрок» — все формы записи «цифра N раз».
-   Ловим только однозначные: цифра, знак умножения, число. */
-const COUNT_RE = /^([0-9])\s*[xх×*]\s*([1-8])$/i;
-const COUNT_RE_REV = /^([1-8])\s*[xх×*]\s*([0-9])$/i;
+/* «5x5» — пятёрка пять раз. Звёздочки тут БОЛЬШЕ НЕТ: с версии 1.2 она
+   означает «одна любая цифра», и «5*5» — это маска, а не количество.
+   Оставлены только однозначные знаки умножения: латинская x, русская х
+   и знак ×. */
+const COUNT_RE = /^([0-9])\s*[xх×]\s*([1-8])$/i;
+const COUNT_RE_REV = /^([1-8])\s*[xх×]\s*([0-9])$/i;
 
 function parseQuery(text, options){
   options = options || {};
   const q = {
     mask: null, where: options.where || "any",
-    counts: [], family: options.family || null,
+    counts: [],
+    // families — СПИСОК: «покажи зеркальные ИЛИ с нулями». Старое поле
+    // family по-прежнему принимается, чтобы не ломать уже написанный код.
+    families: options.families ? options.families.slice()
+              : (options.family ? [options.family] : []),
+    family: options.family || null,
     statusMin: options.statusMin || null,
+    zerosMin: options.zerosMin || null,     // нулей в номере не меньше
+    pairsMin: options.pairsMin || null,     // пар по разбивке не меньше
+    repeatMin: options.repeatMin || null,   // самая частая цифра не реже
+    sameTail: options.sameTail || false,    // все пары кончаются одинаково
+    // Цена. max: null означает «без верхней границы» — потолка тут нет.
+    priceMin: options.priceMin != null ? options.priceMin : null,
+    priceMax: options.priceMax != null ? options.priceMax : null,
     error: null, hint: ""
   };
   const raw = String(text === undefined || text === null ? "" : text).trim();
@@ -138,8 +218,11 @@ function parseQuery(text, options){
   // Условия «цифра N раз» из отдельного элемента интерфейса
   if(options.counts) q.counts = options.counts.slice();
 
+  const hasFilter = q.counts.length || q.families.length || q.statusMin ||
+                    q.zerosMin || q.pairsMin || q.repeatMin || q.sameTail ||
+                    q.priceMin != null || q.priceMax != null;
   if(!raw){
-    if(!q.counts.length && !q.family && !q.statusMin) q.error = "search.empty";
+    if(!hasFilter) q.error = "search.empty";
     return q;
   }
 
@@ -157,7 +240,7 @@ function parseQuery(text, options){
   const mask = cleanMask(raw);
   if(mask === null){ q.error = "search.badChars"; return q; }
   if(!mask){ q.error = "search.empty"; return q; }
-  if(mask.replace(/\*/g, "").length > 8){ q.error = "search.tooLong"; return q; }
+  if(mask.length > 8){ q.error = "search.tooLong"; return q; }
 
   q.mask = mask;
   q.hint = "search.hint." + q.where;
@@ -172,9 +255,7 @@ function maskToRegExp(mask, where){
   let body = "";
   for(let i = 0; i < mask.length; i++){
     const ch = mask.charAt(i);
-    if(ch === "?" || ch === "X") body += "\\d";
-    else if(ch === "*") body += "\\d*";
-    else body += ch;
+    body += (ch === "?" || ch === "X" || ch === "*" || ch === ".") ? "\\d" : ch;
   }
   // Позиция считается по ТЕЛУ номера (6 цифр после кода оператора):
   // «в начале» человек имеет в виду начало номера, а не код оператора.
@@ -195,8 +276,21 @@ function matches(rec, q){
     const c = q.counts[i];
     if((rec.dc[c.digit] || 0) < c.min) return false;
   }
-  if(q.family && rec.fam !== q.family) return false;
+  // Группа узора: достаточно попадания в ЛЮБУЮ из выбранных.
+  if(q.families.length){
+    const have = rec.fams || (rec.fam ? [rec.fam] : []);
+    let hit = false;
+    for(let i = 0; i < q.families.length; i++)
+      if(have.indexOf(q.families[i]) >= 0){ hit = true; break; }
+    if(!hit) return false;
+  }
   if(q.statusMin && STATUS_RANK.indexOf(rec.st) < STATUS_RANK.indexOf(q.statusMin)) return false;
+  if(q.zerosMin  != null && (rec.zeros  || 0) < q.zerosMin)  return false;
+  if(q.pairsMin  != null && (rec.pa     || 0) < q.pairsMin)  return false;
+  if(q.repeatMin != null && (rec.maxrep || 0) < q.repeatMin) return false;
+  if(q.sameTail && !rec.tail) return false;
+  if(q.priceMin != null && !(rec.price >= q.priceMin)) return false;
+  if(q.priceMax != null && !(rec.price <= q.priceMax)) return false;
   return true;
 }
 
@@ -252,7 +346,8 @@ function toSql(q, table){
     let like = "";
     for(let i = 0; i < q.mask.length; i++){
       const ch = q.mask.charAt(i);
-      like += (ch === "?" || ch === "X") ? "_" : (ch === "*" ? "%" : ch);
+      // Каждый знак подстановки — ровно один символ, поэтому «_», а не «%».
+      like += (ch === "?" || ch === "X" || ch === "*" || ch === ".") ? "_" : ch;
     }
     if(q.where === "start")      like = "__" + like + "%";
     else if(q.where === "end")   like = "%" + like;
@@ -264,7 +359,18 @@ function toSql(q, table){
     where.push(t + "d" + q.counts[i].digit + " >= ?");
     params.push(q.counts[i].min);
   }
-  if(q.family){ where.push(t + "fam = ?"); params.push(q.family); }
+  // Группа узора — отдельный булев столбец на каждую группу: база
+  // индексирует их напрямую, и «любая из выбранных» превращается в OR.
+  if(q.families.length){
+    where.push("(" + q.families.map(function(f){ return t + "fam_" + f + " = TRUE"; }).join(" OR ") + ")");
+  }
+  if(q.zerosMin  != null){ where.push(t + "zeros >= ?");  params.push(q.zerosMin); }
+  if(q.pairsMin  != null){ where.push(t + "pa >= ?");     params.push(q.pairsMin); }
+  if(q.repeatMin != null){ where.push(t + "maxrep >= ?"); params.push(q.repeatMin); }
+  if(q.sameTail)         { where.push(t + "tail IS NOT NULL"); }
+  if(q.priceMin != null) { where.push(t + "price >= ?"); params.push(q.priceMin); }
+  // Верхней границы может не быть вовсе — это и есть «дороже миллиона».
+  if(q.priceMax != null) { where.push(t + "price <= ?"); params.push(q.priceMax); }
   if(q.statusMin){
     where.push(t + "st_rank >= ?"); params.push(STATUS_RANK.indexOf(q.statusMin));
   }
@@ -274,6 +380,10 @@ function toSql(q, table){
 return {
   VERSION: VERSION,
   STATUS_RANK: STATUS_RANK,
+  FAMILIES: FAMILIES,
+  PRICE_BUCKETS: PRICE_BUCKETS,
+  countAlignedPairs: countAlignedPairs,
+  sameTail: sameTail,
   buildIndex: buildIndex,
   parseQuery: parseQuery,
   maskToRegExp: maskToRegExp,

@@ -17,8 +17,8 @@ export type ValuedListing = {
   window: string | null;
   patternFrom: number | null;
   patternTo: number | null;
+  /** Сбор оператора за переоформление. Сидит ВНУТРИ цены, не сверх неё. */
   fee: number;
-  total: number;
   /** Запись для модуля поиска: маска, счётчики цифр, вид узора. */
   search: IndexRecord | null;
 };
@@ -110,20 +110,19 @@ export default function ListingCard({ item }: { item: ValuedListing }) {
         </div>
       )}
 
+      {/* Одна цена, а не три строки: сбор оператора внутри неё. Покупателю
+          важно, сколько он отдаст, — и это число одно при любом операторе. */}
       <div className="listing-card-cost">
-        <div>
-          <span>{tCost("seller")}</span>
+        <div className="price-total">
+          <span>{tCost("price")}</span>
           <b>{formatPrice(l.price)}</b>
         </div>
-        <div>
-          <span>{tCost("feeUnknownOperator")}</span>
-          {/* Плюс уместен только у ненулевого сбора: «+ Бесплатно» — бессмыслица. */}
-          <b>{item.fee > 0 ? `+ ${formatPrice(item.fee)}` : formatPrice(item.fee)}</b>
-        </div>
-        <div className="price-total">
-          <span>{tCost("total")}</span>
-          <b>{formatPrice(item.total)}</b>
-        </div>
+        {item.fee > 0 && (
+          <div>
+            <span>{tCost("feeInside")}</span>
+            <b>− {formatPrice(item.fee)}</b>
+          </div>
+        )}
       </div>
 
       <span className="listing-card-view">{t("view")}</span>

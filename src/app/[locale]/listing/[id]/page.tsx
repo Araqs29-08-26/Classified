@@ -63,21 +63,18 @@ export async function generateMetadata({
     operator: listing.operator,
   });
 
-  const total = verdict.ok ? listing.price + verdict.transferFee : listing.price;
-
+  // Цена в описании одна: сбор оператора сидит внутри неё, а не прибавляется.
   const description = verdict.ok
     ? tSeo("listingDescription", {
         number: listing.phone_number,
         tier: t(listing.status_tier),
         pattern: verdict.pattern,
         price: formatPrice(listing.price),
-        total: formatPrice(total),
       })
     : tSeo("listingDescriptionPlain", {
         number: listing.phone_number,
         tier: t(listing.status_tier),
         price: formatPrice(listing.price),
-        total: formatPrice(total),
       });
 
   const url = `${SITE_URL}/${params.locale}/listing/${listing.id}`;
@@ -250,21 +247,20 @@ export default async function ListingPage({
           <h3>{t("listing.cost.title")}</h3>
 
           <div className="price-breakdown">
-            <div>
-              <span>{t("listing.cost.seller")}</span>
+            <div className="price-total">
+              <span>{t("listing.cost.price")}</span>
               <b>{formatPrice(listing.price)}</b>
             </div>
+            {/* Сбор оператора сидит ВНУТРИ цены, а не сверх неё: покупатель
+                платит за номер, а не за оператора. От оператора зависит лишь
+                остаток продавцу. */}
             <div>
-              <span>
-                {listing.operator
-                  ? t("listing.cost.fee", { operator: listing.operator })
-                  : t("listing.cost.feeUnknownOperator")}
-              </span>
-              <b>{formatPrice(fee)}</b>
+              <span>{t("listing.cost.feeInside")}</span>
+              <b>− {formatPrice(fee)}</b>
             </div>
-            <div className="price-total">
-              <span>{t("listing.cost.total")}</span>
-              <b>{formatPrice(listing.price + fee)}</b>
+            <div>
+              <span>{t("listing.cost.sellerGets")}</span>
+              <b>{formatPrice(Math.max(0, listing.price - fee))}</b>
             </div>
           </div>
 
@@ -277,8 +273,8 @@ export default async function ListingPage({
           {verdict.ok && (
             <p className="cost-note">
               {t("listing.cost.range", {
-                from: formatAmount(verdict.sellerMin),
-                to: formatPrice(verdict.sellerMax),
+                from: formatAmount(verdict.priceMin),
+                to: formatPrice(verdict.priceMax),
               })}
             </p>
           )}

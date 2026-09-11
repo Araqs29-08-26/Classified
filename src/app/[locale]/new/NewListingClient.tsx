@@ -158,7 +158,8 @@ export default function NewListingClient() {
     [form.phone_number, form.operator, heldOverLimit, locale]
   );
 
-  const sellerPrice = Number(form.price) || 0;
+  /** Цена для покупателя целиком — её и вводит продавец. Сбор внутри неё. */
+  const askPrice = Number(form.price) || 0;
   const transferFee = verdict?.ok ? verdict.transferFee : 0;
 
   // Публикацию блокирует только неразобранный номер. Статус на неё не влияет:
@@ -600,27 +601,50 @@ export default function NewListingClient() {
               placeholder={t("formStep.pricePlaceholder")}
               required
             />
+            <p className="field-hint">{t("formStep.priceHint")}</p>
           </div>
 
-          {verdict?.ok && sellerPrice > 0 && (
+          {/* Рыночный диапазон показывается до того, как продавец назвал цену:
+              иначе он узнаёт, что промахнулся, уже после ввода. */}
+          {verdict?.ok && (
             <div className="price-breakdown">
               <div>
-                <span>{t("formStep.sellerPriceLabel")}</span>
-                <b>{formatPrice(sellerPrice)}</b>
-              </div>
-              <div>
-                <span>{t("formStep.feeLabel")}</span>
-                <b>
-                  {transferFee > 0
-                    ? `+ ${formatPrice(transferFee)}`
-                    : formatPrice(transferFee)}
-                </b>
+                <span>{t("formStep.priceRangeFrom")}</span>
+                <b>{formatPrice(verdict.priceMin)}</b>
               </div>
               <div className="price-total">
-                <span>{t("formStep.totalLabel")}</span>
-                <b>{formatPrice(sellerPrice + transferFee)}</b>
+                <span>{t("formStep.priceRangeTypical")}</span>
+                <b>{formatPrice(verdict.priceTypical)}</b>
+              </div>
+              <div>
+                <span>{t("formStep.priceRangeTo")}</span>
+                <b>{formatPrice(verdict.priceMax)}</b>
               </div>
             </div>
+          )}
+
+          {/* Что останется на руках: единственное, на что здесь влияет оператор. */}
+          {verdict?.ok && askPrice > 0 && (
+            <div className="price-breakdown">
+              <div className="price-total">
+                <span>{t("formStep.priceLabel")}</span>
+                <b>{formatPrice(askPrice)}</b>
+              </div>
+              {transferFee > 0 && (
+                <div>
+                  <span>{t("formStep.feeInsideLabel")}</span>
+                  <b>− {formatPrice(transferFee)}</b>
+                </div>
+              )}
+              <div>
+                <span>{t("formStep.sellerGetsLabel")}</span>
+                <b>{formatPrice(Math.max(0, askPrice - transferFee))}</b>
+              </div>
+            </div>
+          )}
+
+          {verdict?.ok && askPrice > verdict.priceMax && (
+            <p className="paid-note">{t("formStep.priceAboveMarket")}</p>
           )}
 
           <div className="field">

@@ -16,9 +16,11 @@ import {
   findSimilar,
   parseQuery,
   PATTERN_FAMILIES,
+  PRICE_BUCKETS,
   runSearch,
   type IndexRecord,
   type MaskPosition,
+  type PriceBucket,
 } from "@/lib/numberSearch";
 import {
   NUMBER_TYPES,
@@ -40,7 +42,8 @@ type Props = {
   initialSort?: string;
   initialMask?: string;
   initialWhere?: string;
-  initialPreset?: string;
+  initialFamily?: string;
+  initialPrice?: string;
 };
 
 function OperatorBadge({ op, small }: { op: string; small?: boolean }) {
@@ -72,16 +75,12 @@ function OperatorBadge({ op, small }: { op: string; small?: boolean }) {
 /** Все восемь статусов: обычные номера тоже размещаются и тоже ищутся. */
 const ALL_TIERS = TIERS.map((x) => x.name);
 
-/** Готовые узоры: каждый — семейство кодов, которые возвращает движок. */
-const PRESETS = [
-  { id: "mirror", prefixes: ["pal."] },
-  { id: "triple", prefixes: ["run.3", "run.4", "run.5", "run.6"] },
-  { id: "pairRepeat", prefixes: ["block.pair.", "pairs."] },
-  { id: "round", prefixes: ["zeros.tail."] },
-  { id: "ladder", prefixes: ["seq."] },
-] as const;
 const splitParam = (value?: string) =>
   value ? value.split(",").filter(Boolean) : [];
+
+/** Цена внутри корзины. У последней корзины верхней границы нет: max === null. */
+const inBucket = (price: number, b: PriceBucket) =>
+  price >= b.min && (b.max === null || price < b.max);
 
 export default function HomeClient({
   listings,
@@ -91,7 +90,8 @@ export default function HomeClient({
   initialSort = "",
   initialMask = "",
   initialWhere = "any",
-  initialPreset = "",
+  initialFamily = "",
+  initialPrice = "",
 }: Props) {
   const locale = useLocale();
   const t = useTranslations("home");
@@ -112,6 +112,10 @@ export default function HomeClient({
           locale,
         });
         const fee = v.ok ? v.transferFee : 0;
+        // Запись для модуля поиска знает и цену объявления: по ней модуль
+        // умеет отбирать сам, когда поиск переедет из памяти в базу.
+        const rec = v.ok ? buildIndex(v) : null;
+        if (rec) rec.price = l.price;
         return {
           listing: l,
           index: l.beauty_index ?? (v.ok ? v.index : null),
@@ -121,18 +125,11 @@ export default function HomeClient({
           patternFrom: v.ok ? v.patternFrom : null,
           patternTo: v.ok ? v.patternTo : null,
           fee,
-          total: l.price + fee,
-          // Запись для модуля поиска: маска, счётчики цифр, вид узора.
-          search: v.ok ? buildIndex(v) : null,
+          // Запись для модуля поиска: маска, счётчики цифр, виды узора.
+          search: rec,
         };
       }),
     [listings]
-  );
-
-  // Верхняя граница ползунка — по полной стоимости, ведь по ней и фильтруем.
-  const maxPrice = useMemo(
-    () => Math.max(TIERS[0].price, ...valued.map((x) => x.total), 1),
-    [valued]
   );
 
   const [selectedOperators, setSelectedOperators] = useState<string[]>(
@@ -154,14 +151,27 @@ export default function HomeClient({
       ? (initialWhere as MaskPosition)
       : "any"
   );
-  const [preset, setPreset] = useState<string>(initialPreset);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
+  /**
+   * Цена выбирается готовыми диапазонами, а не ползунком.
+   *
+   * У ползунка всегда есть верхний конец, и он отсекал самое дорогое — ровно
+   * те номера, ради которых площадку и открывают. У последней корзины верхней
+   * границы нет вовсе.
+   */
+  const [buckets, setBuckets] = useState<string[]>(splitParam(initialPrice));
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [onlyDescribed, setOnlyDescribed] = useState(false);
   // Чего маска не даёт в принципе: «цифра 4 встречается не менее пяти раз».
   const [countDigit, setCountDigit] = useState("");
   const [countMin, setCountMin] = useState(2);
-  const [family, setFamily] = useState("");
+  /**
+   * Виды узора — выбор нескольких сразу.
+   *
+   * Один номер почти всегда попадает в несколько видов: 041 10 90 90 — это и
+   * повтор блока, и нули. Пока вид выбирался один, разделы «Повторы», «Нули»
+   * и «Мало разных цифр» стояли пустыми.
+   */
+  const [families, setFamilies] = useState<string[]>(splitParam(initialFamily));
   /** На узком экране фильтры живут в выезжающей снизу панели. */
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -173,23 +183,16 @@ export default function HomeClient({
       prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value]
     );
 
-  const setMin = (value: number) =>
-    setPriceRange(([, hi]) => [Math.max(0, Math.min(value, hi)), hi]);
-  const setMax = (value: number) =>
-    setPriceRange(([lo]) => [lo, Math.min(maxPrice, Math.max(value, lo))]);
-
   const hasActiveFilters =
     selectedOperators.length > 0 ||
     selectedTiers.length > 0 ||
     selectedTypes.length > 0 ||
     !!mask.trim() ||
-    !!preset ||
     onlyVerified ||
     onlyDescribed ||
     !!countDigit ||
-    !!family ||
-    priceRange[0] > 0 ||
-    priceRange[1] < maxPrice;
+    families.length > 0 ||
+    buckets.length > 0;
 
   function resetFilters() {
     setSelectedOperators([]);
@@ -198,12 +201,11 @@ export default function HomeClient({
     setSort("");
     setMask("");
     setWhere("any");
-    setPreset("");
     setOnlyVerified(false);
     setOnlyDescribed(false);
     setCountDigit("");
-    setFamily("");
-    setPriceRange([0, maxPrice]);
+    setFamilies([]);
+    setBuckets([]);
   }
 
   // Счётчики считаются по всему списку, без учёта активных фильтров.
@@ -214,14 +216,20 @@ export default function HomeClient({
     return counts;
   }, [listings]);
 
-  const presetCounts = useMemo(() => {
+  /** Сколько номеров в каждом виде узора. Виды пересекаются — суммы не сходятся. */
+  const familyCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const p of PRESETS) {
-      counts[p.id] = valued.filter(
-        (x) =>
-          x.patternCode !== null &&
-          p.prefixes.some((prefix) => x.patternCode!.startsWith(prefix))
-      ).length;
+    for (const f of PATTERN_FAMILIES) counts[f] = 0;
+    for (const x of valued) {
+      for (const f of x.search?.fams ?? []) counts[f] = (counts[f] ?? 0) + 1;
+    }
+    return counts;
+  }, [valued]);
+
+  const bucketCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const b of PRICE_BUCKETS) {
+      counts[b.code] = valued.filter((x) => inBucket(x.listing.price, b)).length;
     }
     return counts;
   }, [valued]);
@@ -245,7 +253,8 @@ export default function HomeClient({
     if (sort) q.set("sort", sort);
     if (mask.trim()) q.set("mask", mask.trim());
     if (where !== "any") q.set("where", where);
-    if (preset) q.set("preset", preset);
+    if (families.length) q.set("family", families.join(","));
+    if (buckets.length) q.set("price", buckets.join(","));
 
     const query = q.toString();
     window.history.replaceState(
@@ -253,7 +262,16 @@ export default function HomeClient({
       "",
       query ? `${window.location.pathname}?${query}` : window.location.pathname
     );
-  }, [selectedOperators, selectedTiers, selectedTypes, sort, mask, where, preset]);
+  }, [
+    selectedOperators,
+    selectedTiers,
+    selectedTypes,
+    sort,
+    mask,
+    where,
+    families,
+    buckets,
+  ]);
 
   // Активные фильтры показываются чипами над списком: видно, что именно сузило
   // выдачу, и каждый снимается по отдельности, не сбрасывая остальные.
@@ -273,12 +291,19 @@ export default function HomeClient({
       label: tType(type),
       clear: () => toggle(setSelectedTypes, type),
     })),
-    ...(preset
-      ? [{ key: "preset", label: t(`presets.${preset}`), clear: () => setPreset("") }]
-      : []),
     ...(mask.trim()
       ? [{ key: "mask", label: mask.trim(), clear: () => setMask("") }]
       : []),
+    ...families.map((f) => ({
+      key: `family:${f}`,
+      label: engineMessage(`family.${f}`, locale),
+      clear: () => toggle(setFamilies, f),
+    })),
+    ...buckets.map((code) => ({
+      key: `price:${code}`,
+      label: engineMessage(code, locale),
+      clear: () => toggle(setBuckets, code),
+    })),
     ...(onlyVerified
       ? [{ key: "verified", label: t("filters.onlyVerified"), clear: () => setOnlyVerified(false) }]
       : []),
@@ -293,8 +318,6 @@ export default function HomeClient({
       : []),
   ];
 
-  const presetPrefixes = PRESETS.find((p) => p.id === preset)?.prefixes;
-
   // Написанное человеком разбирает сам модуль: он знает и «?», и «*», и то,
   // что «5x5» — это «пятёрка пять раз», а не маска. Сайт ничего не угадывает.
   const query = useMemo(
@@ -302,13 +325,13 @@ export default function HomeClient({
       parseQuery(mask, {
         where,
         counts: countDigit ? [{ digit: countDigit, min: countMin }] : [],
-        family: family || null,
+        families,
       }),
-    [mask, where, countDigit, countMin, family]
+    [mask, where, countDigit, countMin, families]
   );
 
   /** Задан ли вообще запрос: пустая строка без условий — это «показать всё». */
-  const hasQuery = !!mask.trim() || !!countDigit || !!family;
+  const hasQuery = !!mask.trim() || !!countDigit || families.length > 0;
 
   /**
    * Строка под полем поиска: расшифровка запроса словами либо причина отказа.
@@ -364,21 +387,21 @@ export default function HomeClient({
 
   const visible = useMemo(() => {
     const filtered = valued.filter(
-      ({ listing: l, patternCode, total, search: rec }) =>
+      ({ listing: l, search: rec }) =>
         (!selectedOperators.length || selectedOperators.includes(l.operator)) &&
         (!selectedTiers.length || selectedTiers.includes(l.status_tier)) &&
         (!selectedTypes.length || selectedTypes.includes(l.number_type)) &&
-        // Диапазон считается по ПОЛНОЙ стоимости: покупатель платит цену продавца
-        // плюс сбор оператора, и искать логично по тому, что он отдаст на руки.
-        !(total < priceRange[0]) &&
-        !(total > priceRange[1]) &&
+        // Корзины цены проверяются здесь, а не модулем: выбранных корзин может
+        // быть несколько и несоседних, а модуль принимает один диапазон — «до
+        // 50 000» вместе с «дороже миллиона» стали бы у него «всем подряд».
+        (!buckets.length ||
+          PRICE_BUCKETS.some(
+            (b) => buckets.includes(b.code) && inBucket(l.price, b)
+          )) &&
         (!onlyVerified || l.number_verified) &&
         (!onlyDescribed || !!l.description) &&
-        // Маску, счётчики цифр и вид узора проверяет модуль поиска.
-        (!searchHits || (rec !== null && searchHits.has(rec.w))) &&
-        (!presetPrefixes ||
-          (patternCode !== null &&
-            presetPrefixes.some((prefix) => patternCode.startsWith(prefix))))
+        // Маску, счётчики цифр и виды узора проверяет модуль поиска.
+        (!searchHits || (rec !== null && searchHits.has(rec.w)))
     );
 
     // Продвинутые объявления идут первыми при ЛЮБОЙ сортировке — за это и платят.
@@ -395,8 +418,6 @@ export default function HomeClient({
     if (sort === "price_asc") return by((x) => x.listing.price);
     if (sort === "price_desc") return by((x) => -x.listing.price);
     if (sort === "index_desc") return by((x) => -(x.index ?? -1));
-    if (sort === "total_asc") return by((x) => x.total);
-    if (sort === "total_desc") return by((x) => -x.total);
     return by((x) => -new Date(x.listing.created_at).getTime());
   }, [
     valued,
@@ -405,8 +426,7 @@ export default function HomeClient({
     selectedTypes,
     sort,
     mask,
-    priceRange,
-    presetPrefixes,
+    buckets,
     searchHits,
     onlyVerified,
     onlyDescribed,
@@ -546,81 +566,33 @@ export default function HomeClient({
         </div>
 
         <div className="filter-group">
-          <div className="filter-group-label">{t("filters.totalPriceLabel")}</div>
-          <p className="filters-hint">{t("filters.totalPriceHint")}</p>
-          <div className="price-range">
-            <div className="price-range-track-wrap">
-              <div className="price-range-fill" />
-              <div
-                className="price-range-fill-active"
-                style={{
-                  left: `${maxPrice ? (priceRange[0] / maxPrice) * 100 : 0}%`,
-                  right: `${maxPrice ? 100 - (priceRange[1] / maxPrice) * 100 : 0}%`,
-                }}
-              />
-              <input
-                type="range"
-                min={0}
-                max={maxPrice}
-                value={priceRange[0]}
-                aria-label={t("filters.priceFrom")}
-                onChange={(e) => setMin(Number(e.target.value))}
-              />
-              <input
-                type="range"
-                min={0}
-                max={maxPrice}
-                value={priceRange[1]}
-                aria-label={t("filters.priceTo")}
-                onChange={(e) => setMax(Number(e.target.value))}
-              />
-            </div>
-            <div className="price-range-inputs">
-              <input
-                type="number"
-                className="mono"
-                min={0}
-                max={priceRange[1]}
-                value={priceRange[0]}
-                aria-label={t("filters.priceFrom")}
-                onChange={(e) => setMin(Number(e.target.value) || 0)}
-              />
-              <span className="price-range-sep">—</span>
-              <input
-                type="number"
-                className="mono"
-                min={priceRange[0]}
-                max={maxPrice}
-                value={priceRange[1]}
-                aria-label={t("filters.priceTo")}
-                onChange={(e) => setMax(Number(e.target.value) || 0)}
-              />
-            </div>
+          <div className="filter-group-label">{t("filters.priceLabel")}</div>
+          <p className="filters-hint">{t("filters.priceHint")}</p>
+          {/* Готовые диапазоны вместо ползунка: у последнего верхней границы
+              нет, и самые дорогие номера больше не отсекаются. */}
+          <div className="presets">
+            {PRICE_BUCKETS.map((b) => {
+              const active = buckets.includes(b.code);
+              return (
+                <button
+                  key={b.code}
+                  type="button"
+                  className={"chip" + (active ? " active" : "")}
+                  aria-pressed={active}
+                  disabled={!active && bucketCounts[b.code] === 0}
+                  onClick={() => toggle(setBuckets, b.code)}
+                >
+                  {engineMessage(b.code, locale)}
+                  <span className="chip-count">{bucketCounts[b.code] ?? 0}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
 
         <details className="filter-extra">
           <summary>{t("filters.extraLabel")}</summary>
-
-        <div className="filter-group">
-          <div className="filter-group-label">{t("presetsLabel")}</div>
-          <div className="presets">
-            {PRESETS.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                className={"chip" + (preset === p.id ? " active" : "")}
-                aria-pressed={preset === p.id}
-                disabled={presetCounts[p.id] === 0}
-                onClick={() => setPreset(preset === p.id ? "" : p.id)}
-              >
-                {t(`presets.${p.id}`)}
-                <span className="chip-count">{presetCounts[p.id] ?? 0}</span>
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div className="filter-group">
           <div className="filter-group-label">{t("filters.digitCountLabel")}</div>
@@ -663,14 +635,28 @@ export default function HomeClient({
 
         <div className="filter-group">
           <div className="filter-group-label">{t("filters.familyLabel")}</div>
-          <select value={family} onChange={(e) => setFamily(e.target.value)}>
-            <option value="">{t("filters.familyAny")}</option>
-            {PATTERN_FAMILIES.map((f) => (
-              <option key={f} value={f}>
-                {engineMessage(`family.${f}`, locale)}
-              </option>
-            ))}
-          </select>
+          <p className="filters-hint">{t("filters.familyHint")}</p>
+          {/* Выбор нескольких видов сразу. Список с одним значением оставлял
+              разделы «Повторы», «Нули» и «Мало разных цифр» пустыми: номер
+              числился только в том виде, который задал ему статус. */}
+          <div className="presets">
+            {PATTERN_FAMILIES.map((f) => {
+              const active = families.includes(f);
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  className={"chip" + (active ? " active" : "")}
+                  aria-pressed={active}
+                  disabled={!active && familyCounts[f] === 0}
+                  onClick={() => toggle(setFamilies, f)}
+                >
+                  {engineMessage(`family.${f}`, locale)}
+                  <span className="chip-count">{familyCounts[f] ?? 0}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="filter-group">
@@ -747,8 +733,6 @@ export default function HomeClient({
                 <option value="index_desc">{t("filters.sortIndex")}</option>
                 <option value="price_asc">{t("filters.sortPriceAsc")}</option>
                 <option value="price_desc">{t("filters.sortPriceDesc")}</option>
-                <option value="total_asc">{t("filters.sortTotalAsc")}</option>
-                <option value="total_desc">{t("filters.sortTotalDesc")}</option>
               </select>
             </label>
           </div>
@@ -798,7 +782,7 @@ export default function HomeClient({
           <p className="three-lines">
             <span className="three-lines-icon" aria-hidden="true">i</span>
             <span>
-              <b>{t("threeLinesTitle")}</b> {t("threeLinesText")}
+              <b>{t("onePriceTitle")}</b> {t("onePriceText")}
             </span>
           </p>
         </>

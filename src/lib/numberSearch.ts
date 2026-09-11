@@ -22,10 +22,22 @@ export type IndexRecord = {
   st: string;
   st_rank: number;
   ix: number;
+  /**
+   * Все группы узоров номера.
+   *
+   * Именно список, а не одно значение: 041 10 90 90 — это и повтор блока,
+   * и нули. Пока группа была одна, разделы «Повторы», «Нули» и «Мало разных
+   * цифр» в фильтре стояли пустыми — номер числился только в той группе,
+   * которая задала статус.
+   */
+  fams: string[];
+  /** Группа, задавшая статус. Оставлена модулем для совместимости. */
   fam: string;
   pc: string;
   dis: number;
   op: string;
+  /** Цена объявления. Модуль отбирает по ней, если задан диапазон. */
+  price?: number;
   [extra: string]: unknown;
 };
 
@@ -33,27 +45,33 @@ export type SearchQuery = {
   mask: string | null;
   where: MaskPosition;
   counts: CountCondition[];
-  family: string | null;
+  /** Группы узора списком: подходит номер, у которого есть хотя бы одна из них. */
+  families: string[];
   statusMin: string | null;
+  priceMin: number | null;
+  /** null означает «без верхней границы»: потолка у цены в поиске нет. */
+  priceMax: number | null;
   /** Код ошибки для словаря либо null. */
   error: string | null;
   /** Код подсказки: расшифровка запроса человеческими словами. */
   hint: string;
 };
 
+/** Одна корзина цены для витрины. У последней верхней границы нет. */
+export type PriceBucket = { code: string; min: number; max: number | null };
+
 export const SEARCH_VERSION: string = search.VERSION;
 
-/** Виды узоров — для выпадающего списка. Порядок от частых к редким. */
-export const PATTERN_FAMILIES = [
-  "run",
-  "block",
-  "pairs",
-  "pal",
-  "seq",
-  "zeros",
-  "rhythm",
-  "distinct",
-] as const;
+/**
+ * Готовые диапазоны цены вместо ползунка.
+ *
+ * У ползунка всегда есть верхний конец, и он отсекал самое дорогое — ровно те
+ * номера, ради которых площадку и открывают. У последней корзины max === null.
+ */
+export const PRICE_BUCKETS: PriceBucket[] = search.PRICE_BUCKETS;
+
+/** Виды узоров — для фильтра. Порядок от частых к редким. */
+export const PATTERN_FAMILIES: string[] = search.FAMILIES;
 
 /** Запись индекса из вердикта движка. null, если номер не распознан. */
 export function buildIndex(verdict: EngineOk): IndexRecord | null {
@@ -66,13 +84,15 @@ export function parseQuery(
   options?: {
     where?: MaskPosition;
     counts?: CountCondition[];
-    family?: string | null;
+    families?: string[];
     statusMin?: string | null;
+    priceMin?: number | null;
+    priceMax?: number | null;
   }
 ): SearchQuery {
-  // Пакет типизирует family и statusMin своими объединениями строк; сайту
+  // Пакет типизирует families и statusMin своими объединениями строк; сайту
   // удобнее обычные строки, поэтому приводим явно.
-  return search.parseQuery(text, options as never) as SearchQuery;
+  return search.parseQuery(text, options as never) as unknown as SearchQuery;
 }
 
 export function runSearch<T extends IndexRecord>(records: T[], q: SearchQuery): T[] {
