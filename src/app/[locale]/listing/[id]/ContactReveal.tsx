@@ -7,25 +7,44 @@ import { supabase } from "@/lib/supabase";
 
 const onlyDigits = (p: string) => p.replace(/[^\d]/g, "");
 
+/**
+ * Связь с продавцом: телефон либо письмо.
+ *
+ * Продавец может зарегистрироваться по почте — тогда телефона у него нет,
+ * и прежняя кнопка не показывала ничего: объявление висит, а связаться не с
+ * кем. Теперь в этом случае открывается окно письма.
+ *
+ * Ни телефон, ни адрес почты не приходят вместе со страницей. Телефон
+ * отдаётся по нажатию и по одному объявлению, адрес почты не отдаётся вовсе:
+ * письмо уходит с сервера, а покупатель оставляет свой контакт для ответа.
+ * Причина одна и та же — списком контакты продавцов выгрузить нельзя.
+ */
 type State =
   | { kind: "hidden" }
   | { kind: "loading" }
-  | { kind: "shown"; phone: string }
-  | { kind: "missing" }
+  | { kind: "phone"; phone: string }
+  | { kind: "letter" }
+  | { kind: "sent" }
+  | { kind: "none" }
   | { kind: "failed" };
+
+/** Почему письмо не ушло — словами, которые человеку что-то говорят. */
+type SendError = "failed" | "tooMany" | null;
 
 export default function ContactReveal({ listingId }: { listingId: string }) {
   const t = useTranslations("listing.contact");
   const [state, setState] = useState<State>({ kind: "hidden" });
 
-  // Телефон намеренно не приходит вместе со страницей: до нажатия его нет ни
-  // в разметке, ни в данных страницы, поэтому его не соберут ни поисковики,
-  // ни простые сборщики. Функция в базе отдаёт телефон по одному объявлению
-  // и только для активного — списком телефоны выгрузить нельзя.
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<SendError>(null);
+
   async function reveal() {
     setState({ kind: "loading" });
 
-    const { data, error } = await supabase.rpc("listing_seller_phone", {
+    const { data, error } = await supabase.rpc("listing_seller_contact", {
       listing_id: listingId,
     });
 
@@ -34,18 +53,124 @@ export default function ContactReveal({ listingId }: { listingId: string }) {
       return;
     }
 
-    setState(data ? { kind: "shown", phone: String(data) } : { kind: "missing" });
+    // Функция возвращает строку таблицы — в ответе это список из одной записи.
+    const row = (Array.isArray(data) ? data[0] : data) as
+      | { phone: string | null; has_email: boolean }
+      | undefined;
+
+    if (row?.phone) setState({ kind: "phone", phone: String(row.phone) });
+    else if (row?.has_email) setState({ kind: "letter" });
+    else setState({ kind: "none" });
   }
 
-  if (state.kind === "missing") {
+  async function send(e: React.FormEvent) {
+    e.preventDefault();
+    setSending(true);
+    setSendError(null);
+
+    const { data, error } = await supabase.rpc("send_listing_message", {
+      listing_id: listingId,
+      writer_contact: contact,
+      body: message,
+      writer_name: name,
+    });
+
+    if (error) {
+      // Слишком частые письма — не поломка, а защита ящика продавца,
+      // и человеку надо сказать об этом иначе, чем об ошибке.
+      setSendError(error.message.includes("too_many") ? "tooMany" : "failed");
+      setSending(false);
+      return;
+    }
+
+    // Письмо уже сохранено. Если почта не уйдёт, оно всё равно на месте,
+    // а покупателю показывать ошибку незачем — он своё сделал.
+    void supabase.functions.invoke("notify-seller", {
+      body: { messageId: data },
+    });
+
+    setSending(false);
+    setState({ kind: "sent" });
+  }
+
+  if (state.kind === "none") {
     return (
       <p style={{ fontSize: 13, color: "var(--faint)", marginTop: 16 }}>
-        {t("noPhone")}
+        {t("noContact")}
       </p>
     );
   }
 
-  if (state.kind !== "shown") {
+  if (state.kind === "sent") {
+    return (
+      <div className="contact-box">
+        <b>{t("sentTitle")}</b>
+        <p style={{ margin: "6px 0 0", fontSize: 13 }}>{t("sentText")}</p>
+      </div>
+    );
+  }
+
+  if (state.kind === "letter") {
+    return (
+      <form className="contact-box contact-letter" onSubmit={send}>
+        <b>{t("writeTitle")}</b>
+        <p className="contact-letter-hint">{t("promptEmail")}</p>
+        <p className="contact-letter-hint">{t("writeHint")}</p>
+
+        <div className="field">
+          <label>{t("nameLabel")}</label>
+          <input
+            type="text"
+            value={name}
+            maxLength={100}
+            placeholder={t("namePlaceholder")}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+
+        <div className="field">
+          <label>{t("yourContactLabel")}</label>
+          <input
+            type="text"
+            value={contact}
+            maxLength={200}
+            placeholder={t("yourContactPlaceholder")}
+            onChange={(e) => setContact(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="field">
+          <label>{t("messageLabel")}</label>
+          <textarea
+            rows={4}
+            value={message}
+            maxLength={4000}
+            placeholder={t("messagePlaceholder")}
+            onChange={(e) => setMessage(e.target.value)}
+            required
+          />
+        </div>
+
+        {sendError && <p className="order-error">{t(sendError)}</p>}
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button className="btn btn-accent" type="submit" disabled={sending}>
+            {sending ? t("sending") : t("send")}
+          </button>
+          <button
+            className="btn btn-ghost"
+            type="button"
+            onClick={() => setState({ kind: "hidden" })}
+          >
+            {t("cancel")}
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  if (state.kind !== "phone") {
     return (
       <>
         <div className="contact-box">

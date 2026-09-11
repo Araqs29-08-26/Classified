@@ -823,6 +823,30 @@ a.card:hover {
   font-weight:600
 }
 
+.contact-letter {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  font-weight:400;
+  color:var(--ink)
+}
+
+.contact-letter b {
+  color:var(--accent-2)
+}
+
+.contact-letter-hint {
+  margin:0;
+  font-size:12.5px;
+  line-height:1.45;
+  color:var(--muted)
+}
+
+.contact-letter .field {
+  margin:0
+}
+
+
 form.card {
   max-width:520px
 }
