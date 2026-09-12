@@ -13,6 +13,7 @@ import { Link } from "@/i18n/navigation";
 import {
   evaluateNumber,
   OPERATOR_CODE,
+  recommendedPrice,
   type EngineResult,
 } from "@/lib/numberEngine";
 import {
@@ -167,6 +168,10 @@ export default function NewListingClient() {
   /** Цена для покупателя целиком — её и вводит продавец. Сбор внутри неё. */
   const askPrice = Number(form.price) || 0;
   const transferFee = verdict?.ok ? verdict.transferFee : 0;
+
+  // Рекомендация с поправкой на сбор оператора: советовать цену, при которой
+  // переоформление съедает больше, чем продавец получает, нельзя.
+  const advice = verdict?.ok ? recommendedPrice(verdict) : null;
 
   // Публикацию блокирует только неразобранный номер. Статус на неё не влияет:
   // размещение бесплатное для всех статусов, включая обычные.
@@ -616,15 +621,15 @@ export default function NewListingClient() {
             <div className="price-breakdown">
               <div>
                 <span>{t("formStep.priceRangeFrom")}</span>
-                <b>{formatPrice(verdict.priceMin)}</b>
+                <b>{formatPrice(advice!.min)}</b>
               </div>
               <div className="price-total">
                 <span>{t("formStep.priceRangeTypical")}</span>
-                <b>{formatPrice(verdict.priceTypical)}</b>
+                <b>{formatPrice(advice!.typical)}</b>
               </div>
               <div>
                 <span>{t("formStep.priceRangeTo")}</span>
-                <b>{formatPrice(verdict.priceMax)}</b>
+                <b>{formatPrice(advice!.max)}</b>
               </div>
             </div>
           )}
@@ -649,7 +654,11 @@ export default function NewListingClient() {
             </div>
           )}
 
-          {verdict?.ok && askPrice > verdict.priceMax && (
+          {verdict?.ok && advice!.raisedByFee && (
+            <p className="paid-note">{t("formStep.feeFloorNote")}</p>
+          )}
+
+          {verdict?.ok && askPrice > advice!.max && (
             <p className="paid-note">{t("formStep.priceAboveMarket")}</p>
           )}
 

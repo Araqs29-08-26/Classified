@@ -35,6 +35,17 @@ export default function AccountClient() {
   /** Объявление, для которого открыто окно продвижения. */
   const [promoFor, setPromoFor] = useState<Listing | null>(null);
 
+  /**
+   * Правка объявления: открыта на одном объявлении за раз.
+   *
+   * Меняются только цена и описание — остальное в карточке либо подтверждено
+   * (номер), либо посчитано движком (статус), и правка сделала бы её неправдой.
+   */
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editPrice, setEditPrice] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+
   // Не вошедшему в кабинете делать нечего — отправляем на вход.
   useEffect(() => {
     if (!sessionLoading && !user) router.replace("/login");
@@ -103,6 +114,42 @@ export default function AccountClient() {
 
     setBusyId(null);
     if (!error) void load();
+  }
+
+  function startEdit(listing: Listing) {
+    setEditId(listing.id);
+    setEditPrice(String(listing.price));
+    setEditDescription(listing.description ?? "");
+    setEditError(null);
+  }
+
+  async function saveEdit(listing: Listing) {
+    const price = Number(editPrice);
+    if (!Number.isFinite(price) || price <= 0) {
+      setEditError(t("editBadPrice"));
+      return;
+    }
+
+    setBusyId(listing.id);
+    setEditError(null);
+
+    const { error } = await supabase
+      .from("listings")
+      .update({
+        price,
+        description: editDescription.trim() || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", listing.id);
+
+    setBusyId(null);
+    if (error) {
+      setEditError(t("editFailed"));
+      return;
+    }
+
+    setEditId(null);
+    void load();
   }
 
   async function setStatus(listing: Listing, status: string) {
@@ -214,6 +261,14 @@ export default function AccountClient() {
                       </button>
                     )}
                   </span>
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    onClick={() => (editId === l.id ? setEditId(null) : startEdit(l))}
+                  >
+                    {t("edit")}
+                  </button>
+
                   {isExpired(l) ? (
                     <button
                       className="btn btn-accent"
@@ -240,6 +295,60 @@ export default function AccountClient() {
                     </button>
                   )}
                 </div>
+              )}
+
+              {tab === "listings" && editId === l.id && (
+                <form
+                  className="account-edit"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void saveEdit(l);
+                  }}
+                >
+                  <b>{t("editTitle")}</b>
+
+                  <div className="field">
+                    <label>{t("editPriceLabel")}</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={editPrice}
+                      onChange={(e) => setEditPrice(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label>{t("editDescriptionLabel")}</label>
+                    <textarea
+                      rows={3}
+                      value={editDescription}
+                      placeholder={t("editDescriptionPlaceholder")}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                    />
+                  </div>
+
+                  <p className="account-edit-hint">{t("editHint")}</p>
+
+                  {editError && <p className="order-error">{editError}</p>}
+
+                  <div className="account-edit-actions">
+                    <button
+                      className="btn btn-accent"
+                      type="submit"
+                      disabled={busyId === l.id}
+                    >
+                      {busyId === l.id ? t("working") : t("editSave")}
+                    </button>
+                    <button
+                      className="btn btn-ghost"
+                      type="button"
+                      onClick={() => setEditId(null)}
+                    >
+                      {t("editCancel")}
+                    </button>
+                  </div>
+                </form>
               )}
             </div>
           ))}

@@ -13,6 +13,7 @@ import {
   engineMessage,
   evaluateNumber,
   OPERATOR_CODE,
+  recommendedPrice,
 } from "@/lib/numberEngine";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
@@ -298,11 +299,11 @@ export default async function ListingPage({
           )}
 
           {/* У обычного номера движок цены не называет — показывать нечего. */}
-          {verdict.ok && verdict.priceMax > 0 && (
+          {verdict.ok && recommendedPrice(verdict).max > 0 && (
             <p className="cost-note">
               {t("listing.cost.range", {
-                from: formatAmount(verdict.priceMin),
-                to: formatPrice(verdict.priceMax),
+                from: formatAmount(recommendedPrice(verdict).min),
+                to: formatPrice(recommendedPrice(verdict).max),
               })}
             </p>
           )}

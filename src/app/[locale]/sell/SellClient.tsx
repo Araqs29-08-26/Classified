@@ -12,6 +12,7 @@ import {
   fillMessage,
   OPERATOR_CODE,
   OPERATOR_NAME,
+  recommendedPrice,
   type EngineResult,
 } from "@/lib/numberEngine";
 import { formatPrice, formatAmount, OPERATOR_META } from "@/lib/supabase";
@@ -103,21 +104,22 @@ export default function SellClient() {
   // непонятная запись, буква внутри номера или несколько номеров в строке.
   const error = result && !result.ok ? result.error : null;
 
+  // Рекомендация с поправкой на сбор: советовать цену ниже сбора нельзя.
+  const advice = result && result.ok ? recommendedPrice(result) : null;
+
   const ctaHref =
     result && result.ok
       ? `/new?number=${encodeURIComponent(asked)}&tier=${encodeURIComponent(
           result.status
-        )}&price=${result.priceTypical}&type=${encodeURIComponent(
+        )}&price=${advice?.typical ?? 0}&type=${encodeURIComponent(
           detected?.numberType ?? "Мобильный"
         )}${operator ? `&operator=${encodeURIComponent(operator)}` : ""}`
       : "/new";
 
   // Где стоит отметка «рекомендуем» внутри полосы диапазона.
   const markPercent =
-    result && result.ok && result.priceMax > result.priceMin
-      ? ((result.priceTypical - result.priceMin) /
-          (result.priceMax - result.priceMin)) *
-        100
+    advice && advice.max > advice.min
+      ? ((advice.typical - advice.min) / (advice.max - advice.min)) * 100
       : 50;
 
   return (
@@ -262,7 +264,7 @@ export default function SellClient() {
 
           {/* Нулевая цена — это не «бесплатно», а «движок не берётся считать».
               Показывать полосу диапазона от нуля до нуля незачем. */}
-          {result.priceMax === 0 ? (
+          {advice!.max === 0 ? (
             <p className="notice">{tr("noPrice")}</p>
           ) : (
           <div className="range">
@@ -272,31 +274,34 @@ export default function SellClient() {
             <div className="range-ends">
               <span>
                 <em>{tr("rangeLow")}</em>
-                <b>{formatAmount(result.priceMin)}</b>
+                <b>{formatAmount(advice!.min)}</b>
               </span>
               <span className="range-rec">
                 <em>{tr("rangeRec")}</em>
-                <b>{formatPrice(result.priceTypical)}</b>
+                <b>{formatPrice(advice!.typical)}</b>
               </span>
               <span className="range-high">
                 <em>{tr("rangeHigh")}</em>
-                <b>{formatAmount(result.priceMax)}</b>
+                <b>{formatAmount(advice!.max)}</b>
               </span>
             </div>
             <p className="breakdown-hint">{tr("priceHint")}</p>
+            {advice!.raisedByFee && (
+              <p className="breakdown-hint">{tr("feeFloorNote")}</p>
+            )}
           </div>
           )}
 
           {/* Схема версии 5.0: сбор оператора сидит ВНУТРИ рыночной цены,
               а не прибавляется к ней. Иначе два одинаковых по узору номера
               стоили бы покупателю разных денег — только из-за симки. */}
-          {result.priceMax > 0 && (
+          {advice!.max > 0 && (
           <table className="money-table">
             <tbody>
               <tr className="money-total">
                 <td>{engineMessage("price.marketLabel", locale)}</td>
                 <td className="col-right mono">
-                  {formatAmount(result.priceMin)} – {formatPrice(result.priceMax)}
+                  {formatAmount(advice!.min)} – {formatPrice(advice!.max)}
                 </td>
               </tr>
               <tr>
@@ -309,15 +314,15 @@ export default function SellClient() {
               <tr>
                 <td>{engineMessage("price.sellerLabel", locale)}</td>
                 <td className="col-right mono">
-                  {formatAmount(result.sellerGetsMin)} –{" "}
-                  {formatPrice(result.sellerGetsMax)}
+                  {formatAmount(advice!.sellerMin)} –{" "}
+                  {formatPrice(advice!.sellerMax)}
                 </td>
               </tr>
             </tbody>
           </table>
           )}
 
-          {result.priceMax > 0 && (
+          {advice!.max > 0 && (
             <p className="breakdown-hint">
               {engineMessage("price.rangeExplained", locale)}
             </p>
@@ -342,9 +347,9 @@ export default function SellClient() {
               number={asked}
               status={tTiers(result.status)}
               index={result.index}
-              priceFrom={formatAmount(result.priceMin)}
-              priceTo={formatPrice(result.priceMax)}
-              hasPrice={result.priceMax > 0}
+              priceFrom={formatAmount(advice!.min)}
+              priceTo={formatPrice(advice!.max)}
+              hasPrice={advice!.max > 0}
             />
           </div>
 

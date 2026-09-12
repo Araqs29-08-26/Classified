@@ -80,7 +80,6 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
   const t = await getTranslations({ locale, namespace: "nav" });
-  const tRoot = await getTranslations({ locale });
 
   return (
     <html lang={locale}>
@@ -112,10 +111,6 @@ export default async function LocaleLayout({
               </nav>
             </div>
           </header>
-
-          {/* Бесплатные размещения кончатся — человек должен знать об этом
-              заранее, а не в день, когда они кончились. */}
-          <p className="beta-strip">{tRoot("betaStrip")}</p>
 
           <main className="wrap">{children}</main>
 

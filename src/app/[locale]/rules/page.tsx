@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 import { Link } from "@/i18n/navigation";
-import { EXTRA_LISTING_PRICE } from "@/lib/promoPrices";
+import { BETA_PROMO, EXTRA_LISTING_PRICE } from "@/lib/promoPrices";
 import RulesNav from "./RulesNav";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +35,10 @@ export default async function RulesPage({
       <p>{t("postingFree")}</p>
       <p>{t("postingTerm")}</p>
       <p>{t("postingSecond", { amount: EXTRA_LISTING_PRICE })}</p>
+
+      {/* Акция стоит отдельным абзацем и исчезнет вместе с ней самой:
+          правило выше остаётся верным и после её окончания. */}
+      {BETA_PROMO && <p className="legal-note">{t("postingPromo")}</p>}
 
       <h2>{t("postingWhoTitle")}</h2>
       <p>{t("postingWho")}</p>

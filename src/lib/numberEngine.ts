@@ -221,6 +221,50 @@ export function engineMessage(code: string, locale: string): string {
   return Array.isArray(value) ? value[0] : value;
 }
 
+/** Что советовать по цене: диапазон для покупателя и остаток продавцу. */
+export type PriceAdvice = {
+  min: number;
+  typical: number;
+  max: number;
+  sellerMin: number;
+  sellerTypical: number;
+  sellerMax: number;
+  /** Нижняя граница поднята до сбора оператора, а не взята у движка. */
+  raisedByFee: boolean;
+};
+
+/**
+ * Рекомендованная цена с поправкой на сбор оператора.
+ *
+ * Движок считает рыночный диапазон по узору цифр — одинаково для всех
+ * операторов, и это верно: покупатель платит за номер. Но сбор за
+ * переоформление у операторов разный, и у Viva он бывает выше нижней границы
+ * диапазона. Тогда движок советовал цену, при которой продавец отдаёт за
+ * переоформление больше, чем получает за номер.
+ *
+ * Советовать такое нельзя. Нижняя граница поднимается до сбора: дешевле
+ * продавать просто незачем. Верхняя и сам расчёт движка не трогаются.
+ */
+export function recommendedPrice(verdict: EngineOk): PriceAdvice {
+  const fee = verdict.transferFee;
+
+  // Сбор выше всего рыночного диапазона — редкий, но возможный случай:
+  // тогда единственная осмысленная цена и есть сбор.
+  const max = Math.max(verdict.priceMax, fee);
+  const min = Math.min(Math.max(verdict.priceMin, fee), max);
+  const typical = Math.min(Math.max(verdict.priceTypical, min), max);
+
+  return {
+    min,
+    typical,
+    max,
+    sellerMin: Math.max(0, min - fee),
+    sellerTypical: Math.max(0, typical - fee),
+    sellerMax: Math.max(0, max - fee),
+    raisedByFee: min > verdict.priceMin,
+  };
+}
+
 export function evaluateNumber(input: string, options?: EngineOptions): EngineResult {
   const { locale = "ru", ...rest } = options ?? {};
   return engine.evaluate(input, {
