@@ -658,6 +658,14 @@ export default function NewListingClient() {
             <p className="paid-note">{t("formStep.feeFloorNote")}</p>
           )}
 
+          {/* Ниже сбора — случай хуже, чем «дороже рынка»: там продавец просто
+              долго ждёт покупателя, а здесь уходит в минус. */}
+          {verdict?.ok && askPrice > 0 && askPrice < transferFee && (
+            <p className="paid-note">
+              {t("formStep.priceBelowFee", { fee: formatPrice(transferFee) })}
+            </p>
+          )}
+
           {verdict?.ok && askPrice > advice!.max && (
             <p className="paid-note">{t("formStep.priceAboveMarket")}</p>
           )}

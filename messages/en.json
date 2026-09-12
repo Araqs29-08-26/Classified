@@ -214,7 +214,8 @@
       "priceHint": "This is the full price for the buyer: the operator's transfer fee already sits inside it. You set the price yourself — the range below is only a hint, we do not require you to keep to it.",
       "feeInsideLabel": "including the transfer fee",
       "sellerGetsLabel": "You will receive",
-      "feeFloorNote": "The lower bound has been raised to the operator's fee: selling cheaper makes no sense — the transfer would cost more than you get for the number."
+      "feeFloorNote": "The lower bound has been raised to the operator's fee: selling cheaper makes no sense — the transfer would cost more than you get for the number.",
+      "priceBelowFee": "This price is below the transfer fee ({fee}) — the number would cost the buyer less than the transfer itself, and you would be left with nothing. You set the price, but do check it."
     },
     "doneStep": {
       "title": "Done!",
