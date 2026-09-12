@@ -23,12 +23,12 @@
       "allTypes": "All number types",
       "apply": "Apply",
       "maskLabel": "Number mask",
-      "maskHint": "“*” is one digit of any value: “5*5” finds 505, 515, 525. Spaces and hyphens do not matter.",
+      "maskHint": "An asterisk stands in for a digit you do not know: 77**77 is a number whose middle does not matter. Spaces and hyphens can go wherever you like.",
       "maskClear": "Clear",
       "operatorLabel": "Operator",
       "statusLabel": "Status",
       "typeLabel": "Number type",
-      "priceLabel": "Price, ֏",
+      "priceLabel": "Price range",
       "sortLabel": "Sort",
       "sortIndex": "Most beautiful first",
       "indexShort": "index",
@@ -44,7 +44,7 @@
       "familyLabel": "Pattern kind",
       "familyAny": "Any",
       "foundSuffix": "Found: {count}",
-      "maskPlaceholder": "e.g. 77 or 5*5",
+      "maskPlaceholder": "e.g. 77",
       "whereLabel": "Where to look",
       "whereAny": "Anywhere",
       "whereStart": "At the start",
@@ -55,7 +55,7 @@
       "digitCountHint": "For example, five fives — anywhere in the number",
       "timesLabel": "at least",
       "timesUnit": "times",
-      "priceHint": "The operator's transfer fee already sits inside it",
+      "priceHint": "The operator's transfer fee already sits inside the price",
       "priceAny": "Any",
       "familyHint": "One number belongs to several kinds at once"
     },
@@ -89,7 +89,6 @@
     },
     "similarTitle": "No exact matches. Here are numbers that differ by a single digit:",
     "find": "Search",
-    "legendAny": "— one digit of any value",
     "valuerEyebrow": "Free, no sign-up",
     "valuerTitle": "What is your number worth?",
     "valuerText": "Status, pattern, market price and the operator's transfer fee",
@@ -101,8 +100,7 @@
     "filtersTitle": "More filters",
     "filtersClose": "Close",
     "onePriceTitle": "Why there is only one price.",
-    "onePriceText": "A buyer pays for the number, not for the operator. So the price in a listing is the whole of it: the operator's transfer fee already sits inside. The operator only affects how much of that sum the seller keeps.",
-    "legendTimes": "— a five five times, anywhere in the number"
+    "onePriceText": "A buyer pays for the number, not for the operator. So the price in a listing is the whole of it: the operator's transfer fee already sits inside. The operator only affects how much of that sum the seller keeps."
   },
   "listing": {
     "verified": "✓ ownership verified by SMS",
@@ -270,20 +268,27 @@
       "rangeLow": "lower bound",
       "rangeRec": "recommended",
       "rangeHigh": "upper bound",
-      "operatorNote": "Operator (by the number's code): {operator} — confirm when posting if the number has been ported.",
-      "operatorUnknown": "The operator could not be determined from the number — you will pick it manually when posting.",
       "cta": "Post this number",
       "disclaimer": "This is an automatic valuation based on the pattern of digits — you set the final price yourself when posting.",
       "featuresTitle": "What the number contains",
-      "priceHint": "The seller picks a price inside the range. Above the upper bound, numbers of this status take a long time to sell — but such a price cannot be forbidden: the owner sets it."
+      "priceHint": "The seller picks a price inside the range. Above the upper bound, numbers of this status take a long time to sell — but such a price cannot be forbidden: the owner sets it.",
+      "noPrice": "The engine puts no price on an ordinary number: such numbers sell rarely and by agreement. You set the price yourself when you post the listing."
     },
     "share": {
       "button": "Send to a friend",
       "title": "A number valued on Araqs",
       "text": "I had {number} valued on Araqs: status “{status}”, beauty index {index}, market price {from} – {to}. Have a look:",
       "copy": "Copy the link",
-      "copied": "Link copied"
-    }
+      "copied": "Link copied",
+      "textNoPrice": "I had {number} valued on Araqs: status “{status}”, beauty index {index}. Have a look:"
+    },
+    "operatorLabel": "Operator",
+    "operatorHint": "Detected from the number's code. If the number was ported to another operator, correct it — the transfer fee depends on this.",
+    "heldLabel": "Have you held the number for more than two years?",
+    "heldHint": "At Viva, holding a number for over two years costs only 500 ֏; otherwise the full category price is added.",
+    "heldYes": "More than two years",
+    "heldNo": "Less than two years",
+    "heldUnknown": "I don't know"
   },
   "numberTypes": {
     "Мобильный": "Mobile",

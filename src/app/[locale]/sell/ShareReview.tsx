@@ -21,12 +21,15 @@ export default function ShareReview({
   index,
   priceFrom,
   priceTo,
+  hasPrice,
 }: {
   number: string;
   status: string;
   index: number;
   priceFrom: string;
   priceTo: string;
+  /** У обычного номера движок цены не называет — тогда её нет и в сообщении. */
+  hasPrice: boolean;
 }) {
   const t = useTranslations("sell.share");
   const [open, setOpen] = useState(false);
@@ -40,30 +43,66 @@ export default function ShareReview({
   }
 
   function text(): string {
-    return t("text", { number, status, index, from: priceFrom, to: priceTo });
+    return hasPrice
+      ? t("text", { number, status, index, from: priceFrom, to: priceTo })
+      : t("textNoPrice", { number, status, index });
   }
 
   async function share() {
     const url = link();
+    const data = { title: t("title"), text: text(), url };
 
-    // Своё окно показывается только там, где системного нет: на телефоне
-    // системное знает, какие мессенджеры у человека стоят, а список кнопок —
-    // нет. Отмена в системном окне — это не ошибка, и её нечем заменять.
-    if (typeof navigator !== "undefined" && navigator.share) {
+    // Сначала пробуем системное окно «Поделиться»: на телефоне оно знает,
+    // какие мессенджеры у человека вправду стоят, а список кнопок — нет.
+    //
+    // Но полагаться на него одно нельзя. На настольном браузере оно есть
+    // далеко не везде, а там, где есть, умеет отказать — и тогда нажатие
+    // не даёт НИЧЕГО, кнопка выглядит сломанной. Поэтому любой отказ, кроме
+    // осознанной отмены человеком, разворачивает наш собственный список.
+    const canShare =
+      typeof navigator !== "undefined" &&
+      typeof navigator.share === "function" &&
+      (typeof navigator.canShare !== "function" || navigator.canShare(data));
+
+    if (canShare) {
       try {
-        await navigator.share({ title: t("title"), text: text(), url });
+        await navigator.share(data);
         return;
-      } catch {
-        return;
+      } catch (error) {
+        // Человек сам закрыл системное окно — значит, передумал.
+        if ((error as { name?: string })?.name === "AbortError") return;
       }
     }
 
     setOpen((prev) => !prev);
   }
 
-  function copy() {
-    void navigator.clipboard?.writeText(`${text()} ${link()}`);
-    setCopied(true);
+  async function copy() {
+    const full = `${text()} ${link()}`;
+
+    // Буфер обмена доступен не всегда: в некоторых браузерах его просто нет,
+    // а по незащищённому соединению он отключён. Говорить «скопировано», когда
+    // ничего не скопировалось, нельзя — человек вставит пустоту и не поймёт.
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(full);
+        setCopied(true);
+        return;
+      }
+    } catch {
+      // Пробуем старый способ ниже.
+    }
+
+    const box = document.createElement("textarea");
+    box.value = full;
+    box.setAttribute("readonly", "");
+    box.style.position = "fixed";
+    box.style.opacity = "0";
+    document.body.appendChild(box);
+    box.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(box);
+    setCopied(ok);
   }
 
   const message = () => encodeURIComponent(`${text()} ${link()}`);
@@ -97,7 +136,7 @@ export default function ShareReview({
           <a className="btn btn-ghost" href={`viber://forward?text=${message()}`}>
             Viber
           </a>
-          <button type="button" className="btn btn-ghost" onClick={copy}>
+          <button type="button" className="btn btn-ghost" onClick={() => void copy()}>
             {copied ? t("copied") : t("copy")}
           </button>
         </div>

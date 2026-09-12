@@ -68,18 +68,50 @@ const vivaLong = E.evaluate("+374 41 10 90 90", {
 check("Viva дольше двух лет — сбор", vivaLong.transferFee, 500);
 
 console.log("3. Поиск");
+// Всё, что набрано в строке, читается как маска. Сокращение «5x5» («пятёрка
+// пять раз») убрано: человек набирал «5*5», имея в виду маску, а получал
+// фильтр по количеству — молча и не тем.
 const q5x5 = S.parseQuery("5x5");
-check("«5x5» — счётчик, а не маска", JSON.stringify(q5x5.counts), '[{"digit":"5","min":5}]');
-check("«5x5» без маски", q5x5.mask, null);
+check("«5x5» — маска, а не счётчик", q5x5.mask, "5?5");
+check("«5x5» без счётчика", q5x5.counts.length, 0);
 const q5m5 = S.parseQuery("5*5");
 check("«5*5» — маска", q5m5.mask, "5?5");
 check("«5*5» без счётчика", q5m5.counts.length, 0);
+// В подсказке показывается запись человека, а не внутренняя форма со знаком «?».
+check("«5*5» — что показать человеку", q5m5.maskDisplay, "5*5");
+check("«5**5» — что показать человеку", S.parseQuery("5**5").maskDisplay, "5**5");
 const qDots = S.parseQuery("096.33.33.48");
 check("«096.33.33.48» — маска по всему окну", qDots.mask, "96333348");
 const qBad = S.parseQuery("абв");
 check("«абв» — понятная ошибка", qBad.error, "search.badChars");
 const qEmpty = S.parseQuery("");
 check("пустой запрос — код «пусто»", qEmpty.error, "search.empty");
+
+/*
+ * Похожие номера не должны ронять страницу.
+ *
+ * findSimilar() из модуля собирает запросы-варианты сама и кладёт в них
+ * устаревшее поле family вместо families, а отбор читает families.length —
+ * и падает. На сайте это был белый экран вместо всей страницы. Поэтому на
+ * сайте похожие ищет своя обёртка (src/lib/numberSearch.ts); здесь
+ * проверяется, что ошибка модуля никуда не делась и обёртку убирать рано.
+ */
+const sample = [
+  "+37455674901", "+37441109090", "+37493909977",
+  "+37411220744", "+37495250806", "+37444841414",
+].map((n) => S.buildIndex(E.evaluate(n, { messages: ru })));
+
+let moduleStillBroken = false;
+try {
+  S.findSimilar(sample, S.parseQuery("77", { families: [] }));
+} catch {
+  moduleStillBroken = true;
+}
+if (!moduleStillBroken) {
+  console.log(
+    "  ЗАМЕТКА: findSimilar в модуле починен — свою обёртку в numberSearch.ts можно убрать"
+  );
+}
 
 console.log("Корзины цены: у последней потолка нет");
 const last = S.PRICE_BUCKETS[S.PRICE_BUCKETS.length - 1];

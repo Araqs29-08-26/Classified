@@ -55,6 +55,14 @@ export type SearchQuery = {
   error: string | null;
   /** Код подсказки: расшифровка запроса человеческими словами. */
   hint: string;
+  /**
+   * Маска так, как её набрал человек — со звёздочками.
+   *
+   * В подсказке показывать надо именно её: в поле mask лежит внутренняя
+   * запись со знаком «?», которого человек не вводил. Увидев «5?5» вместо
+   * своего «5*5», он решит, что ошибся.
+   */
+  maskDisplay: string | null;
 };
 
 /** Одна корзина цены для витрины. У последней верхней границы нет. */
@@ -95,11 +103,59 @@ export function parseQuery(
   return search.parseQuery(text, options as never) as unknown as SearchQuery;
 }
 
+/**
+ * Отбор номеров по запросу.
+ *
+ * Ошибка внутри модуля не должна ронять страницу. Поиск — часть каталога, а
+ * не весь каталог: если он сломается, человек должен увидеть пустую выдачу и
+ * шапку сайта, а не белый экран. Поэтому падение перехватывается и остаётся
+ * в консоли разработчика.
+ */
 export function runSearch<T extends IndexRecord>(records: T[], q: SearchQuery): T[] {
-  return search.search(records as never, q as never) as unknown as T[];
+  try {
+    return search.search(records as never, q as never) as unknown as T[];
+  } catch (error) {
+    console.error("поиск не отработал", error);
+    return [];
+  }
 }
 
-/** Номера, отличающиеся одной цифрой. Показываются, когда точных ноль. */
+/**
+ * Номера, отличающиеся одной цифрой. Показываются, когда точных ноль.
+ *
+ * ПОЧЕМУ НЕ ФУНКЦИЯ МОДУЛЯ. Её findSimilar() собирает запросы-варианты сама
+ * и кладёт в них устаревшее поле family вместо families. Отбор в том же
+ * модуле читает q.families.length — и на первом же подошедшем номере падает
+ * с ошибкой. На сайте это выглядело как белый экран вместо страницы: любой
+ * поиск по маске без точных совпадений убивал её целиком, вместе с шапкой и
+ * каталогом. В версии 1.3 поведение то же — проверено.
+ *
+ * Здесь запрос не собирается заново: берётся исходный и в нём подменяется
+ * одна цифра маски. Все прочие условия — вид узора, повторы цифр, цена —
+ * остаются как были, а сам отбор по-прежнему делает модуль.
+ */
 export function findSimilar<T extends IndexRecord>(records: T[], q: SearchQuery): T[] {
-  return search.findSimilar(records as never, q as never) as unknown as T[];
+  if (!q.mask || q.error) return [];
+
+  const seen = new Set<string>();
+  const out: T[] = [];
+
+  for (let i = 0; i < q.mask.length; i += 1) {
+    const ch = q.mask.charAt(i);
+    // Место, где цифра и так любая, подменять нечем.
+    if (ch === "?" || ch === "X") continue;
+
+    const variant: SearchQuery = {
+      ...q,
+      mask: q.mask.slice(0, i) + "?" + q.mask.slice(i + 1),
+    };
+
+    for (const rec of runSearch(records, variant)) {
+      if (seen.has(rec.w)) continue;
+      seen.add(rec.w);
+      out.push(rec);
+    }
+  }
+
+  return out.sort((a, b) => b.ix - a.ix);
 }

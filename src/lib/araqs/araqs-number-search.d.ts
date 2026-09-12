@@ -64,6 +64,12 @@ export interface SearchQuery {
   error: string | null;
   /** Код подсказки для словаря: "search.hint.end", "search.hint.count". */
   hint: string;
+  /**
+   * Маска в том виде, в каком её набрал человек (со звёздочками).
+   * В подсказке показывать ИМЕННО ЕЁ: поле mask содержит внутреннюю форму
+   * со знаком «?», которого человек не вводил и видеть не должен.
+   */
+  maskDisplay: string | null;
 }
 
 export interface ParseOptions {

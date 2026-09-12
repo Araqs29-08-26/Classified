@@ -9,7 +9,11 @@ import {
   supabase,
   type Listing,
 } from "@/lib/supabase";
-import { evaluateNumber, OPERATOR_CODE } from "@/lib/numberEngine";
+import {
+  engineMessage,
+  evaluateNumber,
+  OPERATOR_CODE,
+} from "@/lib/numberEngine";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
 import ContactReveal from "./ContactReveal";
@@ -222,14 +226,33 @@ export default async function ListingPage({
                 </div>
               </div>
 
-              <ul className="why-list">
-                <li>
-                  <b>{verdict.pattern}</b>
-                </li>
-                {verdict.notes.map((note) => (
-                  <li key={note}>{note}</li>
+              <ul className="feature-list">
+                {verdict.features.map((f, i) => (
+                  <li
+                    key={i}
+                    className={
+                      "feature" +
+                      (f.main ? " feature-main" : "") +
+                      (f.affects === "info" ? " feature-info" : "")
+                    }
+                  >
+                    <span>{f.text}</span>
+                    {/* Признак, который в цену не заложен, помечается прямо:
+                        иначе покупатель решит, что платит и за него тоже. */}
+                    {f.affects === "info" && (
+                      <em>{engineMessage("extra.affects.info", params.locale)}</em>
+                    )}
+                  </li>
                 ))}
               </ul>
+
+              {verdict.notes.length > 0 && (
+                <ul className="why-list">
+                  {verdict.notes.map((note) => (
+                    <li key={note}>{note}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         )}
@@ -253,15 +276,19 @@ export default async function ListingPage({
             </div>
             {/* Сбор оператора сидит ВНУТРИ цены, а не сверх неё: покупатель
                 платит за номер, а не за оператора. От оператора зависит лишь
-                остаток продавцу. */}
-            <div>
-              <span>{t("listing.cost.feeInside")}</span>
-              <b>− {formatPrice(fee)}</b>
-            </div>
-            <div>
-              <span>{t("listing.cost.sellerGets")}</span>
-              <b>{formatPrice(Math.max(0, listing.price - fee))}</b>
-            </div>
+                остаток продавцу. Нулевой сбор не показываем: вычитать нечего. */}
+            {fee > 0 && (
+              <>
+                <div>
+                  <span>{t("listing.cost.feeInside")}</span>
+                  <b>− {formatPrice(fee)}</b>
+                </div>
+                <div>
+                  <span>{t("listing.cost.sellerGets")}</span>
+                  <b>{formatPrice(Math.max(0, listing.price - fee))}</b>
+                </div>
+              </>
+            )}
           </div>
 
           {verdict.ok && (
@@ -270,7 +297,8 @@ export default async function ListingPage({
             </p>
           )}
 
-          {verdict.ok && (
+          {/* У обычного номера движок цены не называет — показывать нечего. */}
+          {verdict.ok && verdict.priceMax > 0 && (
             <p className="cost-note">
               {t("listing.cost.range", {
                 from: formatAmount(verdict.priceMin),

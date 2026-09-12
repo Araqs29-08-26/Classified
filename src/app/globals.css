@@ -1329,6 +1329,46 @@ textarea:focus {
   margin:6px 0 8px
 }
 
+/* Признаки номера. Главный — тот, что задал статус, — крупнее остальных;
+   тот, что в цену не входит, приглушён и подписан. */
+.feature-list {
+  list-style:none;
+  margin:0 0 14px;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:8px
+}
+
+.feature-list .feature {
+  display:flex;
+  align-items:baseline;
+  flex-wrap:wrap;
+  gap:8px;
+  font-size:13.5px;
+  line-height:1.5;
+  color:var(--ink)
+}
+
+.feature-list .feature-main {
+  font-size:14.5px;
+  font-weight:600
+}
+
+.feature-list .feature-info {
+  color:var(--faint)
+}
+
+.feature-list .feature-info em {
+  font-style:normal;
+  font-size:11.5px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:var(--surface-2);
+  color:var(--faint);
+  white-space:nowrap
+}
+
 .why-list {
   list-style:none;
   margin:0;
@@ -1756,8 +1796,16 @@ textarea:focus {
   border-radius:14px
 }
 
-/* Пояснение к «?» и «*» стоит рядом с кнопками положения: и то и другое
-   относится к тому, как читается введённая маска. */
+/* Что означает звёздочка — отдельной строкой: это целая фраза, а не пара
+   значков, и в одной строке с кнопками положения она сжималась. */
+.mask-search-tip {
+  margin:0;
+  max-width:64ch;
+  font-size:12.5px;
+  line-height:1.45;
+  color:var(--faint)
+}
+
 .mask-search-legend {
   display:flex;
   align-items:center;
@@ -1765,17 +1813,6 @@ textarea:focus {
   flex-wrap:wrap;
   font-size:12.5px;
   color:var(--faint)
-}
-
-.mask-search-legend b {
-  color:var(--ink);
-  font-weight:700
-}
-
-.mask-search-sep {
-  width:1px;
-  height:16px;
-  background:var(--line)
 }
 
 /* Четыре положения маски. Считаются по шести цифрам после кода оператора. */
@@ -3010,10 +3047,14 @@ textarea:focus {
   cursor:default
 }
 
-/* Статусы — две колонки: цветная грань, название, счётчик. */
+/* Статусы: цветная грань, название, счётчик. Кнопки текут по строке и
+   переносятся сами — колонки равной ширины резали длинные слова. */
 .tier-list {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  display:flex;
+  /* Направление задаётся явно: выше по файлу у этого же класса стоит column,
+     и без сброса кнопки встали бы в столбик. */
+  flex-direction:row;
+  flex-wrap:wrap;
   gap:5px
 }
 
@@ -3026,7 +3067,8 @@ textarea:focus {
   border:1px solid var(--line);
   cursor:pointer;
   margin:0;
-  min-width:0
+  /* Ширина по слову, а дальше кнопка растягивается на остаток строки. */
+  flex:1 1 auto
 }
 
 .tier-row:hover {

@@ -353,7 +353,10 @@ export default function HomeClient({
     if (query.mask) {
       parts.push(
         fillMessage(engineMessage("search.hint." + query.where, locale), {
-          mask: query.mask,
+          // Именно maskDisplay: в mask лежит внутренняя запись со знаком «?»,
+          // которого человек не вводил. Увидев «5?5» вместо своего «5*5»,
+          // он решит, что ошибся.
+          mask: query.maskDisplay ?? query.mask,
         })
       );
     }

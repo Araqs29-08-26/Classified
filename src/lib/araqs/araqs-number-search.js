@@ -55,7 +55,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
 "use strict";
 
-const VERSION = "1.2";
+const VERSION = "1.3";
 
 // Все группы узоров. Номер почти всегда попадает в несколько сразу, поэтому
 // в индексе это СПИСОК. В версии 1.0 группа была одна — та, что задала
@@ -186,12 +186,12 @@ function cleanMask(text){
   return out.replace(/[.X*]/g, "?");
 }
 
-/* «5x5» — пятёрка пять раз. Звёздочки тут БОЛЬШЕ НЕТ: с версии 1.2 она
-   означает «одна любая цифра», и «5*5» — это маска, а не количество.
-   Оставлены только однозначные знаки умножения: латинская x, русская х
-   и знак ×. */
-const COUNT_RE = /^([0-9])\s*[xх×]\s*([1-8])$/i;
-const COUNT_RE_REV = /^([1-8])\s*[xх×]\s*([0-9])$/i;
+/* Сокращения вида «5x5» («пятёрка пять раз») здесь больше НЕТ.
+   Заказчик убрал его сознательно: рядом стоит отдельный элемент «цифра —
+   не менее N раз», и вторая, невидимая запись того же самого только путала.
+   Хуже всего было то, что человек набирал «5*5», имея в виду маску, а
+   получал фильтр по количеству — молча и не тем. Теперь всё, что набрано
+   в строке, читается как маска, и ничего не угадывается. */
 
 function parseQuery(text, options){
   options = options || {};
@@ -211,7 +211,7 @@ function parseQuery(text, options){
     // Цена. max: null означает «без верхней границы» — потолка тут нет.
     priceMin: options.priceMin != null ? options.priceMin : null,
     priceMax: options.priceMax != null ? options.priceMax : null,
-    error: null, hint: ""
+    error: null, hint: "", maskDisplay: null
   };
   const raw = String(text === undefined || text === null ? "" : text).trim();
 
@@ -226,23 +226,15 @@ function parseQuery(text, options){
     return q;
   }
 
-  // «5x5» — пятёрка пять раз. Разбирается ДО маски: в маске «x» означает
-  // любую цифру, и без этой проверки запрос прочитался бы как «5?5».
-  let m = raw.match(COUNT_RE) || raw.match(COUNT_RE_REV);
-  if(m){
-    const digit = raw.match(COUNT_RE) ? m[1] : m[2];
-    const times = raw.match(COUNT_RE) ? m[2] : m[1];
-    q.counts.push({ digit: digit, min: parseInt(times, 10) });
-    q.hint = "search.hint.count";
-    return q;
-  }
-
   const mask = cleanMask(raw);
   if(mask === null){ q.error = "search.badChars"; return q; }
   if(!mask){ q.error = "search.empty"; return q; }
   if(mask.length > 8){ q.error = "search.tooLong"; return q; }
 
   q.mask = mask;
+  // В подсказке нельзя показывать внутреннюю форму: человек набрал «5*5»,
+  // а видел «5?5» — знак, которого он не вводил. Показываем его запись.
+  q.maskDisplay = mask.replace(/\?/g, "*");
   q.hint = "search.hint." + q.where;
   return q;
 }

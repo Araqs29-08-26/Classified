@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -10,10 +10,11 @@ import {
   engineMessage,
   evaluateNumber,
   fillMessage,
+  OPERATOR_CODE,
   OPERATOR_NAME,
   type EngineResult,
 } from "@/lib/numberEngine";
-import { formatPrice, formatAmount } from "@/lib/supabase";
+import { formatPrice, formatAmount, OPERATOR_META } from "@/lib/supabase";
 import PatternNumber from "../PatternNumber";
 import ShareReview from "./ShareReview";
 
@@ -31,29 +32,71 @@ export default function SellClient() {
   const tr = useTranslations("sell.result");
   const tTiers = useTranslations("tiers");
 
-  // Номер берётся из адреса, если он там есть: иначе смена языка сбрасывала бы
-  // и введённый номер, и показанную оценку.
+  // Номер и настройки берутся из адреса: иначе смена языка сбрасывала бы
+  // оценку, а переслать разбор другу было бы нечем.
   const searchParams = useSearchParams();
   const fromUrl = searchParams.get("number") ?? "";
+  const opFromUrl = searchParams.get("operator") ?? "";
+  const heldFromUrl = searchParams.get("held") ?? "";
 
   const [phone, setPhone] = useState(fromUrl || "+374");
-  const [result, setResult] = useState<EngineResult | null>(
-    fromUrl ? evaluateNumber(fromUrl, { locale }) : null
+  /** Номер, который вправду оценивали. Отличается от набранного до нажатия. */
+  const [asked, setAsked] = useState(fromUrl);
+  const [operator, setOperator] = useState(
+    opFromUrl || (fromUrl ? detect(fromUrl).operator ?? "" : "")
   );
-  const [detected, setDetected] = useState<ReturnType<typeof detect> | null>(
-    fromUrl ? detect(fromUrl) : null
+  const [held, setHeld] = useState<"yes" | "no" | "">(
+    heldFromUrl === "yes" || heldFromUrl === "no" ? heldFromUrl : ""
   );
+
+  const detected = useMemo(() => (asked ? detect(asked) : null), [asked]);
+
+  const isViva = operator === "Viva";
+  // Срок владения спрашивается только у Viva: у Ucom и Team он на сбор не влияет.
+  const heldOverLimit = isViva && held !== "" ? held === "yes" : null;
+
+  // Оценка пересчитывается сама, когда меняют оператора или срок владения:
+  // от них зависит сбор, а значит и то, сколько останется продавцу.
+  const result: EngineResult | null = useMemo(
+    () =>
+      asked
+        ? evaluateNumber(asked, {
+            operator: OPERATOR_CODE[operator] ?? null,
+            heldOverLimit,
+            locale,
+          })
+        : null,
+    [asked, operator, heldOverLimit, locale]
+  );
+
+  // Настройки живут в адресе страницы — вместе с номером. Ссылку можно
+  // переслать, и у друга откроется тот же разбор, а не «примерно такой же».
+  function remember(next: { number: string; operator: string; held: string }) {
+    const q = new URLSearchParams();
+    q.set("number", next.number);
+    if (next.operator) q.set("operator", next.operator);
+    if (next.held) q.set("held", next.held);
+    window.history.replaceState(null, "", `${window.location.pathname}?${q}`);
+  }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setResult(evaluateNumber(phone, { locale }));
-    setDetected(detect(phone));
+    // Оператор подставляется по коду номера — как подсказка, не как приговор.
+    const guess = detect(phone).operator ?? "";
+    setAsked(phone);
+    setOperator(guess);
+    setHeld("");
+    remember({ number: phone, operator: guess, held: "" });
+  }
 
-    // Оценённый номер уходит в адрес — так его можно и переслать, и сохранить,
-    // и не потерять при смене языка.
-    const q = new URLSearchParams(window.location.search);
-    q.set("number", phone);
-    window.history.replaceState(null, "", `${window.location.pathname}?${q}`);
+  function chooseOperator(next: string) {
+    setOperator(next);
+    remember({ number: asked, operator: next, held: next === "Viva" ? held : "" });
+  }
+
+  function chooseHeld(next: "yes" | "no" | "") {
+    setHeld(next);
+    remember({ number: asked, operator, held: next });
   }
 
   // Причину отказа объясняет сам движок: он лучше знает, что именно не так —
@@ -62,11 +105,11 @@ export default function SellClient() {
 
   const ctaHref =
     result && result.ok
-      ? `/new?number=${encodeURIComponent(phone)}&tier=${encodeURIComponent(
+      ? `/new?number=${encodeURIComponent(asked)}&tier=${encodeURIComponent(
           result.status
         )}&price=${result.priceTypical}&type=${encodeURIComponent(
           detected?.numberType ?? "Мобильный"
-        )}${detected?.operator ? `&operator=${encodeURIComponent(detected.operator)}` : ""}`
+        )}${operator ? `&operator=${encodeURIComponent(operator)}` : ""}`
       : "/new";
 
   // Где стоит отметка «рекомендуем» внутри полосы диапазона.
@@ -127,6 +170,60 @@ export default function SellClient() {
 
           <p className="breakdown-pattern">{result.pattern}</p>
 
+          <h2>{t("operatorLabel")}</h2>
+          <p className="breakdown-hint">{t("operatorHint")}</p>
+          <div className="operator-toggle-row">
+            {["Viva", "Ucom", "Team Telecom"].map((op) => {
+              const active = operator === op;
+              const meta = OPERATOR_META[op];
+              return (
+                <button
+                  key={op}
+                  type="button"
+                  className={"operator-toggle" + (active ? " active" : "")}
+                  aria-pressed={active}
+                  onClick={() => chooseOperator(op)}
+                >
+                  <span className="operator-badge" title={op}>
+                    {meta?.logo ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={meta.logo} alt="" />
+                    ) : (
+                      op.slice(0, 1)
+                    )}
+                  </span>
+                  <span className="operator-toggle-name">{op}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Только у Viva: там сбор либо 500 ֏, либо ещё и полная стоимость
+              категории — у премиум-номера разница в две тысячи раз. */}
+          {isViva && (
+            <>
+              <h2>{t("heldLabel")}</h2>
+              <p className="breakdown-hint">{t("heldHint")}</p>
+              <div className="presets">
+                {([
+                  ["yes", "heldYes"],
+                  ["no", "heldNo"],
+                  ["", "heldUnknown"],
+                ] as const).map(([value, key]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={"chip" + (held === value ? " active" : "")}
+                    aria-pressed={held === value}
+                    onClick={() => chooseHeld(value)}
+                  >
+                    {t(key)}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
           {/* Признаков в номере бывает несколько, и показывать надо все:
               041 10 90 90 — это и пара «90», и три нуля. Прежняя версия
               называла только тот узор, что задал статус. */}
@@ -163,6 +260,11 @@ export default function SellClient() {
 
           <h2>{tr("rangeTitle")}</h2>
 
+          {/* Нулевая цена — это не «бесплатно», а «движок не берётся считать».
+              Показывать полосу диапазона от нуля до нуля незачем. */}
+          {result.priceMax === 0 ? (
+            <p className="notice">{tr("noPrice")}</p>
+          ) : (
           <div className="range">
             <div className="range-bar">
               <span className="range-mark" style={{ left: `${markPercent}%` }} />
@@ -183,10 +285,12 @@ export default function SellClient() {
             </div>
             <p className="breakdown-hint">{tr("priceHint")}</p>
           </div>
+          )}
 
           {/* Схема версии 5.0: сбор оператора сидит ВНУТРИ рыночной цены,
               а не прибавляется к ней. Иначе два одинаковых по узору номера
               стоили бы покупателю разных денег — только из-за симки. */}
+          {result.priceMax > 0 && (
           <table className="money-table">
             <tbody>
               <tr className="money-total">
@@ -211,10 +315,13 @@ export default function SellClient() {
               </tr>
             </tbody>
           </table>
+          )}
 
-          <p className="breakdown-hint">
-            {engineMessage("price.rangeExplained", locale)}
-          </p>
+          {result.priceMax > 0 && (
+            <p className="breakdown-hint">
+              {engineMessage("price.rangeExplained", locale)}
+            </p>
+          )}
 
           {result.operatorPrice > 0 && (
             <p className="breakdown-hint">
@@ -225,12 +332,6 @@ export default function SellClient() {
             </p>
           )}
 
-          <p className="breakdown-hint">
-            {detected?.operator
-              ? tr("operatorNote", { operator: detected.operator })
-              : tr("operatorUnknown")}
-          </p>
-
           <div className="breakdown-actions">
             <Link href={ctaHref} className="btn btn-accent">
               {tr("cta")}
@@ -238,11 +339,12 @@ export default function SellClient() {
             {/* Разбор чужого номера часто смотрят, чтобы показать владельцу:
                 ссылка воспроизводит его целиком, считать заново не нужно. */}
             <ShareReview
-              number={phone}
+              number={asked}
               status={tTiers(result.status)}
               index={result.index}
               priceFrom={formatAmount(result.priceMin)}
               priceTo={formatPrice(result.priceMax)}
+              hasPrice={result.priceMax > 0}
             />
           </div>
 
