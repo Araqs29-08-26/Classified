@@ -7,14 +7,38 @@ import { useTranslations } from "next-intl";
  * «Отправить другу» — переслать разбор номера.
  *
  * Пересылается ссылка, а не картинка: по ней у друга откроется тот же разбор,
- * посчитанный заново, — со статусом, узором и ценой. Номер сидит в адресе,
- * язык — в самом пути, поэтому ссылка воспроизводит ровно то, что было видно
- * отправителю.
+ * посчитанный заново, — со статусом, узором и ценой. Номер и настройки сидят
+ * в адресе, язык — в самом пути, поэтому ссылка воспроизводит ровно то, что
+ * было видно отправителю.
  *
- * На телефоне открывается обычное окно «Поделиться» — в нём человек выбирает
- * тот мессенджер, который у него вправду стоит. Списка кнопок хватает там,
- * где такого окна нет: на настольном браузере.
+ * ПОЧЕМУ НЕ СИСТЕМНОЕ ОКНО «ПОДЕЛИТЬСЯ». На телефоне оно показывает
+ * мессенджеры, а на настольной Windows — «Мой телефон», «Dropbox для
+ * S-режима», «OneNote» и обмен по Bluetooth. Человек хотел отправить
+ * сообщение другу, а получил список того, чем не пользуется. Поэтому
+ * предлагаются те три мессенджера, которыми в Армении вправду пишут, и
+ * ссылка для всего остального.
  */
+const MESSENGERS = [
+  {
+    id: "whatsapp",
+    name: "WhatsApp",
+    href: (text: string, url: string) =>
+      `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`,
+  },
+  {
+    id: "telegram",
+    name: "Telegram",
+    href: (text: string, url: string) =>
+      `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
+  },
+  {
+    id: "viber",
+    name: "Viber",
+    href: (text: string, url: string) =>
+      `viber://forward?text=${encodeURIComponent(`${text} ${url}`)}`,
+  },
+] as const;
+
 export default function ShareReview({
   number,
   status,
@@ -48,35 +72,6 @@ export default function ShareReview({
       : t("textNoPrice", { number, status, index });
   }
 
-  async function share() {
-    const url = link();
-    const data = { title: t("title"), text: text(), url };
-
-    // Сначала пробуем системное окно «Поделиться»: на телефоне оно знает,
-    // какие мессенджеры у человека вправду стоят, а список кнопок — нет.
-    //
-    // Но полагаться на него одно нельзя. На настольном браузере оно есть
-    // далеко не везде, а там, где есть, умеет отказать — и тогда нажатие
-    // не даёт НИЧЕГО, кнопка выглядит сломанной. Поэтому любой отказ, кроме
-    // осознанной отмены человеком, разворачивает наш собственный список.
-    const canShare =
-      typeof navigator !== "undefined" &&
-      typeof navigator.share === "function" &&
-      (typeof navigator.canShare !== "function" || navigator.canShare(data));
-
-    if (canShare) {
-      try {
-        await navigator.share(data);
-        return;
-      } catch (error) {
-        // Человек сам закрыл системное окно — значит, передумал.
-        if ((error as { name?: string })?.name === "AbortError") return;
-      }
-    }
-
-    setOpen((prev) => !prev);
-  }
-
   async function copy() {
     const full = `${text()} ${link()}`;
 
@@ -105,38 +100,35 @@ export default function ShareReview({
     setCopied(ok);
   }
 
-  const message = () => encodeURIComponent(`${text()} ${link()}`);
-
   return (
     <>
-      <button type="button" className="btn btn-ghost" onClick={share}>
+      <button
+        type="button"
+        className="btn btn-ghost"
+        aria-expanded={open}
+        onClick={() => setOpen((prev) => !prev)}
+      >
         {t("button")}
       </button>
 
       {open && (
         <div className="share-row">
-          <a
+          {MESSENGERS.map((m) => (
+            <a
+              key={m.id}
+              className={`btn btn-ghost share-${m.id}`}
+              href={m.href(text(), link())}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {m.name}
+            </a>
+          ))}
+          <button
+            type="button"
             className="btn btn-ghost"
-            href={`https://wa.me/?text=${message()}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            onClick={() => void copy()}
           >
-            WhatsApp
-          </a>
-          <a
-            className="btn btn-ghost"
-            href={`https://t.me/share/url?url=${encodeURIComponent(
-              link()
-            )}&text=${encodeURIComponent(text())}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Telegram
-          </a>
-          <a className="btn btn-ghost" href={`viber://forward?text=${message()}`}>
-            Viber
-          </a>
-          <button type="button" className="btn btn-ghost" onClick={() => void copy()}>
             {copied ? t("copied") : t("copy")}
           </button>
         </div>

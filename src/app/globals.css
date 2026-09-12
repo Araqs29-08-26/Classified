@@ -119,6 +119,9 @@ a {
 }
 
 .site-header {
+  position:sticky;
+  top:0;
+  z-index:30;
   border-bottom:1px solid var(--line);
   background:var(--surface)
 }
@@ -143,22 +146,70 @@ a {
   gap:10px
 }
 
-@media (max-width:480px) {
+@media (max-width:760px) {
   .site-header .bar {
-    padding:12px 16px;
-    gap:10px
+    padding:10px 14px;
+    gap:12px;
+    /* Одна строка: перенос делал шапку высотой в четверть экрана. */
+    flex-wrap:nowrap
   }
+
+  .site-header .brand {
+    flex-shrink:0
+  }
+
   .site-header .bar nav.nav-actions {
-    width:100%;
-    justify-content:space-between
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    /* Полосу прокрутки прячем: она бы съела высоту, ради которой всё затевалось. */
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+    /* Слева, а не справа: иначе видно хвост меню и обрезанное слово. */
+    justify-content:flex-start;
+    /* Затенение у правого края — знак, что список продолжается. */
+    mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent);
+    -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent)
   }
+
+  .site-header .bar nav.nav-actions::-webkit-scrollbar {
+    display:none
+  }
+
+  .site-header .bar nav.nav-actions > * {
+    flex-shrink:0
+  }
+
   .brand .name {
     font-size:17px
   }
+
   .site-header .btn {
-    padding:9px 12px;
+    padding:8px 11px;
     font-size:13px
   }
+
+  .site-header .nav-link {
+    font-size:13px
+  }
+}
+
+@media (max-width:480px) {
+  /* Знак узнаётся и без подписи, а место нужнее меню. */
+  .site-header .brand .name {
+    display:none
+  }
+}
+
+/* Полоса о бета-тестировании. Не в шапке: та закреплена, а эта должна
+   уехать при прокрутке и не отнимать экран. */
+.beta-strip {
+  margin:0;
+  padding:9px 20px;
+  text-align:center;
+  background:var(--accent-soft);
+  color:var(--accent-ink);
+  font-size:12.5px;
+  line-height:1.45
 }
 
 .brand {
@@ -1201,7 +1252,8 @@ textarea:focus {
 
 .listing-aside {
   position:sticky;
-  top:16px
+  /* Отступ с запасом на шапку: иначе карточка цены уезжает под неё. */
+  top:88px
 }
 
 .detail-head {

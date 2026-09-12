@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { detect, normalizePhone } from "@/lib/phone";
 import { confirmOwnership, sendOwnershipCode } from "@/lib/verifyNumber";
-import { EXTRA_LISTING_PRICE } from "@/lib/promoPrices";
+import { EXTRA_LISTING_PRICE, FREE_LISTINGS } from "@/lib/promoPrices";
 import { displayWho, useSession } from "@/lib/useSession";
 import { Link } from "@/i18n/navigation";
 import {
@@ -60,8 +60,9 @@ export default function NewListingClient() {
   /**
    * Сколько объявлений уже есть и есть ли подписка «Магазин».
    *
-   * Первое объявление бесплатно всегда; за второе и следующие берётся доплата,
-   * если только подписка её не снимает. null — ещё не считали.
+   * Пока идёт бета-тестирование, бесплатны первые FREE_LISTINGS объявлений;
+   * за следующие берётся доплата, если только подписка её не снимает.
+   * null — ещё не считали.
    */
   const [ownCount, setOwnCount] = useState<number | null>(null);
   const [hasShop, setHasShop] = useState(false);
@@ -133,7 +134,12 @@ export default function NewListingClient() {
   }, [user]);
 
   /** Требуется ли доплата за это объявление. */
-  const needsPayment = ownCount !== null && ownCount > 0 && !hasShop;
+  const needsPayment =
+    ownCount !== null && ownCount >= FREE_LISTINGS && !hasShop;
+
+  /** Сколько бесплатных размещений осталось. Показывается, пока они есть. */
+  const freeLeft =
+    ownCount === null ? null : Math.max(0, FREE_LISTINGS - ownCount);
 
   const autofilled = Boolean(qNumber && qTier);
   const numberMatchesVerified =
@@ -658,14 +664,28 @@ export default function NewListingClient() {
 
           {blockReason && verdict?.ok && <div className="notice">{blockReason}</div>}
 
-          {hasShop && ownCount !== null && ownCount > 0 && (
+          {hasShop && ownCount !== null && ownCount >= FREE_LISTINGS && (
             <p className="paid-note">{t("shopActive")}</p>
+          )}
+
+          {/* Пока бесплатные размещения есть, человек должен видеть, сколько
+              их осталось и что мера временная. Узнать об этом на четвёртом
+              объявлении — значит узнать слишком поздно. */}
+          {!needsPayment && freeLeft !== null && freeLeft > 0 && (
+            <p className="paid-note">
+              {t("betaFree", { free: FREE_LISTINGS, left: freeLeft })}
+            </p>
           )}
 
           {needsPayment && (
             <div className="paid-block">
               <b>{t("paidTitle")}</b>
-              <p>{t("paidText", { amount: EXTRA_LISTING_PRICE })}</p>
+              <p>
+                {t("paidText", {
+                  amount: EXTRA_LISTING_PRICE,
+                  free: FREE_LISTINGS,
+                })}
+              </p>
               <p className="paid-links">
                 <Link href="/rules/promo">{t("paidSubscribe")}</Link>
               </p>

@@ -70,7 +70,7 @@ export default async function PromoRulesPage({
           <li key={s.plan} className="service">
             <span className="service-body">
               <b>
-                {t("shopTitle")} — {t(s.limit === null ? "shopUnlimited" : `shop${s.limit}`)}
+                {t("shopTitle")} — {t(`shop${s.limit}`)}
               </b>
             </span>
             <span className="service-price">

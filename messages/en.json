@@ -11,7 +11,7 @@
   },
   "home": {
     "title": "Armenia's beautiful phone numbers, in one place",
-    "subtitle": "Sellers list numbers for free, buyers find a number and contact them directly. Payment and number transfer happen outside the platform, between you and the seller.",
+    "subtitle": "Sellers list numbers, buyers find the one they want and get in touch directly. While the beta test runs, the first three listings are free. Payment and number transfer happen outside the platform, between you and the seller.",
     "stats": "Showing {count} listings",
     "warningBanner": "Attention! A phone number can only be re-registered at an official mobile operator office, with both the current and the new subscriber present along with their passports. The operator may charge a fee for the transfer, and its amount can depend on the number's category.",
     "filters": {
@@ -165,7 +165,7 @@
   },
   "newListing": {
     "title": "List a number",
-    "subtitle": "Listing is free. Ownership is verified by an SMS code sent to that number.",
+    "subtitle": "While the beta test runs, the first three numbers are posted free. Ownership is verified by an SMS code sent to that number.",
     "autofillNotice": "The fields below were filled in automatically from your valuation — review and adjust the operator and price before publishing if needed.",
     "phoneStep": {
       "label": "Your phone number (for sign-in and verification)",
@@ -211,7 +211,7 @@
       "priceRangeTypical": "We suggest",
       "priceRangeTo": "Up to",
       "priceAboveMarket": "Numbers priced above the upper bound take a long time to sell — but the price is yours to set.",
-      "priceHint": "This is the full price for the buyer: the operator's transfer fee already sits inside it.",
+      "priceHint": "This is the full price for the buyer: the operator's transfer fee already sits inside it. You set the price yourself — the range below is only a hint, we do not require you to keep to it.",
       "feeInsideLabel": "including the transfer fee",
       "sellerGetsLabel": "You will receive"
     },
@@ -243,14 +243,15 @@
     },
     "checking": "Checking whether you are signed in...",
     "signedInAs": "You are signed in as {who}. The listing will be posted from this account.",
-    "paidTitle": "This is not your first listing",
-    "paidText": "The first listing is free. The second and each further one costs {amount} ֏. Or take a «Shop» subscription — with it there is no surcharge.",
+    "paidTitle": "You have used up the free listings",
+    "paidText": "While the beta test runs, {free} numbers are posted free. Each further listing costs {amount} ֏. Or take a «Shop» subscription — with it there is no surcharge.",
     "paidOrder": "Post for {amount} ֏",
     "paidSubscribe": "See the subscriptions",
     "paidOrdering": "Sending...",
     "paidDone": "The request has been sent. We will publish the listing after payment — an administrator will contact you.",
     "paidFailed": "The request could not be sent. Please try again.",
-    "shopActive": "You have a «Shop» subscription — no surcharge for this listing."
+    "shopActive": "You have a «Shop» subscription — no surcharge for this listing.",
+    "betaFree": "Beta test: {free} numbers can be posted free, you have {left} left. After that posting becomes paid — we will warn you in advance."
   },
   "sell": {
     "title": "Value a number",
@@ -276,7 +277,6 @@
     },
     "share": {
       "button": "Send to a friend",
-      "title": "A number valued on Araqs",
       "text": "I had {number} valued on Araqs: status “{status}”, beauty index {index}, market price {from} – {to}. Have a look:",
       "copy": "Copy the link",
       "copied": "Link copied",
@@ -340,7 +340,7 @@
         },
         {
           "title": "What listing costs",
-          "body": "Basic listing is free — for every tier, premium included, with no time limit. We take no commission on the deal and take no part in payments between the seller and the buyer. Only promotion of a listing on the marketplace and advertising may be paid for; the current terms are always shown on this page."
+          "body": "While the beta test runs, every user posts up to three listings free — for every status of a number, premium ones included. This is a temporary measure while the marketplace fills up: when it ends we will announce it in advance and posting will become paid. Listings beyond the free ones are charged for, or covered by a «Shop» subscription. We take no commission on the deal and take no part in settlement between seller and buyer. Current amounts are always shown on the «Promotion» page."
         },
         {
           "title": "Prohibited content",
@@ -360,7 +360,7 @@
         },
         {
           "title": "Paying for the marketplace's services",
-          "body": "Posting listings is free. Only promotion services, monthly subscriptions and the fee for a seller's second and further listings are paid — they are listed with their prices under «Rules → Promotion». All prices are in Armenian drams (AMD) and include all applicable taxes. Payment is made by bank card on the acquiring bank's secure page; the card number is never passed to the Araqs site and is not stored by us."
+          "body": "Promotion services, monthly subscriptions and listings beyond the free ones are paid — they are listed with their prices under «Rules → Promotion». All prices are in Armenian drams (AMD) and include all applicable taxes. Payment is made by bank card on the acquiring bank's secure page; the card number is never passed to the Araqs site and is not stored by us."
         },
         {
           "title": "When a service counts as delivered",
@@ -449,9 +449,9 @@
     "title": "Rules",
     "intro": "The marketplace brings a seller and a buyer together. The engine values the number; payment and transfer happen between you two — we do not take part in the settlement.",
     "postingTitle": "Posting",
-    "postingFree": "Posting a listing is free — for every status of a number, ordinary ones included. We take no commission on the deal.",
-    "postingTerm": "A listing stays on the marketplace for 6 months. After that it leaves the catalogue and you can post it again — free as well.",
-    "postingSecond": "The first listing is always free. The second and each further one costs {amount} ֏ — or you take out a «Shop» subscription and pay no surcharge.",
+    "postingFree": "While the beta test runs, anyone may post up to three numbers free — for every status, ordinary ones included. We take no commission on the deal. This is temporary: once the marketplace has enough numbers, posting will become paid, and we will say so in advance.",
+    "postingTerm": "A listing stays on the marketplace for 6 months. After that it leaves the catalogue and you can post it again — it will show up in the listings once more.",
+    "postingSecond": "Beyond the three free ones, each listing costs {amount} ֏ — or you take out a «Shop» subscription and pay no surcharge.",
     "postingWhoTitle": "Who may post",
     "postingWho": "The owner of the number may post a listing. The seller's phone is confirmed by SMS when posting. Optionally the number being sold can be confirmed too — then a «Verified» mark appears in search results.",
     "postingForbiddenTitle": "What may not be posted",
@@ -552,8 +552,8 @@
     "highlightText": "The listing card is highlighted in colour — it stands out from the rest.",
     "urgentTitle": "Urgent",
     "urgentText": "An «Urgent» mark appears in the listing row.",
-    "extraTitle": "Second and further listings",
-    "extraText": "The first listing is free. Each further one costs {amount} ֏.",
+    "extraTitle": "Listings beyond the free ones",
+    "extraText": "The first three listings are free. Each further one costs {amount} ֏.",
     "chosen": "Selected",
     "totalLabel": "Total",
     "order": "Order",
@@ -572,15 +572,14 @@
   },
   "promoPage": {
     "title": "Promotion",
-    "intro": "Posting a listing is free. Only the services that make a listing more visible are paid, along with subscriptions for people who trade numbers regularly.",
+    "intro": "While the beta test runs, everyone posts three listings free. What stays paid: the services that make a listing more visible, subscriptions for people who trade numbers regularly, and listings beyond the free ones.",
     "perListingTitle": "Services for a single listing",
     "perListingNote": "Ordered in your account, on your own listing. They last 30 days.",
     "subscriptionsTitle": "Monthly subscriptions",
     "shopTitle": "Shop",
-    "shopIntro": "For sellers who keep many numbers on the marketplace: no surcharge for the second and further listings.",
+    "shopIntro": "For sellers who keep many numbers on the marketplace: no surcharge for listings beyond the free ones.",
     "shop50": "up to 50 numbers",
     "shop100": "up to 100 numbers",
-    "shopUnlimited": "no limit on the number of listings",
     "hunterTitle": "Hunter",
     "hunterText": "You describe the combination of digits you want, and the moment such a number goes on sale you get an urgent notification. The subscription is monthly.",
     "perMonth": "per month",
@@ -589,7 +588,8 @@
     "ordered": "Request sent — we will get in touch.",
     "orderFailed": "The request could not be sent. Please try again.",
     "signInToOrder": "Sign in to order",
-    "payNote": "Online payment is not connected yet. An administrator contacts you about the request; later the «Order» button will lead straight to a payment page."
+    "payNote": "Online payment is not connected yet. An administrator contacts you about the request; later the «Order» button will lead straight to a payment page.",
+    "shop1000": "up to 1000 listings"
   },
   "tiersShort": {
     "Премиум": "Premium",
@@ -748,5 +748,6 @@
     "afterTitle": "How our status differs from the operator's category",
     "afterBody": "An operator names a category when it sells a new number, and each has its own scale. Our status is calculated by the engine from the number itself, identically for every listing: it breaks the digits down, finds the pattern and assigns a status with an index from 0 to 100.",
     "ctaTitle": "What next"
-  }
+  },
+  "betaStrip": "Beta test: right now anyone posts 3 numbers free. Later posting will become paid — we will warn you in advance."
 }
