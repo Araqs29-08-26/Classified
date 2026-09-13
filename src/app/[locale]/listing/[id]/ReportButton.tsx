@@ -20,6 +20,9 @@ export default function ReportButton({ listingId }: { listingId: string }) {
   const t = useTranslations("listing.report");
   const [state, setState] = useState<State>("idle");
   const [reason, setReason] = useState<string>(REASONS[0]);
+  /** Оба поля необязательные: сообщить о мошеннике можно и не называя себя. */
+  const [comment, setComment] = useState("");
+  const [contact, setContact] = useState("");
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -31,6 +34,8 @@ export default function ReportButton({ listingId }: { listingId: string }) {
     const { data, error } = await supabase.rpc("file_report", {
       listing_id: listingId,
       reason,
+      comment,
+      contact,
     });
 
     if (error) {
@@ -88,6 +93,30 @@ export default function ReportButton({ listingId }: { listingId: string }) {
           <span>{t(`reasons.${code}`)}</span>
         </label>
       ))}
+
+      <div className="field">
+        <label>{t("commentLabel")}</label>
+        <textarea
+          rows={2}
+          value={comment}
+          maxLength={2000}
+          placeholder={t("commentPlaceholder")}
+          onChange={(e) => setComment(e.target.value)}
+        />
+      </div>
+
+      <div className="field">
+        <label>{t("contactLabel")}</label>
+        <input
+          type="text"
+          value={contact}
+          maxLength={200}
+          placeholder={t("contactPlaceholder")}
+          onChange={(e) => setContact(e.target.value)}
+        />
+      </div>
+
+      <p className="report-privacy">{t("privacy")}</p>
 
       <div className="report-actions">
         <button

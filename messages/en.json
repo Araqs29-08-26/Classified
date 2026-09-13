@@ -161,7 +161,12 @@
         "wrong_data": "Incorrect details: price, tier, or operator",
         "spam": "Spam or offensive content"
       },
-      "tooMany": "Reports about this listing have already come in and we are looking into them. If you know anything more, write to support."
+      "tooMany": "Reports about this listing have already come in and we are looking into them. If you know anything more, write to support.",
+      "commentLabel": "What exactly is wrong",
+      "commentPlaceholder": "Optional, but it helps us look into it",
+      "contactLabel": "Your contact for a reply",
+      "contactPlaceholder": "Optional — email or phone",
+      "privacy": "We do not show your contact to the seller."
     }
   },
   "newListing": {
