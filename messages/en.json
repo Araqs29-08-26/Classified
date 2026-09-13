@@ -160,7 +160,8 @@
         "fraud": "Fraud or deception",
         "wrong_data": "Incorrect details: price, tier, or operator",
         "spam": "Spam or offensive content"
-      }
+      },
+      "tooMany": "Reports about this listing have already come in and we are looking into them. If you know anything more, write to support."
     }
   },
   "newListing": {

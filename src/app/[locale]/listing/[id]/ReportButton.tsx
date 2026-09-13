@@ -14,7 +14,7 @@ import { supabase } from "@/lib/supabase";
  */
 const REASONS = ["not_owner", "fraud", "wrong_data", "spam"] as const;
 
-type State = "idle" | "form" | "sending" | "done" | "failed";
+type State = "idle" | "form" | "sending" | "done" | "failed" | "tooMany";
 
 export default function ReportButton({ listingId }: { listingId: string }) {
   const t = useTranslations("listing.report");
@@ -25,22 +25,36 @@ export default function ReportButton({ listingId }: { listingId: string }) {
     e.preventDefault();
     setState("sending");
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const { error } = await supabase.from("reports").insert({
+    // Жалоба записывается функцией в базе, а не прямой вставкой: там же
+    // проверяется, что объявление существует и что жалобами его не заваливают.
+    // Автор берётся из сессии — подать жалобу можно и не входя на сайт.
+    const { data, error } = await supabase.rpc("file_report", {
       listing_id: listingId,
-      // Жалобу может подать и незалогиненный посетитель — тогда автор неизвестен.
-      reporter_id: user?.id ?? null,
       reason,
     });
 
-    setState(error ? "failed" : "done");
+    if (error) {
+      setState(error.message.includes("too_many") ? "tooMany" : "failed");
+      return;
+    }
+
+    // Письмо администратору — уже после того, как жалоба сохранена. Если почта
+    // не уйдёт, жалоба всё равно на месте, и человеку показывать ошибку незачем.
+    void supabase.functions.invoke("notify-report", {
+      body: { reportId: data },
+    });
+
+    setState("done");
   }
 
   if (state === "done") {
     return <p className="report-done">{t("done")}</p>;
+  }
+
+  // Слишком частые жалобы — не поломка: человеку надо сказать, что сигнал
+  // уже принят, а не что у него что-то не сработало.
+  if (state === "tooMany") {
+    return <p className="report-done">{t("tooMany")}</p>;
   }
 
   if (state === "idle" || state === "failed") {
