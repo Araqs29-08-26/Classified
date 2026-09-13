@@ -19,5 +19,9 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "_comment_exclude": "supabase — код для Deno, а не для сайта: там свои Deno.env и импорты вида jsr:. Сборке сайта его проверять нечем.",
+  "exclude": [
+    "node_modules",
+    "supabase"
+  ]
 }
